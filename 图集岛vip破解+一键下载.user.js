@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name 图集岛VIP破解+下载+收藏
 // @namespace http://tampermonkey.net/
-// @version 1.0.3
+// @version 1.0.4
 // @description 图集岛最好用的插件！兼容手机 + PC ！支持VIP破解 + 单张下载 + 批量下载 + 打包下载 + 本地收藏
 // @author tengfei + ss548
 // @include /https?:\/\/(\w+\.)?tujidao.\w+/
@@ -27,8 +27,9 @@
         ".btn-box{display:flex;justify-content: space-around;position:fixed;z-index:1000;bottom:5px}" +
         ".btn{width:100%;cursor:pointer;background: rgb(12 192 229 / 50%);z-index: 100;text-align: center;padding: 10px 10px;color: #f9f9f9;border-radius: 50px;text-decoration:none;}" +
         "a:link{color:pink;}a:visited{color:purple;}" +
-        "@media screen and (min-width: 0px) {.imgbox {max-width: 50%} .contianer{column-count: 1;column-gap: 5px;margin:0;padding:0;}}" +
-        "@media screen and (min-width: 900px) {.imgbox {max-width: 25%} .contianer{column-count: 1;column-gap: 5px;margin:0;padding:0;}}" +
+        "@media screen and (min-width: 0px) {.imgbox {max-width: 100%} .contianer{column-count: 2;column-gap: 5px;margin:0;padding:0;}}" +
+        "@media screen and (min-width: 900px) {.imgbox {max-width: 100%} .contianer{column-count: 3;column-gap: 5px;margin:0;padding:0;}}" +
+        "@media screen and (min-width: 1200px) {.imgbox {max-width: 100%} .contianer{column-count: 4;column-gap: 5px;margin:0;padding:0;}}" +
         ".loading-box{width: 100%;height: 50px;display: none;align-items: center;position: absolute;top: 50px;left: 0;z-index: 999;}.loading{margin: 0 auto;width: 120px;height: 40px;line-height: 40px;color: #FFF;font-size: 17px;text-align: center;background: #1111119e;border-radius: 2px;}"+
         "</style></head>" +
         '<body bgcolor="#27282d"><div class="loading-box"><p class="loading">下载中...</p></div><ul id="images" align="center" class="contianer">';
