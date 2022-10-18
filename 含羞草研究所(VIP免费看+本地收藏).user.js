@@ -5,31 +5,8 @@
 // @version      0.3.6
 // @description  针对 含羞草研究所 的优化脚本，此脚本可以让用户观看VIP视频
 // @author       htf
-// @match        https://www.hxcbb101.com/*
-// @match        https://h5.hxcbb101.com/*
-// @include        /^https://www.hxcbb\d+\.com.+$/
-// @include        /^https://h5.hxcbb\d+\.com.+$/
-// @include        /^http://www.hxcbb\d+\.com.+$/
-// @include        /^http://h5.hxcbb\d+\.com.+$/
-// @include        /^https://www.hxcpp\d+\.com.+$/
-// @include        /^https://h5.hxcpp\d+\.com.+$/
-// @include        /^http://www.hxcpp\d+\.com.+$/
-// @include        /^http://h5.hxcpp\d+\.com.+$/
-// @include        /^https://www.fi11sm\d+\.com.+$/
-// @include        /^https://h5.fi11sm\d+\.com.+$/
-// @include        /^https://www.yashenggd.com.+$/
-// @include        /^https://h5.yashenggd.com.+$/
-// @include        /^https://www.fi11av\d+\.com.+$/
-// @include        /^https:///h5.fi11av\d+\.com.+$/
-// @include        /^https://www.fi11tv\d+\.com.+$/
-// @include        /^https:///h5.fi11tv\d+\.com.+$/
-// @include        /^https://www.hxx-new-retail\d*\.com.+$/
-// @include        /^https:///h5.hxx-new-retail\d*\.com.+$/
-// @include        /^https://www.jianguomuye\d*\.com.+$/
-// @include        /^https:///h5.jianguomuye\d*\.com.+$/
-// @include       /https?:\/\/(\w+\.)?zszy.\w+/
-// @match        https://fi11.com/*
-// @match        https://fi11.cn/*
+// @match        http://www.fi11.tv/*
+// @match        *://*/*
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=hxcbb101.com
 // @grant unsafeWindow
 // ==/UserScript==
