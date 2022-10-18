@@ -2,7 +2,7 @@
 // @license MIT
 // @name         含羞草研究所(VIP免费看+本地收藏)
 // @namespace    http://tampermonkey.net/
-// @version      0.3.6
+// @version      0.3.7
 // @description  针对 含羞草研究所 的优化脚本，此脚本可以让用户观看VIP视频
 // @author       htf
 // @match        http://www.fi11.tv/*
