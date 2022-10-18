@@ -1,9 +1,9 @@
 // ==UserScript==
 // @license MIT
-// @name         含羞草研究所(VIP免费看+本地收藏)
+// @name         含羞草研究所VIP免费看
 // @namespace    http://tampermonkey.net/
-// @version      0.3.7
-// @description  针对 含羞草研究所 的优化脚本，此脚本可以让用户观看VIP视频
+// @version      0.3.8
+// @description  针对 含羞草研究所 的优化脚本，此脚本可以：1.让用户观看VIP视频、直播、钻石视频 2.显示视频真实地址便于收藏 
 // @author       htf
 // @match        http://www.fi11.tv/*
 // @match        *://*/*
@@ -227,33 +227,12 @@ async function loadAndPlay(playerUrl, pic, playType,pageType) {
             }
         }
     }, 300);
-    like_item = {
-        "name":document.querySelector("p.name").innerText,
-        "tag":document.querySelector("div.videoSignBox").innerText.split('\n\n'),
-        "time":document.querySelector("p.middleInfo span:nth-child(2)").innerText,
-        "src":playerUrl,
-        "pic":pic,
-        "id":getVideoId()
-    };
-    console.log(like_item);
+
     var div = document.createElement('div');
-    div.innerHTML = '<buton onclick="do_like()" >收藏到本地</buton><buton onclick="show_like()" >查看收藏</buton>';
+    div.innerHTML = '真实视频地址: <a href="'+playerUrl+'" >'+playerUrl+'</a>';
     document.querySelector("p.name").after(div);
 }
 
-var like_item = [];
-var like_list = JSON.parse(localStorage.getItem("like_list")) || [];
-function do_like(){
-    if(like_list.some(x=>x.id == like_item.id)){
-        console.log("已收藏了")
-    }
-    like_list.push(like_item);
-    localStorage.setItem("like_list",JSON.stringify(like_list));
-}
-if(!unsafeWindow.do_like)
-{
-    unsafeWindow.do_like = do_like;
-}
 
 function isLogin(deviceType) {
     let storage = getStorage(deviceType)
