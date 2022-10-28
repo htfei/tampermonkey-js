@@ -1,12 +1,13 @@
 // ==UserScript==
 // @name         福利吧看图模式
 // @namespace    http://tampermonkey.net/
-// @version      0.2
-// @description  try to take over the world!
+// @version      0.1
+// @description  福利吧福利汇总看图模式,一行多图，瀑布流
 // @author       why2fly
 // @match        https://fuliba2023.net/*.html*
 // @icon         http://fuliba2023.net/favicon.ico
 // @grant        none
+// @license      GPL-3.0
 // ==/UserScript==
 
 (function() {
