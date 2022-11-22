@@ -2,8 +2,8 @@
 // @license MIT
 // @name         含羞草研究所VIP免费看
 // @namespace    http://tampermonkey.net/
-// @version      0.3.8
-// @description  针对 含羞草研究所 的优化脚本，此脚本可以：1.让用户观看VIP视频、直播、钻石视频 2.显示视频真实地址便于收藏 
+// @version      0.3.9
+// @description  针对 含羞草研究所 的优化脚本，此脚本可以：1.让用户观看VIP视频、直播、钻石视频 2.显示视频真实地址便于收藏
 // @author       htf
 // @match        http://www.fi11.tv/*
 // @match        *://*/*
@@ -46,6 +46,28 @@ async function getLiveUrl(token, videoId){
     };
 
     let res = await fetch("https://www.hxc-api.com/live/getLiveInfo", requestOptions);
+    res = res.text();
+    return res;
+}
+
+async function getLiveList(token){
+    var myHeaders = new Headers();
+    myHeaders.append("auth", token);
+    myHeaders.append("Content-Type", "application/json");
+
+    var raw = JSON.stringify({
+        "length": 10,
+        "page" : 1
+    });
+
+    var requestOptions = {
+        method: 'POST',
+        headers: myHeaders,
+        body: raw,
+        redirect: 'follow'
+    };
+
+    let res = await fetch("https://www.hxc-api.com/live/getLive", requestOptions);
     res = res.text();
     return res;
 }
@@ -229,8 +251,15 @@ async function loadAndPlay(playerUrl, pic, playType,pageType) {
     }, 300);
 
     var div = document.createElement('div');
-    div.innerHTML = '真实视频地址: <a href="'+playerUrl+'" >'+playerUrl+'</a>';
-    document.querySelector("p.name").after(div);
+    div.innerHTML = '<div id="my_add_div"><div><p style="color:#fafafa;font-size:14px">脚本解析的真实视频视频(点击可在新标签页播放)：</p></div><a href="'+playerUrl+'" target="_blank">'+playerUrl+'</a></div>';
+    if (Global.deviceType === 'mobile') {
+        var my_add_node = document.getElementById("my_add_div");
+        my_add_node && my_add_node.parentNode.removeChild(my_add_node);
+        document.querySelector("div.infoAreaBox").after(div);
+    }
+    else{
+        document.querySelector("p.name").after(div);
+    }
 }
 
 
@@ -494,6 +523,21 @@ async function reloadVideo(deviceType,pageType) {
             }
             playType = 'flv'
             loadAndPlay(liveUrl, pic, playType,pageType )
+        }
+        else{
+            preUrl = await getLiveList(token);
+            preUrl = JSON.parse(preUrl)
+            if (preUrl.code === 0) {
+                let cnt = preUrl.data.count
+                var div = document.createElement('div');
+                div.innerHTML = '<div><p style="color:#fafafa;font-size:14px">脚本解析的真实直播视频如下，点击对应图片将打开新标签页播放（提示：直播加载较慢，可多打开几个放在后台，哪个先加载出来了看哪个）</p></div> '
+                for(var i = 0; i < cnt; i++) {
+                    div.innerHTML += '<a href="' + preUrl.data.list[i].pull + '" target="_blank">'
+                    +'<img style="max-width:49%" src="'+ preUrl.data.list[i].thumb +'">'
+                    +'</a>';
+                }
+                document.querySelector("div.van-list").prepend(div);
+            }
         }
     }else{
         preUrl = await getPreUrl(token, videoId)
