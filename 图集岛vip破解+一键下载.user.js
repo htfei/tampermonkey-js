@@ -15,6 +15,11 @@
 // ==/UserScript==
 
 (function () {
+
+    //https://tjg.gzhuibei.com/a/1/xx/x.jpg 不可直接访问，改为 
+    //https://pic.gzhuibei.com/a/1/xx/x.jpg 可以直接访问，突破防盗链。
+    //账号luolikong123密码zuiailol123...
+
     "use strict";
     GM_addStyle(".sc{position: absolute;top: 0;left: 0;background: #ebae12;border-radius: 50%;width: 35px;text-align: center;color: #FFF;z-index: 100;font-size: 13px;cursor: pointer;}");
     var locurl = window.location.href;
