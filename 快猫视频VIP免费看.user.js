@@ -2,10 +2,11 @@
 // @license MIT
 // @name         快猫视频VIP免费看
 // @namespace    http://tampermonkey.net/
-// @version      0.5.1
+// @version      0.5.2
 // @description  针对快猫视频的优化脚本，此脚本可以让用户观看VIP视频，兼容手机+PC
 // @author       w2f
 // @include      /^https://h5.km.\w+/
+// @include      /^https://www.km.\w+/
 // @match        http://re05.cc/*
 // @match        http://re06.cc/*
 // @icon         https://www.kmbb59.com/favicon.ico
