@@ -24,7 +24,7 @@
     GM_addStyle(".sc{position: absolute;top: 0;left: 0;background: #ebae12;border-radius: 50%;width: 35px;text-align: center;color: #FFF;z-index: 100;font-size: 13px;cursor: pointer;}");
     var locurl = window.location.href;
     var html1 =
-        '<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><script type="text/javascript" src="https://www.tujidao02.com/Static/css/jquery.js"></script><script type="text/javascript" src="http://demo.jb51.net/js/viewerjs/js/js/viewer.js"></script><link rel="stylesheet" href="http://demo.jb51.net/js/viewerjs/js/css/viewer.css" type="text/css">' +
+        '<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><script type="text/javascript" src="https://cdn.staticfile.org/jquery/3.6.0/jquery.min.js"></script><script type="text/javascript" src="http://demo.jb51.net/js/viewerjs/js/js/viewer.js"></script><link rel="stylesheet" href="http://demo.jb51.net/js/viewerjs/js/css/viewer.css" type="text/css">' +
         "<style>img {vertical-align: top;text-align: center;}" +
         ".imgbox{margin-bottom:5px;position: relative;overflow: hidden;float:left}" +
         ".imgbox img{max-width: 100%;cursor:pointer;}" +
@@ -55,7 +55,7 @@
             method: "GET",
             url: `https://tjg.gzhuibei.com/a/1/${pic_id}/${imageId}.jpg`,
             headers: {
-                referer: "https://www.tujidao02.com/"
+                referer: "https://tjg.gzhuibei.com/"
             },
             responseType:"blob",
             onload: function(xhr) {
