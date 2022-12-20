@@ -2,21 +2,21 @@
 // @name         快猫/红杏/含羞草/麻豆/AvPron/破解VIP视频免费看
 // @namespace    http://tampermonkey.net/
 // @version      0.2
-// @description  来不及解释了，快上车！！！快猫：http://re06.cc/ 红杏：https://www.hxaa40.com/ 含羞草：http://www.fi11.tv/ 麻豆TV：https://v0k83j2i.com/ AvPron：https://theav101.com/
+// @description  来不及解释了，快上车！！！快猫：http://re06.cc/ 红杏：https://www.hxaa40.com/ 含羞草：http://www.fi11.tv/ 麻豆TV：https://madou.tv/ AvPron：https://theav101.com/
 // @author       w2f
 // @include      /^https://h5.km.\w+/
 // @include      /^https://www.km.\w+/
-// @match        https://www.hxaa40.com/playvideo/*
-// @match        http://www.fi11.tv/*
+// @match        https://*/playvideo/*
 // @match        https://*/videoContent/*
 // @match        https://*/live/*
-// @match        https://h5.*.*/live
+// @match        https://*/live
 // @match        https://*/*
+// @match        https://madou.tv/*
+// @match        https://madou.bet/*
 // @match        https://theav101.com/videos/*
 // @match        https://theav108.com/videos/*
 // @match        https://theav109.com/videos/*
 // @icon         https://index.madou19.tv/json/icon.png
-// @icon         https://www.hcgroup.top/static/picture/slice14.png
 // @require      https://cdn.staticfile.org/jquery/1.10.2/jquery.min.js
 // @require      https://cdnjs.cloudflare.com/ajax/libs/hls.js/1.1.5/hls.min.js
 // @require      https://cdnjs.cloudflare.com/ajax/libs/dplayer/1.26.0/DPlayer.min.js
@@ -47,9 +47,11 @@
         let shikan = null;
         let ads = null;
         /* 麻豆TV*/
-        localStorage.setItem("vip_level",'1');
+        if(location.href.match("https://madou.*?/") != null){
+            localStorage.setItem("vip_level",'1');
+        }
         /* The AV Pron，兼容手机 + PC */
-        if(location.href.match("https://theav10.*?.com/videos/") != null){
+        else if(location.href.match("https://theav10.*?.com/videos/") != null){
             player = document.querySelector(".player");/*todo:.newplayer*/
             shikan = $("script");
             /* 1.点击试看（不需要） */
@@ -164,7 +166,7 @@
         /* 1. 显示地址 */
         var mydiv = document.createElement('div');
         mydiv.innerHTML = '<div id="my_add_dizhi" style="color:red;font-size:14px"><p>视频地址：<a href="'+videoUrl+'" target="_blank">'+videoUrl
-            +'</a></p><p>提示：各位彦祖，出现卡顿、不断刷新等情况，刷新页面即可解决！有任何问题反馈、需求实现，或者想领个红包支持作者，请<a href="https://greasyfork.org/zh-CN/scripts/456496" target="_blank">【点击此处】</a>，祝君使用愉快！</p></div>';
+            +'</a></p><p>提示：各位彦祖，出现卡顿、不断刷新等情况，刷新页面即可解决！有任何问题反馈、需求实现，或者想领个红包支持作者，请<a href="https://sleazyfork.org/zh-CN/scripts/456496" target="_blank">【点击此处】</a>，祝君使用愉快！</p></div>';
         dizhi && dizhi.after(mydiv);
 
         /* 2. 新增播放器 */
