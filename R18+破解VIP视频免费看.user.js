@@ -1,21 +1,24 @@
 // ==UserScript==
-// @name         快猫/红杏/含羞草/麻豆/AvPron/破解VIP视频免费看
+// @name         快猫/红杏/含羞草/麻豆/AvPron/皇家会所/破解VIP视频免费看
 // @namespace    http://tampermonkey.net/
-// @version      0.2
-// @description  来不及解释了，快上车！！！快猫：http://re06.cc/ 红杏：https://www.hxaa40.com/ 含羞草：http://www.fi11.tv/ 麻豆TV：https://madou.tv/ AvPron：https://theav101.com/
+// @version      0.22
+// @description  来不及解释了，快上车！！！快猫：http://re06.cc/ 红杏：https://www.hxaa63.com/ 含羞草：http://www.fi11.tv/ 麻豆TV：https://madou.tv/ AvPron：https://theav101.com/ 皇家会所 http://www.hihs.tv/
 // @author       w2f
-// @include      /^https://h5.km.\w+/
-// @include      /^https://www.km.\w+/
-// @match        https://*/playvideo/*
+// @include      https://www.km*.com/videoContent/*
+// @include      https://h5.km*.com/videoContent/*
 // @match        https://*/videoContent/*
+// @include      https://www.hxaa*.com/*
+// @match        https://www.hxaa63.com/*
+// @match        https://*/playvideo/*
 // @match        https://*/live/*
 // @match        https://*/live
-// @match        https://*/*
-// @match        https://madou.tv/*
 // @match        https://madou.bet/*
-// @match        https://theav101.com/videos/*
-// @match        https://theav108.com/videos/*
-// @match        https://theav109.com/videos/*
+// @match        https://*/channel*
+// @match        https://*/tags*
+// @match        https://*/rankList*
+// @match        https://*/*
+// @include      https://theav*.com/videos/*
+// @match        https://*/videos/*
 // @icon         https://index.madou19.tv/json/icon.png
 // @require      https://cdn.staticfile.org/jquery/1.10.2/jquery.min.js
 // @require      https://cdnjs.cloudflare.com/ajax/libs/hls.js/1.1.5/hls.min.js
@@ -26,7 +29,7 @@
 (function() {
     'use strict';
 
-    // Your code here...
+    // Your code here... none //如果不使用 unsafeWindow ，快猫手机端，含羞草pc端会播放失败，原因未知。
     let my_timer = setInterval(get_videourl,2000);
 
     var oldhref = location.href;
@@ -46,9 +49,23 @@
         let player = null;
         let shikan = null;
         let ads = null;
-        /* 麻豆TV*/
-        if(location.href.match("https://madou.*?/") != null){
-            localStorage.setItem("vip_level",'1');
+
+        /* 皇家会所 */
+        if(location.href.match("https://www.hjhs.*?/videos/") != null){
+            player = document.querySelector("#dplayer");
+            /* 1.点击试看（不需要） */
+            if( player && api && api.quality && api.quality.url){
+                /* 2.解析真实地址 */
+                videoUrl = api.quality.url.replace("suo.","").replace("_suo","");console.log("真实地址:",videoUrl);
+                /* 3.移除广告 */
+                /* 4.播放正片 */
+                play_video(videoUrl,player,document.querySelector("div.headline"));
+                /* 5.停止定时器 */
+                clearInterval(my_timer);
+            }
+            else{
+                console.log("未获取到地址，继续尝试...");
+            }
         }
         /* The AV Pron，兼容手机 + PC */
         else if(location.href.match("https://theav10.*?.com/videos/") != null){
@@ -57,7 +74,8 @@
             /* 1.点击试看（不需要） */
             if( player && shikan ){
                 /* 2.解析真实地址 */
-                videoUrl = shikan.text().match("https:(.*?).m3u8")[0];console.log("真实地址:",videoUrl);
+                videoUrl = unsafeWindow.player.api("hls").url.split('?')[0]; //shikan.text().match("https:(.*?).m3u8")[0];
+                console.log("真实地址:",videoUrl);
                 /* 3.移除广告 */
                 ads = document.querySelector(".table"); if(ads) ads.style.display = "none";
                 /* 4.播放正片 */
@@ -70,7 +88,7 @@
             }
         }
         /* 快猫，兼容手机 + PC */
-        else if(location.href.match("km.*?/videoContent/") != null){
+        else if(location.href.match("https://.*?km.*?.com/videoContent/") != null){
             player = document.querySelector("#videoContent");
             /* 1.点击试看（不需要） */
             if( player && player.__vue__ && player.__vue__.formatUrl ){
@@ -88,7 +106,7 @@
             }
         }
         /* 红杏，兼容手机 + PC */
-        else if(location.href.match("https://www.hx.*?/playvideo/") != null){
+        else if(location.href.match("https://www.hx.*?/#/moves/playvideo/") != null){
             shikan = document.querySelector("div.shikan");
             player = document.querySelector(" div#mse") || document.querySelector("div.play_video_1 div");
             if( shikan ){
@@ -156,6 +174,8 @@
             document.querySelector("div.topBannerBg").after(mydiv);
         }
         else{
+            /* 麻豆TV*/
+            localStorage.setItem("vip_level",'1');
             console.log("地址未匹配，停止定时器!");
             clearInterval(my_timer);
         }
@@ -166,7 +186,7 @@
         /* 1. 显示地址 */
         var mydiv = document.createElement('div');
         mydiv.innerHTML = '<div id="my_add_dizhi" style="color:red;font-size:14px"><p>视频地址：<a href="'+videoUrl+'" target="_blank">'+videoUrl
-            +'</a></p><p>提示：各位彦祖，出现卡顿、不断刷新等情况，刷新页面即可解决！有任何问题反馈、需求实现，或者想领个红包支持作者，请<a href="https://sleazyfork.org/zh-CN/scripts/456496" target="_blank">【点击此处】</a>，祝君使用愉快！</p></div>';
+            +'</a></p><p>提示：各位彦祖，部分网站需要登录后使用，出现卡顿、不断刷新等情况刷新页面即可解决！问题反馈 or 支持作者请<a href="https://sleazyfork.org/zh-CN/scripts/456496" target="_blank">【点击此处】</a>，使用愉快！</p></div>';
         dizhi && dizhi.after(mydiv);
 
         /* 2. 新增播放器 */
