@@ -1,8 +1,8 @@
 // ==UserScript==
-// @name         快猫/红杏/含羞草/麻豆/AvPron/皇家会所/破解VIP视频免费看
+// @name         快猫/红杏/含羞草/麻豆/AvPron/皇家会所/9sex/91TV/破解VIP视频免费看
 // @namespace    http://tampermonkey.net/
-// @version      0.22
-// @description  来不及解释了，快上车！！！快猫：http://re06.cc/ 红杏：https://www.hxaa63.com/ 含羞草：http://www.fi11.tv/ 麻豆TV：https://madou.tv/ AvPron：https://theav101.com/ 皇家会所 http://www.hihs.tv/
+// @version      0.23
+// @description  来不及解释了，快上车！！！快猫：http://re06.cc/ 红杏：https://www.hxaa63.com/ 含羞草：http://www.fi11.tv/ 麻豆TV：https://madou.tv/ AvPron：https://theav101.com/ 皇家会所： http://www.hihs.tv/ 9sex：https://zgntc9hbqx.com/ 91TV：https://kdt29.com/
 // @author       w2f
 // @include      https://www.km*.com/videoContent/*
 // @include      https://h5.km*.com/videoContent/*
@@ -19,6 +19,7 @@
 // @match        https://*/*
 // @include      https://theav*.com/videos/*
 // @match        https://*/videos/*
+// @match        https://zgntc9hbqx.com/*
 // @icon         https://index.madou19.tv/json/icon.png
 // @require      https://cdn.staticfile.org/jquery/1.10.2/jquery.min.js
 // @require      https://cdnjs.cloudflare.com/ajax/libs/hls.js/1.1.5/hls.min.js
@@ -29,7 +30,7 @@
 (function() {
     'use strict';
 
-    // Your code here... none //如果不使用 unsafeWindow ，快猫手机端，含羞草pc端会播放失败，原因未知。
+    /* none 如果不使用 unsafeWindow ，快猫手机端，含羞草pc端会播放失败，原因未知。 */
     let my_timer = setInterval(get_videourl,2000);
 
     var oldhref = location.href;
@@ -42,16 +43,43 @@
         }
     },1000);
 
+    let flag = 0;
     function get_videourl(){
-        let videoUrl = null;
+        let videoUrl = null, videoUrl2 = null, videoUrl3 = null, videoUrl4 = null;
         let el = null;
         let dizhi = null;
         let player = null;
         let shikan = null;
         let ads = null;
-
+        /* 9sex */
+        if(location.href.match("https://zgntc9hbqx.com/") != null){
+            player = document.querySelector("#dplayer");
+            dizhi = $("script").text().match("movies/(.*?)_preview.jpg.txt")[1].split('/');
+            /* 1.点击试看（不需要） */
+            if( player && dizhi && flag==0){
+                /* 2.解析真实地址 */
+                videoUrl = `https://9s.m3.bca834d60257.com/${dizhi[0]}/${dizhi[1]}/360P/${dizhi[2]}_360P.m3u8`;console.log("真实地址:",videoUrl);
+                videoUrl2 = `https://9s.m3.bca834d60257.com/${dizhi[0]}/${dizhi[1]}/480P/${dizhi[2]}_480P.m3u8`;console.log("真实地址2:",videoUrl2);
+                videoUrl3 = `https://9s.m3.bca834d60257.com/${dizhi[0]}/${dizhi[1]}/720P/${dizhi[2]}_720P.m3u8`;console.log("真实地址3:",videoUrl3);
+                videoUrl4 = `https://9s.m3.bca834d60257.com/${dizhi[0]}/${dizhi[1]}/1080P/${dizhi[2]}_1080P.m3u8`;console.log("真实地址4:",videoUrl4);
+                /* 3.vip视频需要移除登录框 */
+                ads = document.querySelector("#login-tip-modal"); if(ads) ads.parentNode.removeChild(ads);
+                /* 4.播放正片 */
+                play_video2(videoUrl,videoUrl2,videoUrl3,videoUrl4,player,document.querySelector("div.notice"));
+                flag = 1;
+            }
+            else if(flag==1){
+                /* 3.1 免费视频需要加载播放后移除广告 */
+                ads = document.querySelector(".pause-ad-imgbox"); if(ads) ads.parentNode.removeChild(ads);//.style.display = "none";
+                /* 5.停止定时器 */
+                clearInterval(my_timer);
+            }
+            else{
+                console.log("未获取到地址，继续尝试...");
+            }
+        }
         /* 皇家会所 */
-        if(location.href.match("https://www.hjhs.*?/videos/") != null){
+        else if(location.href.match("https://www.hjhs.*?/videos/") != null){
             player = document.querySelector("#dplayer");
             /* 1.点击试看（不需要） */
             if( player && api && api.quality && api.quality.url){
@@ -69,21 +97,19 @@
         }
         /* The AV Pron，兼容手机 + PC */
         else if(location.href.match("https://theav10.*?.com/videos/") != null){
-            player = document.querySelector(".player");/*todo:.newplayer*/
-            shikan = $("script");
-            /* 1.点击试看（不需要） */
-            if( player && shikan ){
+            try{
+                /* 1.点击试看（不需要） */
                 /* 2.解析真实地址 */
-                videoUrl = unsafeWindow.player.api("hls").url.split('?')[0]; //shikan.text().match("https:(.*?).m3u8")[0];
+                videoUrl = unsafeWindow.player.api("hls").url.split('?')[0]; // $("script").text().match("https:(.*?).m3u8")[0];
                 console.log("真实地址:",videoUrl);
                 /* 3.移除广告 */
                 ads = document.querySelector(".table"); if(ads) ads.style.display = "none";
                 /* 4.播放正片 */
-                play_video(videoUrl,player,document.querySelector("h2.title"));
+                play_video(videoUrl,document.querySelector(".player"),document.querySelector("h2.title"));
                 /* 5.停止定时器 */
                 clearInterval(my_timer);
             }
-            else{
+            catch{
                 console.log("[The AV Pron]视频页面，未获取到地址，继续尝试...");
             }
         }
@@ -174,7 +200,7 @@
             document.querySelector("div.topBannerBg").after(mydiv);
         }
         else{
-            /* 麻豆TV*/
+            /* 麻豆TV */ /* 91TV */
             localStorage.setItem("vip_level",'1');
             console.log("地址未匹配，停止定时器!");
             clearInterval(my_timer);
@@ -185,8 +211,8 @@
     function play_video(videoUrl,el,dizhi){
         /* 1. 显示地址 */
         var mydiv = document.createElement('div');
-        mydiv.innerHTML = '<div id="my_add_dizhi" style="color:red;font-size:14px"><p>视频地址：<a href="'+videoUrl+'" target="_blank">'+videoUrl
-            +'</a></p><p>提示：各位彦祖，部分网站需要登录后使用，出现卡顿、不断刷新等情况刷新页面即可解决！问题反馈 or 支持作者请<a href="https://sleazyfork.org/zh-CN/scripts/456496" target="_blank">【点击此处】</a>，使用愉快！</p></div>';
+        mydiv.innerHTML = '<div id="my_add_dizhi" style="color:red;font-size:14px"><p style="color:red;font-size:14px">视频地址：<a href="'+videoUrl+'" target="_blank">'+videoUrl
+            +'</a></p><p style="color:red;font-size:14px">提示：各位彦祖，部分网站需要登录后使用，出现卡顿、不断刷新等情况刷新页面即可解决！问题反馈 or 支持作者请<a href="https://sleazyfork.org/zh-CN/scripts/456496" target="_blank">【点击此处】</a>，使用愉快！</p></div>';
         dizhi && dizhi.after(mydiv);
 
         /* 2. 新增播放器 */
@@ -205,5 +231,54 @@
             }
         });
     }
+    /* 函数功能：同上，可切换清晰度  */
+    function play_video2(videoUrl,videoUrl2,videoUrl3,videoUrl4,el,dizhi){
+        /* 1. 显示地址 */
+        var mydiv = document.createElement('div');
+        mydiv.innerHTML = `<div id="my_add_dizhi" style="color:red;font-size:14px">注意：部分视频只360P，切换后无法播放说明不存在高清晰度版本！！！视频地址：
+        <p style="color:red;font-size:14px">360P：<a href="${videoUrl}" target="_blank">${videoUrl}</a></p>
+        <p style="color:red;font-size:14px">480P：<a href="${videoUrl2}" target="_blank">${videoUrl2}</a></p>
+        <p style="color:red;font-size:14px">720P：<a href="${videoUrl3}" target="_blank">${videoUrl3}</a></p>
+        <p style="color:red;font-size:14px">1080P：<a href="${videoUrl4}" target="_blank">${videoUrl4}</a></p>
+        <p style="color:red;font-size:14px">提示：各位彦祖，部分网站需要登录后使用，出现卡顿、不断刷新等情况刷新页面即可解决！
+        问题反馈 or 支持作者请<a href="https://sleazyfork.org/zh-CN/scripts/456496" target="_blank">【点击此处】</a>，使用愉快！</p></div>`;
+        dizhi && dizhi.after(mydiv);
 
+        /* 2. 新增播放器 */
+        window.dp = new DPlayer({
+            element: el,
+            autoplay: true,
+            theme: '#FADFA3',
+            loop: true,
+            lang: 'zh',
+            screenshot: true,
+            hotkey: true,
+            preload: 'auto',
+            video: {
+                 quality: [
+                     {
+                         name: '360P',
+                         url: videoUrl,
+                         type: 'hls',
+                     },
+                     {
+                         name: '480P',
+                         url: videoUrl2,
+                         type: 'hls',
+                     },
+                     {
+                         name: '720P',
+                         url: videoUrl3,
+                         type: 'hls',
+                     },
+                     {
+                         name: '1080P',
+                         url: videoUrl4,
+                         type: 'hls',
+                     },
+                 ],
+                defaultQuality: 0,//默认播放360P为0
+            }
+        });
+    }
 })();
