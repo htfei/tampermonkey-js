@@ -5,13 +5,14 @@
 // @description  来不及解释了，快上车！！！
 // @author       w2f
 // @match        https://*/videoContent/*
-// @match        https://www.peoplelove.cn/*
+// @match        https://www.hxaa75.com/*
+// @match        https://www.hxaa76.com/*
 // @match        https://*/playvideo/*
 // @match        https://*/live/*
 // @match        https://*/live
 // @match        https://madou.bet/*
 // @match        https://*/videos/*
-// @match        https://zgntc9hbqx.com/index/movie/play/id/*
+// @match        https://9sex.com/index/movie/play/id/*
 // @match        https://kdt29.com/*
 // @icon         https://index.madou19.tv/json/icon.png
 // @license      MIT
@@ -125,11 +126,11 @@
     function show_err_log(err) {
         err && console.log(err);
         err_cnt++;
-        if (err_cnt >= 10) {
+        if (err_cnt >= 20) {
             err_cnt = 0;
             var mydiv = document.createElement('div');
             mydiv.innerHTML = `<div id="my_add_err_log" style="color:red;font-size:14px">
-            解析出错，请仔细阅读<a href="https://sleazyfork.org/zh-CN/scripts/456496" target="_blank">【脚本说明】</a>查看是否支持你的平台组合，
+            解析出错，1.检查是否登录！2.请仔细阅读<a href="https://sleazyfork.org/zh-CN/scripts/456496" target="_blank">【脚本说明】</a>查看是否支持你的平台组合，
             如需帮助请复制以下内容到脚本评论区，等候作者处理! 请加上使用的平台组合，如：chrome + tampermonkey 。
             <p style="color:red;font-size:14px">错误信息：${err || "尝试多次仍然未获取到地址,可能是网站已更新..."}</p>
             <p style="color:red;font-size:14px">操作系统：${navigator.platform}</p>
@@ -137,6 +138,7 @@
             <p style="color:red;font-size:14px">当前地址：${location.href}</p>
             </div>`;
             document.querySelector("head").after(mydiv);
+            clearInterval(my_timer);
         }
     }
 
@@ -150,7 +152,7 @@
         let ads = null;
         try {
             /* 9sex */
-            if (location.href.match("https://zgntc9hbqx.com/") != null) {
+            if (location.href.match("https://.*?/index/movie/play/id/") != null) {
                 player = document.querySelector("#dplayer");
                 dizhi = document.body.innerHTML.match("movies/(.*?)_preview.jpg.txt")[1].split('/');/* $("script").text() */
                 /* 1.点击试看（不需要） */
@@ -258,6 +260,36 @@
                 }
                 else {
                     console.log("[红杏]视频页面，未获取到地址，继续尝试...");
+                }
+            }
+            /* 红杏，手机短视频 */
+            else if (location.href.match("https://.*?/#/shotVideoList") != null) {
+                player = document.querySelector("div.shout_list");
+                if(!document.querySelector("button#pojie")){
+                    /* 1. 显示地址 */
+                    var mydiv = document.createElement('div');
+                    mydiv.innerHTML = `<p id="my_add_dizhi" style="color:red;font-size:14px"><button id="pojie">点此破解</button>后，视频标题前会出现“✔”字样，点击标题将打开新页面看视频！</p>`;
+                    document.querySelector("div.van-nav-bar__content").after(mydiv);
+                }
+                else if(player && player.__vue__.playList1){
+                    /* 2.点解破解 */
+                    document.querySelector("button#pojie").onclick = function(){
+                        let videoUrl_list = player.__vue__.playList1; console.log("直播地址:", videoUrl_list);
+                        let divlist = document.querySelectorAll("div.box_left div.box_public div.box_public_1_2 ");
+                        let len = (videoUrl_list.length > divlist.length) ? divlist.length : videoUrl_list.length;
+                        for (var i = 0; i < len; i++) {
+                            divlist[i].innerHTML = `<p><a href="https://jscdn.jdgs.xyz/${videoUrl_list[i].sn}/10000kb/hls/index.m3u8" target="_blank">✔${divlist[i].innerText}</a></p>`;
+                        }
+                        /* 右边的 */
+                        videoUrl_list = player.__vue__.playList2; console.log("直播地址:", videoUrl_list);
+                        divlist = document.querySelectorAll("div.box_right div.box_public div.box_public_1_2 ");
+                        len = (videoUrl_list.length > divlist.length) ? divlist.length : videoUrl_list.length;
+                        for (i = 0; i < len; i++) {
+                            divlist[i].innerHTML = `<p><a href="https://jscdn.jdgs.xyz/${videoUrl_list[i].sn}/10000kb/hls/index.m3u8" target="_blank">✔${divlist[i].innerText}</a></p>`;
+                        }
+                    };
+                    /* 3.停止定时器 */
+                    clearInterval(my_timer);
                 }
             }
             /* 含羞草视频 ，兼容手机 + PC */
