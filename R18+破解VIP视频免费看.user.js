@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         快猫/红杏/含羞草/麻豆/AvPron/皇家会所/9sex/91TV/破解VIP视频免费看
 // @namespace    http://tampermonkey.net/
-// @version      0.26
+// @version      0.27
 // @description  来不及解释了，快上车！！！
 // @author       w2f
 // @match        https://*/videoContent/*
@@ -12,7 +12,7 @@
 // @match        https://*/live
 // @match        https://madou.bet/*
 // @match        https://*/videos/*
-// @match        https://9sex.com/index/movie/play/id/*
+// @match        https://*/index/movie/play/id/*
 // @match        https://kdt29.com/*
 // @icon         https://index.madou19.tv/json/icon.png
 // @license      MIT
@@ -183,9 +183,9 @@
             else if (location.href.match("https://www.hjhs.*?/videos/") != null) {
                 player = document.querySelector("#dplayer");
                 /* 1.点击试看（不需要） */
-                if (player && api && api.quality && api.quality.url) {
+                if (player && window.api?.quality?.url) {
                     /* 2.解析真实地址 */
-                    videoUrl = api.quality.url.replace("suo.", "").replace("_suo", ""); console.log("真实地址:", videoUrl);
+                    videoUrl = window.api.quality.url.replace("suo.", "").replace("_suo", ""); console.log("真实地址:", videoUrl);
                     /* 3.移除广告 */
                     /* 4.播放正片 */
                     play_video(videoUrl, player, document.querySelector("div.headline"));
@@ -200,11 +200,12 @@
             已知缺陷: 若使用Dplayer, 则 chrome/safari 播放正常（无法新标签播放，可能有限制），kiwi m3u8地址获取成功，但播放失败！
             已知缺陷: 可能网站存在限制，控制台中player.api("hls")有值，但脚本获取为null 。只有使用 unsafeWindow.player.api("hls")能获取到 ，
             但由于userscript不支持unsafeWindow，故safari浏览器+userscript无效。改为从<script/>内容查找m3u8地址 */
-            else if (location.href.match("https://theav.*?.com/videos/") != null) {
+            else if (location.href.match("https://theav.*?.com/videos/") != null ||
+                     location.href.match("https://the.*?.fun/videos/") != null ) {
                 if (1) {
                     /* 1.点击试看（不需要） */
                     /* 2.解析真实地址 */
-                    /* videoUrl = player.api("hls").url.split('?')[0]; .match("https:(.*?).m3u8")[0]; 该方案在safari浏览器+userscript下无效 */
+                    /* videoUrl = player.api("hls").url.split('?')[0]; 该方案在safari浏览器+userscript下无效 */
                     videoUrl = document.body.innerHTML.match("https:(.*?).m3u8")[0]; /* $("script").text() */
                     console.log("真实地址:", videoUrl);
                     /* 3.移除广告 */
@@ -214,7 +215,7 @@
                     ads = document.querySelector(".green"); if (ads) ads.style.display = "none";
                     /* 4.播放正片 */
                     /* play_video(videoUrl, document.querySelector(".player"), document.querySelector("h2.title"));该方案在kiwi+tempermonkey下无效 */
-                    Playerjs({ id: "newplayer", file: videoUrl, autoplay: 1 });
+                    Playerjs({ id: "layer", file: videoUrl, autoplay: 1 });
                     /* 5.停止定时器 */
                     clearInterval(my_timer);
                 }
@@ -224,11 +225,11 @@
             }
             /* 快猫，兼容手机 + PC */
             else if (location.href.match("https://.*?km.*?.com/videoContent/") != null) {
-                player = document.querySelector("#videoContent");
                 /* 1.点击试看（不需要） */
-                if (player && player.__vue__ && player.__vue__.formatUrl) {
-                    /* 2.解析真实地址 */
-                    videoUrl = player.__vue__.formatUrl; console.log("真实地址:", videoUrl);
+                /* 2.解析真实地址 */
+                videoUrl = document.querySelector("#videoContent")?.__vue__?.formatUrl;
+                if (videoUrl) {
+                    console.log("真实地址:", videoUrl);
                     /* 3.移除广告 */
                     ads = document.querySelector(".exchangeBg"); if (ads != null) ads.style.display = "none";
                     /* 4.播放正片 */
@@ -248,11 +249,11 @@
                     /* 1.点击试看 */
                     shikan.click(); console.log("点击试看！");
                 }
-                else if (player && player.__vue__ && player.__vue__.playUrl) {
+                else if (player?.__vue__?.playUrl) {
                     /* 2.解析真实地址 */
                     let videoUrl = player.__vue__.playUrl.split('&time')[0]; console.log("真实地址:", videoUrl);
                     /* 3.移除试看 */
-                    player.__vue__.player && player.__vue__.player.hls && player.__vue__.player.hls.destroy();
+                    player.__vue__.player?.hls?.destroy();
                     /* 4.播放正片 */
                     play_video(videoUrl, document.querySelector(" div#mse") || document.querySelector("div.play_video_1 div.dplayer"), document.querySelector("div.move_name") || document.querySelector("div.play_main_1"));
                     /* 5.停止定时器 */
@@ -334,7 +335,7 @@
                 }
                 clearInterval(my_timer);
                 /* 1. 显示地址 */
-                var mydiv = document.createElement('div');
+                mydiv = document.createElement('div');
                 mydiv.innerHTML = '<p id="my_add_dizhi" style="color:red;font-size:14px">提示：彦祖们，请点击图片下方的链接看破解后的直播视频！</p>';
                 document.querySelector("div.topBannerBg").after(mydiv);
             }
