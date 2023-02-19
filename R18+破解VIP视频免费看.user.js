@@ -1,12 +1,13 @@
 // ==UserScript==
 // @name         快猫/红杏/含羞草/麻豆/AvPron/皇家会所/9sex/91TV/破解VIP视频免费看
 // @namespace    http://tampermonkey.net/
-// @version      0.27
+// @version      0.28
 // @description  来不及解释了，快上车！！！
 // @author       w2f
 // @match        https://*/videoContent/*
-// @match        https://www.hxaa75.com/*
-// @match        https://www.hxaa76.com/*
+// @match        https://*.hxaa79.com/*
+// @match        https://*.hxaa80.com/*
+// @match        https://*.hxaa81.com/*
 // @match        https://*/playvideo/*
 // @match        https://*/live/*
 // @match        https://*/live
@@ -126,7 +127,7 @@
     function show_err_log(err) {
         err && console.log(err);
         err_cnt++;
-        if (err_cnt >= 20) {
+        if (err_cnt >= 30) {
             err_cnt = 0;
             var mydiv = document.createElement('div');
             mydiv.innerHTML = `<div id="my_add_err_log" style="color:red;font-size:14px">
@@ -139,6 +140,35 @@
             </div>`;
             document.querySelector("head").after(mydiv);
             clearInterval(my_timer);
+        }
+    }
+
+    function do_login(){
+        let phone = JSON.parse(localStorage.getItem('move-client-user-info'))?.user?.user_info?.phone;
+        let event = document.createEvent('HTMLEvents');
+            event.initEvent("input", true, true);
+        if(phone){
+            /* 自动登录 */
+            let account = document.querySelectorAll('input.van-field__control')[0];
+            account.value = phone;
+            account.dispatchEvent(event);
+            let password = document.querySelectorAll('input.van-field__control')[1];
+            password.value = "123456";
+            password.dispatchEvent(event);
+            document.querySelector('button[type=submit]').click();
+        }else{
+            /* 自动注册 */
+            document.querySelector('div.login_1_2_1')?.click();
+            let account = document.querySelectorAll('input.van-field__control')[0];
+            account.value = ["130", "131", "132", "133", "135", "137", "138", "170", "187", "189"][ Math.floor(10 * Math.random())] + Math.floor(Math.random() * 100000000);
+            account.dispatchEvent(event);
+            let password = document.querySelectorAll('input.van-field__control')[1];
+            password.value = "123456";
+            password.dispatchEvent(event);
+            let password2 = document.querySelectorAll('input.van-field__control')[2];
+            password2.value = "123456";
+            password2.dispatchEvent(event);
+            document.querySelector('button[type=submit]').click();
         }
     }
 
@@ -242,10 +272,16 @@
                 }
             }
             /* 红杏，兼容手机 + PC */
-            else if (location.href.match("https://.*?/#/moves/playvideo/") != null) {
+            else if (location.href.match("https://.*?.hxaa.*?.com/#/moves/playvideo/") != null) {
+                let login = document.querySelector("div.play_video_wdl_2_2");
                 shikan = document.querySelector("div.shikan") || document.querySelector("div.on_play");
                 player = document.querySelector(" div#mse") || document.querySelector("div.play_video_1 div");
-                if (shikan) {
+                if(login){
+                    /* 0.登录 or 注册 */
+                    login.click();
+                    do_login();
+                }
+                else if (shikan) {
                     /* 1.点击试看 */
                     shikan.click(); console.log("点击试看！");
                 }
