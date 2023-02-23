@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         快猫/红杏/含羞草/麻豆/AvPron/皇家会所/9sex/91TV/破解VIP视频免费看
 // @namespace    http://tampermonkey.net/
-// @version      0.28
+// @version      0.29
 // @description  来不及解释了，快上车！！！
 // @author       w2f
 // @match        https://*/videoContent/*
@@ -11,10 +11,20 @@
 // @match        https://*/playvideo/*
 // @match        https://*/live/*
 // @match        https://*/live
+
 // @match        https://madou.bet/*
+// @match        https://*.com/new
+// @match        https://*.com/channel/videoList*
+// @match        https://*.com/tags*
+// @match        https://*.com/rankList
+// @match        https://madou.tv/*
+
 // @match        https://*/videos/*
 // @match        https://*/index/movie/play/id/*
 // @match        https://kdt29.com/*
+// @match        https://*/vip/index.html
+// @match        https://*/vip/list-*.html
+// @match        https://*/index/home.html
 // @icon         https://index.madou19.tv/json/icon.png
 // @license      MIT
 // @grant none
@@ -118,7 +128,7 @@
                         type: 'hls',
                     },
                 ],
-                defaultQuality: 0,//默认播放360P为0
+                defaultQuality: 0,
             }
         });
     }
@@ -181,8 +191,14 @@
         let shikan = null;
         let ads = null;
         try {
+            /* 猫咪vip */
+            if (location.href.match("https://www..*?.com/vip/") != null) {
+                document.querySelectorAll("li.content-item  a.video-pic")?.forEach( a => {a.href = a.href.replace("/vip/play-","/shipin/detail-")});
+                clearInterval(my_timer);
+                console.log("[猫咪]视频页面，未获取到地址，继续尝试...");
+            }
             /* 9sex */
-            if (location.href.match("https://.*?/index/movie/play/id/") != null) {
+            else if (location.href.match("https://.*?/index/movie/play/id/") != null) {
                 player = document.querySelector("#dplayer");
                 dizhi = document.body.innerHTML.match("movies/(.*?)_preview.jpg.txt")[1].split('/');/* $("script").text() */
                 /* 1.点击试看（不需要） */
@@ -201,7 +217,7 @@
                 }
                 else if (flag == 1) {
                     /* 3.1 免费视频需要加载播放后移除广告 */
-                    ads = document.querySelector(".pause-ad-imgbox"); if (ads) ads.parentNode.removeChild(ads);//.style.display = "none";
+                    ads = document.querySelector(".pause-ad-imgbox"); if (ads) ads.parentNode.removeChild(ads);
                     /* 5.停止定时器 */
                     clearInterval(my_timer);
                 }
@@ -245,7 +261,7 @@
                     ads = document.querySelector(".green"); if (ads) ads.style.display = "none";
                     /* 4.播放正片 */
                     /* play_video(videoUrl, document.querySelector(".player"), document.querySelector("h2.title"));该方案在kiwi+tempermonkey下无效 */
-                    Playerjs({ id: "layer", file: videoUrl, autoplay: 1 });
+                    Playerjs({ id: "player", file: videoUrl, autoplay: 1 });
                     /* 5.停止定时器 */
                     clearInterval(my_timer);
                 }
