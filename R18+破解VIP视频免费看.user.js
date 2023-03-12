@@ -1,18 +1,19 @@
 // ==UserScript==
-// @name         快猫/红杏/含羞草/麻豆/AvPron/皇家会所/9sex/91TV/破解VIP视频免费看
+// @name         快猫/红杏/含羞草/麻豆/AvPron/皇家会所/9sex/91TV/猫咪/破解VIP视频免费看
 // @namespace    http://tampermonkey.net/
-// @version      0.29
+// @version      0.30
 // @description  来不及解释了，快上车！！！
 // @author       w2f
 // @match        https://*/videoContent/*
-// @match        https://*.hxaa79.com/*
-// @match        https://*.hxaa80.com/*
-// @match        https://*.hxaa81.com/*
+
+// @match        https://*.hxaa83.com/*
+
 // @match        https://*/playvideo/*
 // @match        https://*/live/*
 // @match        https://*/live
 
 // @match        https://madou.bet/*
+// @match        https://*.com/index
 // @match        https://*.com/new
 // @match        https://*.com/channel/videoList*
 // @match        https://*.com/tags*
@@ -193,7 +194,7 @@
         try {
             /* 猫咪vip */
             if (location.href.match("https://www..*?.com/vip/") != null) {
-                document.querySelectorAll("li.content-item  a.video-pic")?.forEach( a => {a.href = a.href.replace("/vip/play-","/shipin/detail-")});
+                document.querySelectorAll("div.content-item  a.video-pic")?.forEach( a => {a.href = a.href.replace("/vip/play-","/shipin/detail-")});
                 clearInterval(my_timer);
                 console.log("[猫咪]视频页面，未获取到地址，继续尝试...");
             }
@@ -251,8 +252,8 @@
                 if (1) {
                     /* 1.点击试看（不需要） */
                     /* 2.解析真实地址 */
-                    /* videoUrl = player.api("hls").url.split('?')[0]; 该方案在safari浏览器+userscript下无效 */
-                    videoUrl = document.body.innerHTML.match("https:(.*?).m3u8")[0]; /* $("script").text() */
+                    videoUrl = player?.api("hls")?.url?.split('?')[0] || m3ky?.split('?')[0]; /* 该方案在safari浏览器+userscript下无效 */
+                    /* videoUrl = document.body.innerHTML.match("https:(.*?).m3u8")[0];  $("script").text() */
                     console.log("真实地址:", videoUrl);
                     /* 3.移除广告 */
                     ads = document.querySelector(".table"); if (ads) ads.style.display = "none";
@@ -261,7 +262,7 @@
                     ads = document.querySelector(".green"); if (ads) ads.style.display = "none";
                     /* 4.播放正片 */
                     /* play_video(videoUrl, document.querySelector(".player"), document.querySelector("h2.title"));该方案在kiwi+tempermonkey下无效 */
-                    Playerjs({ id: "player", file: videoUrl, autoplay: 1 });
+                    Playerjs({ id: "layer", file: videoUrl, autoplay: 1 });//id: "player"
                     /* 5.停止定时器 */
                     clearInterval(my_timer);
                 }
@@ -331,14 +332,14 @@
                         let divlist = document.querySelectorAll("div.box_left div.box_public div.box_public_1_2 ");
                         let len = (videoUrl_list.length > divlist.length) ? divlist.length : videoUrl_list.length;
                         for (var i = 0; i < len; i++) {
-                            divlist[i].innerHTML = `<p><a href="https://jscdn.jdgs.xyz/${videoUrl_list[i].sn}/10000kb/hls/index.m3u8" target="_blank">✔${divlist[i].innerText}</a></p>`;
+                            divlist[i].innerHTML = `<p><a href="https://jscdn.lordzhang.xyz/${videoUrl_list[i].sn}/10000kb/hls/index.m3u8" target="_blank">✔${divlist[i].innerText}</a></p>`;
                         }
                         /* 右边的 */
                         videoUrl_list = player.__vue__.playList2; console.log("直播地址:", videoUrl_list);
                         divlist = document.querySelectorAll("div.box_right div.box_public div.box_public_1_2 ");
                         len = (videoUrl_list.length > divlist.length) ? divlist.length : videoUrl_list.length;
                         for (i = 0; i < len; i++) {
-                            divlist[i].innerHTML = `<p><a href="https://jscdn.jdgs.xyz/${videoUrl_list[i].sn}/10000kb/hls/index.m3u8" target="_blank">✔${divlist[i].innerText}</a></p>`;
+                            divlist[i].innerHTML = `<p><a href="https://jscdn.lordzhang.xyz/${videoUrl_list[i].sn}/10000kb/hls/index.m3u8" target="_blank">✔${divlist[i].innerText}</a></p>`;
                         }
                     };
                     /* 3.停止定时器 */
