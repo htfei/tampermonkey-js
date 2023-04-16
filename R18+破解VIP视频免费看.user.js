@@ -1,12 +1,18 @@
 // ==UserScript==
-// @name         快猫/红杏/含羞草/麻豆/AvPron/皇家会所/9sex/91TV/猫咪/破解VIP视频免费看
+// @name         快猫/红杏/含羞草/麻豆/AvPron/皇家会所/9sex/91TV/破解VIP视频免费看
 // @namespace    http://tampermonkey.net/
-// @version      0.30
+// @version      0.33
 // @description  来不及解释了，快上车！！！
 // @author       w2f
-// @match        https://*/videoContent/*
+
+// @match        https://www.kmkk76.com/videoContent/*
+// @match        https://www.*.com/videoContent/*
+
+// @match        https://*/play/video/*
 
 // @match        https://*.hxaa83.com/*
+// @match        https://*.hxaa84.com/*
+// @match        https://*.hxaa85.com/*
 
 // @match        https://*/playvideo/*
 // @match        https://*/live/*
@@ -138,8 +144,8 @@
     function show_err_log(err) {
         err && console.log(err);
         err_cnt++;
-        if (err_cnt >= 30) {
-            err_cnt = 0;
+        if (err_cnt == 30) {
+            //err_cnt = 0;
             var mydiv = document.createElement('div');
             mydiv.innerHTML = `<div id="my_add_err_log" style="color:red;font-size:14px">
             解析出错，1.检查是否登录！2.请仔细阅读<a href="https://sleazyfork.org/zh-CN/scripts/456496" target="_blank">【脚本说明】</a>查看是否支持你的平台组合，
@@ -252,7 +258,7 @@
                 if (1) {
                     /* 1.点击试看（不需要） */
                     /* 2.解析真实地址 */
-                    videoUrl = player?.api("hls")?.url?.split('?')[0] || m3ky?.split('?')[0]; /* 该方案在safari浏览器+userscript下无效 */
+                    videoUrl = window.player?.api("hls")?.url?.split('?')[0] || window.m3ky?.split('?')[0]; /* 该方案在safari浏览器+userscript下无效 */
                     /* videoUrl = document.body.innerHTML.match("https:(.*?).m3u8")[0];  $("script").text() */
                     console.log("真实地址:", videoUrl);
                     /* 3.移除广告 */
@@ -347,15 +353,15 @@
                 }
             }
             /* 含羞草视频 ，兼容手机 + PC */
-            else if (location.href.match("/videoContent/") != null) {
-                shikan = document.querySelector(".van-icon-play-circle-o") || document.querySelector("a.linkOutButton.try"); /* 前面为手机。后面为PC */
-                player = document.querySelector("div#videoContentPlayer") || document.querySelector("#tryVideo");
+            else if (location.href.match("/play/video/") != null) {
+                shikan = document.querySelector(".van-icon-play-circle-o") || document.querySelector("div.cursor-pointer.flex-center.space-x-1"); /* 前面为手机。后面为PC */
+                player = document.querySelector("div#videoContentPlayer") || document.querySelector("#v_prism");
                 ads = document.querySelector(".fixedTryWatchShowButtonLine");
                 if (shikan) {
                     /* 1.点击试看 */
                     shikan.click(); console.log("点击试看！");
                 }
-                else if (player && player.__vue__.videoUrl) {
+                else if (player?.__vue__?.videoUrl) {
                     /* 2.解析真实地址 */
                     videoUrl = player.__vue__.videoUrl.split(/start.*?sign/).join('sign'); console.log("真实地址:", videoUrl);
                     /* 3.移除试看、广告 */
@@ -395,10 +401,10 @@
             else {
                 /* 麻豆TV */ /* 91TV */
                 localStorage.setItem("vip_level", '1');
-                console.log("地址未匹配，停止定时器!");
-                clearInterval(my_timer);
+                //console.log("地址未匹配，停止定时器!");//麻豆TV每次刷新后会将vip_level更新为0
+                //clearInterval(my_timer);
             }
-            show_err_log(null);
+            //show_err_log(null);
         }
         catch (err) {
             console.log(`${err}`);
