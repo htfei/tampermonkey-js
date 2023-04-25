@@ -1,12 +1,12 @@
 // ==UserScript==
 // @name         快猫/红杏/含羞草/麻豆/AvPron/皇家会所/9sex/91TV/破解VIP视频免费看
 // @namespace    http://tampermonkey.net/
-// @version      0.33
+// @version      0.34
 // @description  来不及解释了，快上车！！！
 // @author       w2f
 
 // @match        https://www.kmkk76.com/videoContent/*
-// @match        https://www.*.com/videoContent/*
+// @match        https://*/videoContent/*
 
 // @match        https://*/play/video/*
 
@@ -52,6 +52,25 @@
     import_js("https://cdn.staticfile.org/jquery/1.10.2/jquery.min.js");
     import_js("https://cdnjs.cloudflare.com/ajax/libs/hls.js/1.1.5/hls.min.js");
     import_js("https://cdnjs.cloudflare.com/ajax/libs/dplayer/1.26.0/DPlayer.min.js");
+
+    function show_support_author() {
+        var secondsLeft = 10;
+        var mydiv = document.createElement('div');
+        mydiv.innerHTML = `<div id="my_add_dizhi3" style="position: fixed;z-index: 10000;top: 0;left: 0;width: 100%;height: 100%;background: rgba(0,0,0,0.8);">
+            <div style="position: absolute;top: 50%;left: 50%;transform: translate(-50%, -50%);max-width: 90%;max-height: 90%;">
+            <p style="color:red;font-size:14px">最近支付宝发红包力度很大，请大家扫码领红包后一定要用掉，你用了我才有奖励，脚本免费，维护不易，多谢支持！（${secondsLeft}s后自动关闭）</p>
+            <img src="https://i2.100024.xyz/2022/11/23/vlslmo.webp"></div></div>`;
+        document.querySelector("head").after(mydiv);
+
+        var interval = setInterval(function() {
+            secondsLeft--;
+            var xxx = document.querySelector("#my_add_dizhi3 p");if(xxx) xxx.innerText = `最近支付宝发红包力度很大，请大家扫码领红包后一定要用掉，你用了我才有奖励，脚本免费，维护不易，多谢支持！（${secondsLeft}s后自动关闭)`;
+            if (secondsLeft <= 0) {
+                var yyy = document.querySelector("#my_add_dizhi3"); if(yyy) yyy.parentNode.removeChild(yyy);
+                clearInterval(interval);
+            }
+        }, 1000);
+    }
 
     /* 函数功能：加载Dplayer播放视频，并显示视频地址。 参数说明：videoUrl：视频地址 el：播放器加载位置 dizhi: 地址显示位置  */
     function play_video(videoUrl, el, dizhi) {
@@ -421,7 +440,11 @@
             var xxx = document.querySelector("#my_add_dizhi"); xxx && xxx.parentNode.removeChild(xxx); /* 含羞草手机需要删除之前的提示 */
             oldhref = location.href;
             err_cnt = 0;
-            my_timer = setInterval(get_videourl, 1000);
+            my_timer = setInterval(get_videourl, 2000);
+        }
+        if(new Date().getMinutes() % 10 == 0 ){//getMinutes getSeconds
+            console.log("支持作者弹窗!");
+            show_support_author();
         }
     }, 1000);
 
