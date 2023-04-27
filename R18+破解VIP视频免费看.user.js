@@ -1,11 +1,15 @@
 // ==UserScript==
 // @name         快猫/红杏/含羞草/麻豆/AvPron/皇家会所/9sex/91TV/破解VIP视频免费看
 // @namespace    http://tampermonkey.net/
-// @version      0.34
+// @version      0.35
 // @description  来不及解释了，快上车！！！
 // @author       w2f
 
-// @match        https://www.kmkk76.com/videoContent/*
+// @match        https://www.kmkk79.com/videoContent/*
+// @match        https://www.kmkk80.com/videoContent/*
+// @match        https://www.kmkk81.com/videoContent/*
+// @match        https://www.kmkk82.com/videoContent/*
+// @match        https://www.kmkk83.com/videoContent/*
 // @match        https://*/videoContent/*
 
 // @match        https://*/play/video/*
@@ -53,18 +57,22 @@
     import_js("https://cdnjs.cloudflare.com/ajax/libs/hls.js/1.1.5/hls.min.js");
     import_js("https://cdnjs.cloudflare.com/ajax/libs/dplayer/1.26.0/DPlayer.min.js");
 
+    let today = new Date().toLocaleDateString();
+    let min = new Date().getMinutes();
+    let chat = `最近支付宝发红包力度很大，请大家扫码领红包后一定要用掉，你用了我才有奖励，脚本免费，维护不易，多谢支持！`;
     function show_support_author() {
+        localStorage.setItem("today_is_show", today);
         var secondsLeft = 10;
         var mydiv = document.createElement('div');
         mydiv.innerHTML = `<div id="my_add_dizhi3" style="position: fixed;z-index: 10000;top: 0;left: 0;width: 100%;height: 100%;background: rgba(0,0,0,0.8);">
             <div style="position: absolute;top: 50%;left: 50%;transform: translate(-50%, -50%);max-width: 90%;max-height: 90%;">
-            <p style="color:red;font-size:14px">最近支付宝发红包力度很大，请大家扫码领红包后一定要用掉，你用了我才有奖励，脚本免费，维护不易，多谢支持！（${secondsLeft}s后自动关闭）</p>
+            <p style="color:red;font-size:14px">${chat}（${secondsLeft}s后自动关闭）</p>
             <img src="https://i2.100024.xyz/2022/11/23/vlslmo.webp"></div></div>`;
         document.querySelector("head").after(mydiv);
 
         var interval = setInterval(function() {
             secondsLeft--;
-            var xxx = document.querySelector("#my_add_dizhi3 p");if(xxx) xxx.innerText = `最近支付宝发红包力度很大，请大家扫码领红包后一定要用掉，你用了我才有奖励，脚本免费，维护不易，多谢支持！（${secondsLeft}s后自动关闭)`;
+            var xxx = document.querySelector("#my_add_dizhi3 p");if(xxx) xxx.innerText = `${chat}（${secondsLeft}s后自动关闭)`;
             if (secondsLeft <= 0) {
                 var yyy = document.querySelector("#my_add_dizhi3"); if(yyy) yyy.parentNode.removeChild(yyy);
                 clearInterval(interval);
@@ -72,18 +80,31 @@
         }, 1000);
     }
 
-    /* 函数功能：加载Dplayer播放视频，并显示视频地址。 参数说明：videoUrl：视频地址 el：播放器加载位置 dizhi: 地址显示位置  */
+    /* 函数功能：显示视频地址，及提示信息 */
+    function show_videoUrl(videoUrl,dizhi) {
+        var xxx = document.querySelector("#my_add_dizhi");
+        if(xxx){
+            return 0;
+        }
+        var mydiv = document.createElement('div');
+        mydiv.innerHTML = `<div id="my_add_dizhi" style="color:red;font-size:14px">
+            <p style="color:red;font-size:14px">视频地址：<a href="${videoUrl}" target="_blank">${videoUrl}</a></p>
+            <p style="color:red;font-size:14px">问题反馈 or 支持作者请<a href="https://sleazyfork.org/zh-CN/scripts/456496" target="_blank">【点击此处】</a>，使用愉快！</p>
+            <p style="color:red;font-size:14px">${chat}</p>
+            <p style="color:red;font-size:14px"><img src="https://i2.100024.xyz/2023/04/27/10e4dhv.webp"></p></div>`;
+        dizhi.after(mydiv);
+        return 1;
+    }
+
+    /* 函数功能：加载Dplayer播放视频。 参数说明：videoUrl：视频地址 el：播放器加载位置 dizhi: 地址显示位置  */
     function play_video(videoUrl, el, dizhi) {
 
         if (!videoUrl || !el || !dizhi) throw new Error(`部分参数无效，视频地址：${videoUrl}、播放器位置：${el}、提示位置：${dizhi}`);
 
-        /* 1. 显示地址 */
-        var mydiv = document.createElement('div');
-        mydiv.innerHTML = `<div id="my_add_dizhi" style="color:red;font-size:14px">
-            <p style="color:red;font-size:14px">视频地址：<a href="${videoUrl}" target="_blank">${videoUrl}</a></p>
-            <p style="color:red;font-size:14px">问题反馈 or 支持作者请
-            <a href="https://sleazyfork.org/zh-CN/scripts/456496" target="_blank">【点击此处】</a>，使用愉快！</p></div>`;
-        dizhi.after(mydiv);
+        let ret = show_videoUrl(videoUrl,dizhi);
+        if(ret == 0){
+            return 0;
+        }
 
         if (window.dp) {
             window.dp.pause()
@@ -117,8 +138,9 @@
         <p style="color:red;font-size:14px">480P：<a href="${videoUrl2}" target="_blank">${videoUrl2}</a></p>
         <p style="color:red;font-size:14px">720P：<a href="${videoUrl3}" target="_blank">${videoUrl3}</a></p>
         <p style="color:red;font-size:14px">1080P：<a href="${videoUrl4}" target="_blank">${videoUrl4}</a></p>
-        <p style="color:red;font-size:14px">问题反馈 or 支持作者请
-        <a href="https://sleazyfork.org/zh-CN/scripts/456496" target="_blank">【点击此处】</a>，使用愉快！</p></div>`;
+        <p style="color:red;font-size:14px">问题反馈 or 支持作者请<a href="https://sleazyfork.org/zh-CN/scripts/456496" target="_blank">【点击此处】</a>，使用愉快！</p>
+        <p style="color:red;font-size:14px">${chat}</p>
+        <p style="color:red;font-size:14px"><img src="https://i2.100024.xyz/2023/04/27/10e4dhv.webp"></div>`;
         dizhi && dizhi.after(mydiv);
 
         /* 2. 新增播放器 */
@@ -163,7 +185,7 @@
     function show_err_log(err) {
         err && console.log(err);
         err_cnt++;
-        if (err_cnt == 30) {
+        if (err_cnt == 10) {
             //err_cnt = 0;
             var mydiv = document.createElement('div');
             mydiv.innerHTML = `<div id="my_add_err_log" style="color:red;font-size:14px">
@@ -220,8 +242,8 @@
             /* 猫咪vip */
             if (location.href.match("https://www..*?.com/vip/") != null) {
                 document.querySelectorAll("div.content-item  a.video-pic")?.forEach( a => {a.href = a.href.replace("/vip/play-","/shipin/detail-")});
-                clearInterval(my_timer);
-                console.log("[猫咪]视频页面，未获取到地址，继续尝试...");
+                //clearInterval(my_timer);
+                //console.log("[猫咪]视频页面，未获取到地址，继续尝试...");
             }
             /* 9sex */
             else if (location.href.match("https://.*?/index/movie/play/id/") != null) {
@@ -419,7 +441,7 @@
             }
             else {
                 /* 麻豆TV */ /* 91TV */
-                localStorage.setItem("vip_level", '1');
+                localStorage.setItem("vip_level", '1');//todo:加地址提示
                 //console.log("地址未匹配，停止定时器!");//麻豆TV每次刷新后会将vip_level更新为0
                 //clearInterval(my_timer);
             }
@@ -437,12 +459,11 @@
     setInterval(function () {
         if (location.href != oldhref) {
             console.log("监听到地址变化,再次启动【获取视频定时器】!");
-            var xxx = document.querySelector("#my_add_dizhi"); xxx && xxx.parentNode.removeChild(xxx); /* 含羞草手机需要删除之前的提示 */
             oldhref = location.href;
             err_cnt = 0;
             my_timer = setInterval(get_videourl, 2000);
         }
-        if(new Date().getMinutes() % 10 == 0 ){//getMinutes getSeconds
+        if(today != localStorage.getItem('today_is_show') && Math.abs(new Date().getMinutes() - min) > 3 ){//今天在当前站点没弹过，且在当前页面停留3分钟以上时
             console.log("支持作者弹窗!");
             show_support_author();
         }
