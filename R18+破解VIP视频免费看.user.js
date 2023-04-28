@@ -1,15 +1,16 @@
 // ==UserScript==
-// @name         快猫/红杏/含羞草/麻豆/AvPron/皇家会所/9sex/91TV/破解VIP视频免费看
+// @name         快猫/红杏/含羞草/麻豆/AvPron/皇家会所/9sex/91TV/猫咪/小天鹅/破解VIP视频免费看
 // @namespace    http://tampermonkey.net/
-// @version      0.35
+// @version      0.36
 // @description  来不及解释了，快上车！！！
 // @author       w2f
 
-// @match        https://www.kmkk79.com/videoContent/*
-// @match        https://www.kmkk80.com/videoContent/*
-// @match        https://www.kmkk81.com/videoContent/*
-// @match        https://www.kmkk82.com/videoContent/*
-// @match        https://www.kmkk83.com/videoContent/*
+// @match        https://*.kmkk78.com/videoContent/*
+// @match        https://*.kmkk79.com/videoContent/*
+// @match        https://*.kmkk80.com/videoContent/*
+// @match        https://*.kmkk81.com/videoContent/*
+// @match        https://*.kmkk82.com/videoContent/*
+// @match        https://*.kmkk83.com/videoContent/*
 // @match        https://*/videoContent/*
 
 // @match        https://*/play/video/*
@@ -36,6 +37,9 @@
 // @match        https://*/vip/index.html
 // @match        https://*/vip/list-*.html
 // @match        https://*/index/home.html
+
+// @match        https://xtefv.xyz/*
+
 // @icon         https://index.madou19.tv/json/icon.png
 // @license      MIT
 // @grant none
@@ -55,7 +59,11 @@
     }
     import_js("https://cdn.staticfile.org/jquery/1.10.2/jquery.min.js");
     import_js("https://cdnjs.cloudflare.com/ajax/libs/hls.js/1.1.5/hls.min.js");
-    import_js("https://cdnjs.cloudflare.com/ajax/libs/dplayer/1.26.0/DPlayer.min.js");
+    let not_need_dplayer = location.href.match("https://theav.*?.com/videos/") != null ||
+        location.href.match("https://the.*?.fun/videos/") != null ;
+    if (!not_need_dplayer) {
+        import_js("https://cdnjs.cloudflare.com/ajax/libs/dplayer/1.26.0/DPlayer.min.js");
+    }
 
     let today = new Date().toLocaleDateString();
     let min = new Date().getMinutes();
@@ -81,14 +89,15 @@
     }
 
     /* 函数功能：显示视频地址，及提示信息 */
-    function show_videoUrl(videoUrl,dizhi) {
+    function show_videoUrl(videoUrl,dizhi, flag = 0) {
         var xxx = document.querySelector("#my_add_dizhi");
-        if(xxx){
+        if(flag==0 && xxx){
             return 0;
         }
+        if (xxx) xxx.parentNode.removeChild(xxx);
         var mydiv = document.createElement('div');
         mydiv.innerHTML = `<div id="my_add_dizhi" style="color:red;font-size:14px">
-            <p style="color:red;font-size:14px">视频地址：<a href="${videoUrl}" target="_blank">${videoUrl}</a></p>
+            <p style="color:red;font-size:14px;word-wrap: break-word;word-break: break-all;">视频地址：<a href="${videoUrl}" target="_blank">${videoUrl}</a></p>
             <p style="color:red;font-size:14px">问题反馈 or 支持作者请<a href="https://sleazyfork.org/zh-CN/scripts/456496" target="_blank">【点击此处】</a>，使用愉快！</p>
             <p style="color:red;font-size:14px">${chat}</p>
             <p style="color:red;font-size:14px"><img src="https://i2.100024.xyz/2023/04/27/10e4dhv.webp"></p></div>`;
@@ -96,12 +105,12 @@
         return 1;
     }
 
-    /* 函数功能：加载Dplayer播放视频。 参数说明：videoUrl：视频地址 el：播放器加载位置 dizhi: 地址显示位置  */
-    function play_video(videoUrl, el, dizhi) {
+    /* 函数功能：加载Dplayer播放视频。 参数说明：videoUrl：视频地址 el：播放器加载位置 dizhi: 地址显示位置  flag:是否强制刷新 */
+    function play_video(videoUrl, el, dizhi, flag = 0) {
 
         if (!videoUrl || !el || !dizhi) throw new Error(`部分参数无效，视频地址：${videoUrl}、播放器位置：${el}、提示位置：${dizhi}`);
 
-        let ret = show_videoUrl(videoUrl,dizhi);
+        let ret = show_videoUrl(videoUrl,dizhi,flag);
         if(ret == 0){
             return 0;
         }
@@ -127,6 +136,20 @@
                 type: 'hls'
             }
         });
+
+        /* 3. 设置播放器浮动显示,并添加一个具有上边距的兄弟div避免覆盖下面的内容 */
+        //el.classList.add("my_add_header");
+        //el.style += "z-index: 999;top: 0;";
+        el.style.position = 'sticky';
+        el.style.zIndex = '999';
+        el.style.top = '0';
+        var xxx = document.querySelector("#my_add_sibling");
+        if(!xxx){
+            var sibling = document.createElement('div');
+            sibling.id = "my_add_sibling";
+            //sibling.style.marginTop = el.offsetHeight + 'px'; // 设置兄弟元素的顶部边距
+            el.after(sibling);
+        }
     }
 
     /* 函数功能：同上，可切换清晰度  */
@@ -134,10 +157,10 @@
         /* 1. 显示地址 */
         var mydiv = document.createElement('div');
         mydiv.innerHTML = `<div id="my_add_dizhi" style="color:red;font-size:14px">注意：部分视频只360P，切换后无法播放说明不存在高清晰度版本！！！视频地址：
-        <p style="color:red;font-size:14px">360P：<a href="${videoUrl}" target="_blank">${videoUrl}</a></p>
-        <p style="color:red;font-size:14px">480P：<a href="${videoUrl2}" target="_blank">${videoUrl2}</a></p>
-        <p style="color:red;font-size:14px">720P：<a href="${videoUrl3}" target="_blank">${videoUrl3}</a></p>
-        <p style="color:red;font-size:14px">1080P：<a href="${videoUrl4}" target="_blank">${videoUrl4}</a></p>
+        <p style="color:red;font-size:14px;word-wrap: break-word;word-break: break-all;">360P：<a href="${videoUrl}" target="_blank">${videoUrl}</a></p>
+        <p style="color:red;font-size:14px;word-wrap: break-word;word-break: break-all;">480P：<a href="${videoUrl2}" target="_blank">${videoUrl2}</a></p>
+        <p style="color:red;font-size:14px;word-wrap: break-word;word-break: break-all;">720P：<a href="${videoUrl3}" target="_blank">${videoUrl3}</a></p>
+        <p style="color:red;font-size:14px;word-wrap: break-word;word-break: break-all;">1080P：<a href="${videoUrl4}" target="_blank">${videoUrl4}</a></p>
         <p style="color:red;font-size:14px">问题反馈 or 支持作者请<a href="https://sleazyfork.org/zh-CN/scripts/456496" target="_blank">【点击此处】</a>，使用愉快！</p>
         <p style="color:red;font-size:14px">${chat}</p>
         <p style="color:red;font-size:14px"><img src="https://i2.100024.xyz/2023/04/27/10e4dhv.webp"></div>`;
@@ -231,6 +254,7 @@
     }
 
     let flag = 0;
+    let last_videoUrl = null;
     function get_videourl() {
         let videoUrl = null, videoUrl2 = null, videoUrl3 = null, videoUrl4 = null;
         let el = null;
@@ -239,8 +263,41 @@
         let shikan = null;
         let ads = null;
         try {
+            if (!not_need_dplayer && !DPlayer ) {
+                /* DPlayer还未加载完毕时就解析完视频地址，会导致播放时报错ReferenceError: DPlayer is not defined */
+                console.log("正在加载DPlayer...");
+                return;
+            }
+            /* 小天鹅 */
+            if (location.href.match("https://xtefv.xyz/#/Details") != null) {
+                //console.log("[小天鹅]视频页面，正在解析...");
+                player = document.querySelector("div.Mpplay");
+                document.body.classList.remove('van-overflow-hidden');
+                ads = document.querySelector(".VipzceBox"); if (ads) ads.parentNode.removeChild(ads);
+                /* 1.点击试看（不需要） */
+                /* 2.解析真实地址 */
+                videoUrl = document.querySelector("div.detailsBox")?.__vue__?.detailsdata?.vod_direct_play_url;
+                if(player && videoUrl){
+                    if(videoUrl == last_videoUrl){
+                        return;
+                    }else{
+                        last_videoUrl = videoUrl;
+                        console.log("真实地址:", videoUrl);
+                        console.log("last_videoUrl:", last_videoUrl);
+                        /* 3.移除广告 */
+                        //ads = document.querySelector(".MpplayFh");
+                        /* 4.播放正片 */
+                        play_video(videoUrl, player, document.querySelector("div.DetailsofTheTitle"),1);
+                        //player.parentNode.before(ads);
+                        /* 5.停止定时器 */
+                        //clearInterval(my_timer);
+                    }
+                }else{
+                    //console.log("[小天鹅]视频页面，未获取到地址，继续尝试...");
+                }
+            }
             /* 猫咪vip */
-            if (location.href.match("https://www..*?.com/vip/") != null) {
+            else if (location.href.match("https://www..*?.com/vip/") != null) {
                 document.querySelectorAll("div.content-item  a.video-pic")?.forEach( a => {a.href = a.href.replace("/vip/play-","/shipin/detail-")});
                 //clearInterval(my_timer);
                 //console.log("[猫咪]视频页面，未获取到地址，继续尝试...");
@@ -445,7 +502,6 @@
                 //console.log("地址未匹配，停止定时器!");//麻豆TV每次刷新后会将vip_level更新为0
                 //clearInterval(my_timer);
             }
-            //show_err_log(null);
         }
         catch (err) {
             console.log(`${err}`);
