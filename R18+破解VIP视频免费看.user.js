@@ -1,23 +1,21 @@
 // ==UserScript==
 // @name         快猫/红杏/含羞草/麻豆/AvPron/皇家会所/9sex/91TV/猫咪/小天鹅/破解VIP视频免费看
 // @namespace    http://tampermonkey.net/
-// @version      0.36
+// @version      0.38
 // @description  来不及解释了，快上车！！！
 // @author       w2f
 
-// @match        https://*.kmkk78.com/videoContent/*
-// @match        https://*.kmkk79.com/videoContent/*
 // @match        https://*.kmkk80.com/videoContent/*
 // @match        https://*.kmkk81.com/videoContent/*
 // @match        https://*.kmkk82.com/videoContent/*
-// @match        https://*.kmkk83.com/videoContent/*
 // @match        https://*/videoContent/*
+// @include      /^https://www.kmkk\d+\.com.+$/
 
 // @match        https://*/play/video/*
-
-// @match        https://*.hxaa83.com/*
-// @match        https://*.hxaa84.com/*
-// @match        https://*.hxaa85.com/*
+// @match        https://*.hxaa139.com/*
+// @match        https://*.hxaa140.com/*
+// @match        https://*.hxaa141.com/*
+// @include      /^https://www.hxaa\d+\.com.+$/
 
 // @match        https://*/playvideo/*
 // @match        https://*/live/*
@@ -31,14 +29,23 @@
 // @match        https://*.com/rankList
 // @match        https://madou.tv/*
 
+// @match        https://afkv28.com/*
+// @match        https://afkv29.com/*
+// @match        https://afkv30.com/*
+
 // @match        https://*/videos/*
+
 // @match        https://*/index/movie/play/id/*
+
 // @match        https://kdt29.com/*
+
 // @match        https://*/vip/index.html
 // @match        https://*/vip/list-*.html
 // @match        https://*/index/home.html
 
 // @match        https://xtefv.xyz/*
+// @match        https://xteez.xyz/*
+// @match        https://xtedy.xyz/*
 
 // @icon         https://index.madou19.tv/json/icon.png
 // @license      MIT
@@ -69,7 +76,6 @@
     let min = new Date().getMinutes();
     let chat = `最近支付宝发红包力度很大，请大家扫码领红包后一定要用掉，你用了我才有奖励，脚本免费，维护不易，多谢支持！`;
     function show_support_author() {
-        localStorage.setItem("today_is_show", today);
         var secondsLeft = 10;
         var mydiv = document.createElement('div');
         mydiv.innerHTML = `<div id="my_add_dizhi3" style="position: fixed;z-index: 10000;top: 0;left: 0;width: 100%;height: 100%;background: rgba(0,0,0,0.8);">
@@ -99,8 +105,7 @@
         mydiv.innerHTML = `<div id="my_add_dizhi" style="color:red;font-size:14px">
             <p style="color:red;font-size:14px;word-wrap: break-word;word-break: break-all;">视频地址：<a href="${videoUrl}" target="_blank">${videoUrl}</a></p>
             <p style="color:red;font-size:14px">问题反馈 or 支持作者请<a href="https://sleazyfork.org/zh-CN/scripts/456496" target="_blank">【点击此处】</a>，使用愉快！</p>
-            <p style="color:red;font-size:14px">${chat}</p>
-            <p style="color:red;font-size:14px"><img src="https://i2.100024.xyz/2023/04/27/10e4dhv.webp"></p></div>`;
+            </div>`;
         dizhi.after(mydiv);
         return 1;
     }
@@ -162,8 +167,7 @@
         <p style="color:red;font-size:14px;word-wrap: break-word;word-break: break-all;">720P：<a href="${videoUrl3}" target="_blank">${videoUrl3}</a></p>
         <p style="color:red;font-size:14px;word-wrap: break-word;word-break: break-all;">1080P：<a href="${videoUrl4}" target="_blank">${videoUrl4}</a></p>
         <p style="color:red;font-size:14px">问题反馈 or 支持作者请<a href="https://sleazyfork.org/zh-CN/scripts/456496" target="_blank">【点击此处】</a>，使用愉快！</p>
-        <p style="color:red;font-size:14px">${chat}</p>
-        <p style="color:red;font-size:14px"><img src="https://i2.100024.xyz/2023/04/27/10e4dhv.webp"></div>`;
+        </div>`;
         dizhi && dizhi.after(mydiv);
 
         /* 2. 新增播放器 */
@@ -263,20 +267,22 @@
         let shikan = null;
         let ads = null;
         try {
-            if (!not_need_dplayer && !DPlayer ) {
+            if (!not_need_dplayer && typeof(DPlayer)!= 'function' ) {
                 /* DPlayer还未加载完毕时就解析完视频地址，会导致播放时报错ReferenceError: DPlayer is not defined */
                 console.log("正在加载DPlayer...");
                 return;
             }
-            /* 小天鹅 */
-            if (location.href.match("https://xtefv.xyz/#/Details") != null) {
+            /* 小天鹅 支持手机 + PC */
+            if (location.href.match("https://xte.*?.xyz/#/Details") != null) {
                 //console.log("[小天鹅]视频页面，正在解析...");
-                player = document.querySelector("div.Mpplay");
+                player = document.querySelector("div.Mpplay") || document.querySelector("div.playerBox");
                 document.body.classList.remove('van-overflow-hidden');
-                ads = document.querySelector(".VipzceBox"); if (ads) ads.parentNode.removeChild(ads);
+                ads = document.querySelector(".VipzceBox"); if (ads) ads.parentNode.removeChild(ads);/*app*/
+                ads = document.querySelector("div.el-dialog__body"); if (ads) ads.parentNode.removeChild(ads);/*pc*/
+                ads = document.querySelector(".v-modal"); if (ads) ads.parentNode.removeChild(ads);/*pc*/
                 /* 1.点击试看（不需要） */
                 /* 2.解析真实地址 */
-                videoUrl = document.querySelector("div.detailsBox")?.__vue__?.detailsdata?.vod_direct_play_url;
+                videoUrl = (document.querySelector("div.detailsBox")|| document.querySelector("div.user"))?.__vue__?.detailsdata?.vod_direct_play_url;
                 if(player && videoUrl){
                     if(videoUrl == last_videoUrl){
                         return;
@@ -287,13 +293,13 @@
                         /* 3.移除广告 */
                         //ads = document.querySelector(".MpplayFh");
                         /* 4.播放正片 */
-                        play_video(videoUrl, player, document.querySelector("div.DetailsofTheTitle"),1);
+                        play_video(videoUrl, player, document.querySelector("div.DetailsofTheTitle") || document.querySelector("div.playVideoInfo"),1);
                         //player.parentNode.before(ads);
                         /* 5.停止定时器 */
                         //clearInterval(my_timer);
                     }
                 }else{
-                    //console.log("[小天鹅]视频页面，未获取到地址，继续尝试...");
+                    console.log("[小天鹅]视频页面，未获取到地址，继续尝试...");
                 }
             }
             /* 猫咪vip */
@@ -353,11 +359,11 @@
             但由于userscript不支持unsafeWindow，故safari浏览器+userscript无效。改为从<script/>内容查找m3u8地址 */
             else if (location.href.match("https://theav.*?.com/videos/") != null ||
                      location.href.match("https://the.*?.fun/videos/") != null ) {
-                if (1) {
-                    /* 1.点击试看（不需要） */
-                    /* 2.解析真实地址 */
-                    videoUrl = window.player?.api("hls")?.url?.split('?')[0] || window.m3ky?.split('?')[0]; /* 该方案在safari浏览器+userscript下无效 */
-                    /* videoUrl = document.body.innerHTML.match("https:(.*?).m3u8")[0];  $("script").text() */
+                /* 1.点击试看（不需要） */
+                /* 2.解析真实地址 */
+                videoUrl = window.player?.api("hls")?.url?.split('?')[0] || window.m3ky?.split('?')[0]; /* 该方案在safari浏览器+userscript下无效 */
+                /* videoUrl = document.body.innerHTML.match("https:(.*?).m3u8")[0];  $("script").text() */
+                if (videoUrl && typeof(Playerjs)== 'function' ) {
                     console.log("真实地址:", videoUrl);
                     /* 3.移除广告 */
                     ads = document.querySelector(".table"); if (ads) ads.style.display = "none";
@@ -408,7 +414,10 @@
                 }
                 else if (player?.__vue__?.playUrl) {
                     /* 2.解析真实地址 */
-                    let videoUrl = player.__vue__.playUrl.split('&time')[0]; console.log("真实地址:", videoUrl);
+                    let videoUrl = player.__vue__.playUrl.split('&time')[0];
+                    let re = videoUrl.split("/")[2];
+                    videoUrl = videoUrl.replace(re + '/shikanshipin', 'jscdn.kunkunhome.xyz');
+                    console.log("真实地址:", videoUrl);
                     /* 3.移除试看 */
                     player.__vue__.player?.hls?.destroy();
                     /* 4.播放正片 */
@@ -520,8 +529,9 @@
             my_timer = setInterval(get_videourl, 2000);
         }
         if(today != localStorage.getItem('today_is_show') && Math.abs(new Date().getMinutes() - min) > 3 ){//今天在当前站点没弹过，且在当前页面停留3分钟以上时
+            localStorage.setItem("today_is_show", today);
             console.log("支持作者弹窗!");
-            show_support_author();
+            //show_support_author();
         }
     }, 1000);
 
