@@ -16,6 +16,7 @@
 // @match        https://*.hxaa140.com/*
 // @match        https://*.hxaa141.com/*
 // @include      /^https://www.hxaa\d+\.com.+$/
+// @include      /^https://www.hxbb\d+\.com.+$/
 
 // @match        https://*/playvideo/*
 // @match        https://*/live/*
@@ -74,7 +75,7 @@
 
     let today = new Date().toLocaleDateString();
     let min = new Date().getMinutes();
-    let chat = `最近支付宝发红包力度很大，请大家扫码领红包后一定要用掉，你用了我才有奖励，脚本免费，维护不易，多谢支持！`;
+    let chat = `最近支付宝发红包力度很大，请大家扫码领红包后一定要用掉，你用了我才有奖励，脚本免费，维护不易，多谢支持！含羞草/红杏近期即将回归...`;
     function show_support_author() {
         var secondsLeft = 10;
         var mydiv = document.createElement('div');
@@ -399,7 +400,7 @@
                 }
             }
             /* 红杏，兼容手机 + PC */
-            else if (location.href.match("https://.*?.hxaa.*?.com/#/moves/playvideo/") != null) {
+            else if (location.href.match("https://.*?.hx.*?.com/#/moves/playvideo/") != null) {
                 let login = document.querySelector("div.play_video_wdl_2_2");
                 shikan = document.querySelector("div.shikan") || document.querySelector("div.on_play");
                 player = document.querySelector(" div#mse") || document.querySelector("div.play_video_1 div");
@@ -531,7 +532,7 @@
         if(today != localStorage.getItem('today_is_show') && Math.abs(new Date().getMinutes() - min) > 3 ){//今天在当前站点没弹过，且在当前页面停留3分钟以上时
             localStorage.setItem("today_is_show", today);
             console.log("支持作者弹窗!");
-            //show_support_author();
+            show_support_author();
         }
     }, 1000);
 
