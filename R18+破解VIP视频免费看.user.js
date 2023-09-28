@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         快猫/红杏/含羞草/麻豆/AvPron/皇家会所/9sex/91TV/猫咪/小天鹅/破解VIP视频免费看
 // @namespace    http://tampermonkey.net/
-// @version      0.39
+// @version      0.40
 // @description  来不及解释了，快上车！！！
 // @author       w2f
 
@@ -21,6 +21,7 @@
 // @match        https://*/playvideo/*
 // @match        https://*/live/*
 // @match        https://*/live
+// @include      /^https://h5.fi11av\d+\.com/play/video.+$/
 
 // @match        https://madou.bet/*
 // @match        https://*.com/index
@@ -51,6 +52,8 @@
 // @icon         https://index.madou19.tv/json/icon.png
 // @license      MIT
 // @grant none
+// @require      https://scriptcat.org/lib/637/1.3.3/ajaxHooker.js
+// @run-at       document-start
 // ==/UserScript==
 
 (function () {
@@ -72,6 +75,39 @@
     if (!not_need_dplayer) {
         import_js("https://cdnjs.cloudflare.com/ajax/libs/dplayer/1.26.0/DPlayer.min.js");
     }
+
+
+    //其他代码对xhr/fetch进行了二次劫持，protect方法会尝试阻止xhr和fetch被改写
+    ajaxHooker.protect();
+
+    //只有符合规则的请求才会触发hook
+    ajaxHooker.filter([
+        {type: 'xhr', url: '/videos/getPreUrl', method: 'POST', async: true},//含羞草
+        //{url: /^http/},
+    ]);
+    ajaxHooker.hook(request => {
+        //console.log("hooking....",request);
+        if (request.url.indexOf('/videos/getPreUrl') > -1 ) {
+
+            //request.data = await defineData(request.data);
+            request.response = async res => {
+                console.log("hooked!!! responseText ====>",JSON.parse(res.responseText));
+                res.responseText = await modifyResponse(res.responseText);
+                //将xhr和fetch恢复至劫持前的状态
+                //ajaxHooker.unhook();
+            };
+        }
+    });
+
+    async function modifyResponse(responseText){
+        let rspjson = await JSON.parse(responseText);
+        rspjson.data.url = rspjson.data.url.replace(/start=\d+\&end=\d+\&/,"");
+        console.log("fixed url====>",rspjson.data.url);
+        window.videoUrl = rspjson.data.url;
+        return await JSON.stringify(rspjson);
+    }
+
+
 
     let today = new Date().toLocaleDateString();
     let min = new Date().getMinutes();
@@ -107,7 +143,7 @@
             <p style="color:red;font-size:14px;word-wrap: break-word;word-break: break-all;">视频地址：<a href="${videoUrl}" target="_blank">${videoUrl}</a></p>
             <p style="color:red;font-size:14px">问题反馈 or 支持作者请<a href="https://sleazyfork.org/zh-CN/scripts/456496" target="_blank">【点击此处】</a>，使用愉快！</p>
             </div>`;
-        dizhi.after(mydiv);
+        dizhi?.after(mydiv);
         return 1;
     }
 
@@ -462,37 +498,42 @@
             }
             /* 含羞草视频 ，兼容手机 + PC */
             else if (location.href.match("/play/video/") != null) {
-                shikan = document.querySelector(".van-icon-play-circle-o") || document.querySelector("div.cursor-pointer.flex-center.space-x-1"); /* 前面为手机。后面为PC */
-                player = document.querySelector("div#videoContentPlayer") || document.querySelector("#v_prism");
-                ads = document.querySelector(".fixedTryWatchShowButtonLine");
-                if (shikan) {
-                    /* 1.点击试看 */
-                    shikan.click(); console.log("点击试看！");
-                }
-                else if (player?.__vue__?.videoUrl) {
-                    /* 2.解析真实地址 */
-                    videoUrl = player.__vue__.videoUrl.split(/start.*?sign/).join('sign'); console.log("真实地址:", videoUrl);
-                    /* 3.移除试看、广告 */
-                    player.__vue__.videoObj && player.__vue__.videoObj.hls && player.__vue__.videoObj.hls.destroy();
-                    ads && (ads.style.display = "none");
-                    /* 4.播放正片 */
-                    play_video(videoUrl, player, document.querySelector("div.publicVideoInfoBox p.name") || document.querySelector("div.infoAreaBox"));
-                    /* 5.停止定时器 */
+                shikan = document.querySelector("div.try div i") || document.querySelector("div.cursor-pointer.flex-center.space-x-1"); /* 前面为手机。后面为PC */
+                if (window.videoUrl) {
+                    //3.移除广告
+                    ads = document.querySelector("#app > div:nth-child(1) > div:nth-child(3) > div > div:nth-child(1) > div:nth-child(1) > div.relative.bg-overlay > a");
+                    if (ads != null) ads.style.display = "none";
+                    //4.显示地址
+                    show_videoUrl(window.videoUrl, document.querySelector("div.g-m-t-8.g-flex.title") || document.querySelector("h2.text-base.article-title"));
+                    //5.停止定时器
                     clearInterval(my_timer); console.log("停止定时器！");
+                    window.videoUrl = null;
+                }
+                else if (shikan) {
+                    /* 1.点击试看 */
+                    shikan.click(); console.log("点击试看！"); shikan.parentNode.removeChild(shikan);
+                    /* 2.解除试看限制 */
+                    var obj = {}
+                    obj.time = new Date().toLocaleDateString().replaceAll("/","-")
+                    obj.preNum = 99
+                    obj.count = 1
+                    localStorage.setItem("preInfo",JSON.stringify(obj));// PC
+                    obj.num = -89
+                    localStorage.setItem("tryPlayNum",JSON.stringify(obj));// ios android
                 }
                 else {
                     console.log("[含羞草]视频页面，未获取到地址，继续尝试...");
                 }
             }
             /* 含羞草，PC端，直播 */
-            else if (location.href.match("/live/") != null) {
+            /* else if (location.href.match("/live/") != null) {
                 player = document.querySelector("div.VideoAuthAdminBg") || document.querySelector("div#livePlayer");
                 videoUrl = player.__vue__.videoUrl || player.__vue__.videoContent.pull; console.log("直播地址:", videoUrl);
                 play_video(videoUrl, player, document.querySelector("div.userInfo p.name"));
                 clearInterval(my_timer);
-            }
+            }*/
             /* 含羞草，手机端，直播 */
-            else if (location.href.match("//h5.*?/live") != null) {
+            /* else if (location.href.match("//h5.*?/live") != null) {
                 player = document.querySelector("div#publicLiveListModule");
                 let videoUrl_list = player.__vue__.list; console.log("直播地址:", videoUrl_list);
                 let divlist = document.querySelectorAll("ul.liveListBg li .bottom");
@@ -501,11 +542,11 @@
                     divlist[i].innerHTML += '<p><a href="' + videoUrl_list[i].pull + '" target="_blank">' + videoUrl_list[i].pull + '</a></p>';
                 }
                 clearInterval(my_timer);
-                /* 1. 显示地址 */
+                // 1. 显示地址
                 mydiv = document.createElement('div');
                 mydiv.innerHTML = '<p id="my_add_dizhi" style="color:red;font-size:14px">提示：彦祖们，请点击图片下方的链接看破解后的直播视频！</p>';
                 document.querySelector("div.topBannerBg").after(mydiv);
-            }
+            }*/
             else {
                 /* 麻豆TV */ /* 91TV */
                 localStorage.setItem("vip_level", '1');//todo:加地址提示
