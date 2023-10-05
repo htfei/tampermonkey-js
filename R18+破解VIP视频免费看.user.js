@@ -52,7 +52,7 @@
 // @icon         https://index.madou19.tv/json/icon.png
 // @license      MIT
 // @grant none
-// @require      https://scriptcat.org/lib/637/1.3.3/ajaxHooker.js
+// @require      https://greasyfork.org/scripts/476730-ajaxhooker-2/code/ajaxHooker_2.js?version=1259979
 // @run-at       document-start
 // ==/UserScript==
 
@@ -131,7 +131,7 @@
         }, 1000);
     }
 
-    /* 函数功能：显示视频地址，及提示信息 */
+    /* 函数功能：显示视频地址，及提示信息. 参数说明：videoUrl：视频地址  dizhi: 地址显示位置  flag:是否强制刷新 */
     function show_videoUrl(videoUrl,dizhi, flag = 0) {
         var xxx = document.querySelector("#my_add_dizhi");
         if(flag==0 && xxx){
@@ -139,9 +139,9 @@
         }
         if (xxx) xxx.parentNode.removeChild(xxx);
         var mydiv = document.createElement('div');
-        mydiv.innerHTML = `<div id="my_add_dizhi" style="color:red;font-size:14px">
-            <p style="color:red;font-size:14px;word-wrap: break-word;word-break: break-all;">视频地址：<a href="${videoUrl}" target="_blank">${videoUrl}</a></p>
-            <p style="color:red;font-size:14px">问题反馈 or 支持作者请<a href="https://sleazyfork.org/zh-CN/scripts/456496" target="_blank">【点击此处】</a>，使用愉快！</p>
+        mydiv.innerHTML = `<div id="my_add_dizhi" style="color:red;font-size:14px;word-wrap: break-word;word-break: break-all;">
+            <p style="">视频地址：<a href="${videoUrl}" target="_blank">${videoUrl}</a></p>
+            <p style="">问题反馈 or 支持作者请<a href="https://sleazyfork.org/zh-CN/scripts/456496" target="_blank">【点击此处】</a>，使用愉快！</p>
             </div>`;
         dizhi?.after(mydiv);
         return 1;
@@ -498,28 +498,29 @@
             }
             /* 含羞草视频 ，兼容手机 + PC */
             else if (location.href.match("/play/video/") != null) {
-                shikan = document.querySelector("div.try div i") || document.querySelector("div.cursor-pointer.flex-center.space-x-1"); /* 前面为手机。后面为PC */
+                /* 2.解除试看限制 */
+                var obj = {}
+                obj.time = new Date().toLocaleDateString().replaceAll("/","-")
+                obj.preNum = 99
+                obj.count = 1
+                localStorage.setItem("preInfo",JSON.stringify(obj));// PC
+                obj.num = -89
+                localStorage.setItem("tryPlayNum",JSON.stringify(obj));// ios android
+
+                shikan = document.querySelector("div.try div.g-flex-jcc") || document.querySelector("div.cursor-pointer.flex-center.space-x-1"); /* 前面为手机。后面为PC */
                 if (window.videoUrl) {
                     //3.移除广告
-                    ads = document.querySelector("#app > div:nth-child(1) > div:nth-child(3) > div > div:nth-child(1) > div:nth-child(1) > div.relative.bg-overlay > a");
+                    ads = document.querySelector("div.relative.bg-overlay > a");
                     if (ads != null) ads.style.display = "none";
                     //4.显示地址
-                    show_videoUrl(window.videoUrl, document.querySelector("div.g-m-t-8.g-flex.title") || document.querySelector("h2.text-base.article-title"));
+                    show_videoUrl(window.videoUrl, document.querySelector("div.g-m-t-8.g-flex.title") || document.querySelector("h2.text-base.article-title"), 1);
                     //5.停止定时器
                     clearInterval(my_timer); console.log("停止定时器！");
                     window.videoUrl = null;
                 }
                 else if (shikan) {
                     /* 1.点击试看 */
-                    shikan.click(); console.log("点击试看！"); shikan.parentNode.removeChild(shikan);
-                    /* 2.解除试看限制 */
-                    var obj = {}
-                    obj.time = new Date().toLocaleDateString().replaceAll("/","-")
-                    obj.preNum = 99
-                    obj.count = 1
-                    localStorage.setItem("preInfo",JSON.stringify(obj));// PC
-                    obj.num = -89
-                    localStorage.setItem("tryPlayNum",JSON.stringify(obj));// ios android
+                    shikan.click(); console.log("点击试看！"); //shikan.parentNode.removeChild(shikan);
                 }
                 else {
                     console.log("[含羞草]视频页面，未获取到地址，继续尝试...");
@@ -570,7 +571,7 @@
             err_cnt = 0;
             my_timer = setInterval(get_videourl, 2000);
         }
-        if(today != localStorage.getItem('today_is_show') && Math.abs(new Date().getMinutes() - min) > 3 ){//今天在当前站点没弹过，且在当前页面停留3分钟以上时
+        if(today != localStorage.getItem('today_is_show') && Math.abs(new Date().getMinutes() - min) > 5 ){//今天在当前站点没弹过，且在当前页面停留5分钟以上时
             localStorage.setItem("today_is_show", today);
             console.log("支持作者弹窗!");
             show_support_author();
