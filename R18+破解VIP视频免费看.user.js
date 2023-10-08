@@ -1,7 +1,7 @@
 // ==UserScript==
-// @name         快猫/红杏/含羞草/麻豆/AvPron/皇家会所/9sex/91TV/猫咪/小天鹅/破解VIP视频免费看
+// @name         快猫/红杏/含羞草/麻豆/AvPron/皇家会所/9sex/91TV/猫咪/小天鹅/福利姬破解VIP视频免费看
 // @namespace    http://tampermonkey.net/
-// @version      0.40
+// @version      0.41
 // @description  来不及解释了，快上车！！！
 // @author       w2f
 
@@ -22,6 +22,7 @@
 // @match        https://*/live/*
 // @match        https://*/live
 // @include      /^https://h5.fi11av\d+\.com/play/video.+$/
+// @include      /^https://h5.fi11zz\d+\.com/play/video.+$/
 
 // @match        https://madou.bet/*
 // @match        https://*.com/index
@@ -48,6 +49,8 @@
 // @match        https://xtefv.xyz/*
 // @match        https://xteez.xyz/*
 // @match        https://xtedy.xyz/*
+
+// @match        https://fuliji.homes/*
 
 // @icon         https://index.madou19.tv/json/icon.png
 // @license      MIT
@@ -551,6 +554,8 @@
             else {
                 /* 麻豆TV */ /* 91TV */
                 localStorage.setItem("vip_level", '1');//todo:加地址提示
+                //https://fuliji.homes/
+                localStorage.setItem("free_plays", '99');
                 //console.log("地址未匹配，停止定时器!");//麻豆TV每次刷新后会将vip_level更新为0
                 //clearInterval(my_timer);
             }
