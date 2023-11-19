@@ -1,10 +1,13 @@
 // ==UserScript==
-// @name 图集岛VIP破解+下载+收藏
+// @name 图集岛VIP免费看
 // @namespace http://tampermonkey.net/
-// @version 1.0.5
+// @version 1.0.6
 // @description 图集岛最好用的插件！兼容手机 + PC ！支持VIP破解 + 单张下载 + 批量下载 + 打包下载 + 本地收藏
-// @author tengfei + ss548
-// @include /https?:\/\/(\w+\.)?tujidao.\w+/
+// @author tengfei,ss548
+// @match        https://www.tujidao06.com/*
+// @match        https://www.tujidao07.com/*
+// @match        https://www.tujidao08.com/*
+// @include      /^https://www.tujidao\d+\.com.+$/
 // @icon  https://yskhd.com/wp-content/themes/modown/static/img/smilies/rolleyes.png
 // @require https://lf6-cdn-tos.bytecdntp.com/cdn/expire-1-M/jszip/3.7.1/jszip.min.js
 // @require https://lf26-cdn-tos.bytecdntp.com/cdn/expire-1-M/FileSaver.js/2.0.5/FileSaver.min.js
@@ -16,7 +19,7 @@
 
 (function () {
 
-    //https://tjg.gzhuibei.com/a/1/xx/x.jpg 不可直接访问，改为 
+    //https://tjg.gzhuibei.com/a/1/xx/x.jpg 不可直接访问，改为
     //https://pic.gzhuibei.com/a/1/xx/x.jpg 可以直接访问，突破防盗链。
     //账号luolikong123密码zuiailol123...
 
@@ -24,23 +27,26 @@
     GM_addStyle(".sc{position: absolute;top: 0;left: 0;background: #ebae12;border-radius: 50%;width: 35px;text-align: center;color: #FFF;z-index: 100;font-size: 13px;cursor: pointer;}");
     var locurl = window.location.href;
     var html1 =
-        '<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><script type="text/javascript" src="https://cdn.staticfile.org/jquery/3.6.0/jquery.min.js"></script><script type="text/javascript" src="http://demo.jb51.net/js/viewerjs/js/js/viewer.js"></script><link rel="stylesheet" href="http://demo.jb51.net/js/viewerjs/js/css/viewer.css" type="text/css">' +
-        "<style>img {vertical-align: top;text-align: center;}" +
-        ".imgbox{margin-bottom:5px;position: relative;overflow: hidden;float:left}" +
-        ".imgbox img{max-width: 100%;cursor:pointer;}" +
-        ".imgnum{cursor:pointer;position: absolute;right: 5px;bottom: 5px;background: rgb(12 192 229 / 50%);z-index: 100;padding: 10px 10px;color: #f9f9f9;border-radius: 50px;}" +
-        ".btn-box{display:flex;justify-content: space-around;position:fixed;z-index:1000;bottom:5px}" +
-        ".btn{width:100%;cursor:pointer;background: rgb(12 192 229 / 50%);z-index: 100;text-align: center;padding: 10px 10px;color: #f9f9f9;border-radius: 50px;text-decoration:none;}" +
-        "a:link{color:pink;}a:visited{color:purple;}" +
-        "@media screen and (min-width: 0px) {.imgbox {max-width: 100%} .contianer{column-count: 1;column-gap: 5px;margin:0;padding:0;}}" +
-        "@media screen and (min-width: 900px) {.imgbox {max-width: 100%} .contianer{column-count: 2;column-gap: 5px;margin:0;padding:0;}}" +
-        "@media screen and (min-width: 1200px) {.imgbox {max-width: 33%} .contianer{column-count: 1;column-gap: 5px;margin:0;padding:0;}}" +
-        ".loading-box{width: 100%;height: 50px;display: none;align-items: center;position: absolute;top: 50px;left: 0;z-index: 999;}.loading{margin: 0 auto;width: 120px;height: 40px;line-height: 40px;color: #FFF;font-size: 17px;text-align: center;background: #1111119e;border-radius: 2px;}"+
-        "</style></head>" +
-        '<body bgcolor="#27282d"><div class="loading-box"><p class="loading">下载中...</p></div><ul id="images" align="center" class="contianer">';
+        `1<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8">
+    <script type="text/javascript" src="https://cdn.staticfile.org/jquery/3.6.0/jquery.min.js"></script>
+        <style>img {vertical-align: top;text-align: center;}
+        .imgbox{margin-bottom:5px;position: relative;overflow: hidden;float:left}
+        .imgbox img{max-width: 100%;cursor:pointer;}
+        .imgnum{cursor:pointer;position: absolute;right: 5px;bottom: 5px;background: rgb(12 192 229 / 50%);z-index: 100;padding: 10px 10px;color: #f9f9f9;border-radius: 50px;}
+        .btn-box{display:flex;justify-content: space-around;position:fixed;z-index:1000;bottom:5px}
+        .btn{width:100%;cursor:pointer;background: rgb(12 192 229 / 50%);z-index: 100;text-align: center;padding: 10px 10px;color: #f9f9f9;border-radius: 50px;text-decoration:none;}
+        a:link{color:pink;}a:visited{color:purple;}
+        @media screen and (min-width: 0px) {.imgbox {max-width: 100%} .contianer{column-count: 1;column-gap: 5px;margin:0;padding:0;}}
+        @media screen and (min-width: 900px) {.imgbox {max-width: 100%} .contianer{column-count: 2;column-gap: 5px;margin:0;padding:0;}}
+        @media screen and (min-width: 1200px) {.imgbox {max-width: 33%} .contianer{column-count: 1;column-gap: 5px;margin:0;padding:0;}}
+        .loading-box{width: 100%;height: 50px;display: none;align-items: center;position: absolute;top: 50px;left: 0;z-index: 999;}
+        .loading{margin: 0 auto;width: 120px;height: 40px;line-height: 40px;color: #FFF;font-size: 17px;text-align: center;background: #1111119e;border-radius: 2px;}
+        </style></head>
+        <body bgcolor="#27282d"><div class="loading-box"><p class="loading">下载中...</p></div><ul id="images" align="center" class="contianer">`;
     var pic_base =
-        "<li class='imgbox'><div class='imgnum'  onclick='download1({pic_id},{num})'>{imgnum} 下载"+
-        "</div><img alt='{pic_id}_{num}.jpg' filename='{title}_{num}.jpg' data-original='https://tjg.gzhuibei.com/a/1/{pic_id}/{num}.jpg' src='https://tjg.gzhuibei.com/a/1/{pic_id}/{num}.jpg'></li>";
+        `<li class='imgbox'><div class='imgnum'  onclick='download1({pic_id},{num})'>{imgnum} 下载</div>
+        <img alt='{pic_id}_{num}.jpg' filename='{title}_{num}.jpg' data-original='https://tjg.gzhuibei.com/a/1/{pic_id}/{num}.jpg'
+        src='https://tjg.gzhuibei.com/a/1/{pic_id}/{num}.jpg'></li>`;
     var title = "";
     var flag = false;
     var layer = null;

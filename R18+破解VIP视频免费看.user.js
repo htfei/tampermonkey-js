@@ -5,24 +5,12 @@
 // @description  来不及解释了，快上车！！！
 // @author       w2f
 
-// @match        https://*.kmkk80.com/videoContent/*
-// @match        https://*.kmkk81.com/videoContent/*
-// @match        https://*.kmkk82.com/videoContent/*
-// @match        https://*/videoContent/*
-// @include      /^https://www.kmkk\d+\.com.+$/
+// @include      /^https://(www|h5).kmkk\d+\.com/videoContent/.*?$/
 
-// @match        https://*/play/video/*
-// @match        https://*.hxaa139.com/*
-// @match        https://*.hxaa140.com/*
-// @match        https://*.hxaa141.com/*
-// @include      /^https://www.hxaa\d+\.com.+$/
-// @include      /^https://www.hxbb\d+\.com.+$/
+// @include      /^https://www.hx\w+\.com.+$/
 
-// @match        https://*/playvideo/*
-// @match        https://*/live/*
-// @match        https://*/live
-// @include      /^https://h5.fi11av\d+\.com/play/video.+$/
-// @include      /^https://h5.fi11zz\d+\.com/play/video.+$/
+// @include      /^https://(www|h5).fi11\w+\.com/play/video/.*?$/
+// @include      /^https://h5.fi11\w+\.com/smallVideo/.*?$/
 
 // @match        https://madou.bet/*
 // @match        https://*.com/index
@@ -59,9 +47,12 @@
 // @match        https://hanxiucao.space/*
 // @match        https://kmav.one/*
 
-// @match       https://ywfyxd.xyz/pc/index.html*
+// @match       https://*/pc/index.html*
 
-// @icon         https://index.madou19.tv/json/icon.png
+// @match       https://alltv268.com/*
+// @include      /^https://alltv\w+\.com.*$/
+
+// @icon         https://sy3wmh.xyz/pc/favicon.ico
 // @license      MIT
 // @grant        none
 // @require      https://greasyfork.org/scripts/476730-ajaxhooker-2/code/ajaxHooker_2.js?version=1259979
@@ -82,7 +73,7 @@
     }
     import_js("https://cdn.staticfile.org/jquery/1.10.2/jquery.min.js");
     import_js("https://cdnjs.cloudflare.com/ajax/libs/hls.js/1.1.5/hls.min.js");
-    let not_need_dplayer = location.href.match("https://theav.*?.com/videos/") != null || location.href.match("https://the.*?.fun/videos/") != null;
+    let not_need_dplayer = location.href.match("https://theav.*?.com/videos/") != null || location.href.match("https://the.*?.fun/videos/") != null ;
     if (!not_need_dplayer) {
         import_js("https://cdnjs.cloudflare.com/ajax/libs/dplayer/1.26.0/DPlayer.min.js");
     }
@@ -90,22 +81,30 @@
 
     ajaxHooker.protect();
     ajaxHooker.filter([
-        { type: 'xhr', url: '/videos/getPreUrl', method: 'POST', async: true },//含羞草
+        {type: 'xhr', url: '/videos/getPreUrl', method: 'POST', async: true},//含羞草预览
+        {type: 'xhr', url: '/videos/getShortUrl', method: 'POST', async: true},//含羞草h5短视频
     ]);
     ajaxHooker.hook(request => {
-        if (request.url.indexOf('/videos/getPreUrl') > -1) {
+        if (request.url.indexOf('/videos/getPreUrl') > -1 ) {
             request.response = async res => {
-                console.log("hooked!!! responseText ====>", JSON.parse(res.responseText));
+                console.log("hooked!!! responseText ====>",JSON.parse(res.responseText));
                 res.responseText = await modifyResponse(res.responseText);
             };
         }
+        else if (request.url.indexOf('/videos/getShortUrl') > -1 ) {
+            //解除 含羞草h5短视频 次数限制
+            var obj = {};
+            obj.time = today.replaceAll('/','-');
+            obj.count = 1;
+            localStorage.setItem("preInfo",JSON.stringify(obj));
+        }
     });
 
-    async function modifyResponse(responseText) {
+    async function modifyResponse(responseText){
         let rspjson = await JSON.parse(responseText);
-        rspjson.data.url = rspjson.data.url.replace(/start=\d+\&end=\d+\&/, "");
-        console.log("fixed url====>", rspjson.data.url);
-        window.videoUrl = rspjson.data.url;
+        rspjson.data.url = rspjson.data.url.replace(/start=\d+\&end=\d+\&/,"");
+        console.log("fixed url====>",rspjson.data.url);
+        localStorage.setItem("real_video_url", rspjson.data.url);
         return await JSON.stringify(rspjson);
     }
 
@@ -121,20 +120,20 @@
             <img src="https://i2.100024.xyz/2022/11/23/vlslmo.webp"></div></div>`;
         document.querySelector("head").after(mydiv);
 
-        var interval = setInterval(function () {
+        var interval = setInterval(function() {
             secondsLeft--;
-            var xxx = document.querySelector("#my_add_dizhi3 p"); if (xxx) xxx.innerText = `${chat}（${secondsLeft}s后自动关闭)`;
+            var xxx = document.querySelector("#my_add_dizhi3 p");if(xxx) xxx.innerText = `${chat}（${secondsLeft}s后自动关闭)`;
             if (secondsLeft <= 0) {
-                var yyy = document.querySelector("#my_add_dizhi3"); if (yyy) yyy.parentNode.removeChild(yyy);
+                var yyy = document.querySelector("#my_add_dizhi3"); if(yyy) yyy.parentNode.removeChild(yyy);
                 clearInterval(interval);
             }
         }, 1000);
     }
 
     /* 函数功能：显示视频地址，及提示信息. 参数说明：videoUrl：视频地址  dizhi: 地址显示位置  flag:是否强制刷新 */
-    function show_videoUrl(videoUrl, dizhi, flag = 0) {
+    function show_videoUrl(videoUrl,dizhi, flag = 0) {
         var xxx = document.querySelector("#my_add_dizhi");
-        if (flag == 0 && xxx) {
+        if(flag==0 && xxx){
             return 0;
         }
         if (xxx) xxx.parentNode.removeChild(xxx);
@@ -152,8 +151,8 @@
 
         if (!videoUrl || !el || !dizhi) throw new Error(`部分参数无效，视频地址：${videoUrl}、播放器位置：${el}、提示位置：${dizhi}`);
 
-        let ret = show_videoUrl(videoUrl, dizhi, flag);
-        if (ret == 0) {
+        let ret = show_videoUrl(videoUrl,dizhi,flag);
+        if(ret == 0){
             return 0;
         }
 
@@ -186,7 +185,7 @@
         el.style.zIndex = '999';
         el.style.top = '0';
         var xxx = document.querySelector("#my_add_sibling");
-        if (!xxx) {
+        if(!xxx){
             var sibling = document.createElement('div');
             sibling.id = "my_add_sibling";
             //sibling.style.marginTop = el.offsetHeight + 'px'; // 设置兄弟元素的顶部边距
@@ -265,11 +264,11 @@
         }
     }
 
-    function do_login() {
+    function do_login(){
         let phone = JSON.parse(localStorage.getItem('move-client-user-info'))?.user?.user_info?.phone;
         let event = document.createEvent('HTMLEvents');
-        event.initEvent("input", true, true);
-        if (phone) {
+            event.initEvent("input", true, true);
+        if(phone){
             /* 自动登录 */
             let account = document.querySelectorAll('input.van-field__control')[0];
             account.value = phone;
@@ -278,11 +277,11 @@
             password.value = "123456";
             password.dispatchEvent(event);
             document.querySelector('button[type=submit]').click();
-        } else {
+        }else{
             /* 自动注册 */
             document.querySelector('div.login_1_2_1')?.click();
             let account = document.querySelectorAll('input.van-field__control')[0];
-            account.value = ["130", "131", "132", "133", "135", "137", "138", "170", "187", "189"][Math.floor(10 * Math.random())] + Math.floor(Math.random() * 100000000);
+            account.value = ["130", "131", "132", "133", "135", "137", "138", "170", "187", "189"][ Math.floor(10 * Math.random())] + Math.floor(Math.random() * 100000000);
             account.dispatchEvent(event);
             let password = document.querySelectorAll('input.van-field__control')[1];
             password.value = "123456";
@@ -304,7 +303,7 @@
         let shikan = null;
         let ads = null;
         try {
-            if (!not_need_dplayer && typeof (DPlayer) != 'function') {
+            if (!not_need_dplayer && typeof(DPlayer)!= 'function' ) {
                 /* DPlayer还未加载完毕时就解析完视频地址，会导致播放时报错ReferenceError: DPlayer is not defined */
                 console.log("正在加载DPlayer...");
                 return;
@@ -319,36 +318,53 @@
                 ads = document.querySelector(".v-modal"); if (ads) ads.parentNode.removeChild(ads);/*pc*/
                 /* 1.点击试看（不需要） */
                 /* 2.解析真实地址 */
-                videoUrl = (document.querySelector("div.detailsBox") || document.querySelector("div.user"))?.__vue__?.detailsdata?.vod_direct_play_url;
-                if (player && videoUrl) {
-                    if (videoUrl == last_videoUrl) {
+                videoUrl = (document.querySelector("div.detailsBox")|| document.querySelector("div.user"))?.__vue__?.detailsdata?.vod_direct_play_url;
+                if(player && videoUrl){
+                    if(videoUrl == last_videoUrl){
                         return;
-                    } else {
+                    }else{
                         last_videoUrl = videoUrl;
                         console.log("真实地址:", videoUrl);
                         console.log("last_videoUrl:", last_videoUrl);
                         /* 3.移除广告 */
                         //ads = document.querySelector(".MpplayFh");
                         /* 4.播放正片 */
-                        play_video(videoUrl, player, document.querySelector("div.DetailsofTheTitle") || document.querySelector("div.playVideoInfo"), 1);
+                        play_video(videoUrl, player, document.querySelector("div.DetailsofTheTitle") || document.querySelector("div.playVideoInfo"),1);
                         //player.parentNode.before(ads);
                         /* 5.停止定时器 */
                         //clearInterval(my_timer);
                     }
-                } else {
+                }else{
                     console.log("[小天鹅]视频页面，未获取到地址，继续尝试...");
                 }
             }
             /* 猫咪vip */
             else if (location.href.match("https://www..*?.com/vip/") != null) {
-                document.querySelectorAll("div.content-item  a.video-pic")?.forEach(a => { a.href = a.href.replace("/vip/play-", "/shipin/detail-") });
+                document.querySelectorAll("div.content-item  a.video-pic")?.forEach( a => {a.href = a.href.replace("/vip/play-","/shipin/detail-")});
                 //clearInterval(my_timer);
                 //console.log("[猫咪]视频页面，未获取到地址，继续尝试...");
             }
             // 猫咪app
-            else if (location.href.match("https://ywfyxd.xyz/pc/index.html*") != null) {
+            else if (location.href.match("https://.*?.xyz/pc/index.html*") != null) {
                 document.querySelectorAll("#app div.box div.video_img")?.forEach(
-                    (item, idx, arr) => {
+                    (item,idx,arr) => {
+                        var xxx = document.querySelector(`#my_add_dizhi${idx}`);
+                        if (xxx) { xxx.parentNode.removeChild(xxx); }
+                        var videourl = item.querySelector("div > img")?.src?.split('cover')[2]?.split('.')[0];
+                        if (videourl) {
+                            var mydiv = document.createElement('div');
+                            mydiv.innerHTML = `<div id="my_add_dizhi${idx}" style="color:red;font-size:14px;word-wrap: break-word;word-break: break-all;">
+                            <p><a href="https://wsdfamwasvbnmkijsdd.ue9n10.xyz/uploads/video${videourl}_wm.mp4/index.m3u8" target="_blank">✔点此访问</a></p></div>`;
+                            item.after(mydiv);
+                        }
+                    }
+                );
+                //切换下一页网址不变，无法刷新，故不能停止定时器
+            }
+            // all av //todo
+            else if (location.href.match("https://alltv.*?.com/") != null) {
+                document.querySelectorAll("div.video-list-unit-media")?.forEach(
+                    (item,idx,arr) => {
                         var xxx = document.querySelector(`#my_add_dizhi${idx}`);
                         if (xxx) { xxx.parentNode.removeChild(xxx); }
                         var videourl = item.querySelector("div > img")?.src?.split('cover')[2]?.split('.')[0];
@@ -407,13 +423,13 @@
                 }
             }
             // The AV Pron，兼容手机 + PC
-            else if (location.href.match("https://theav.*?.com/videos/") != null || location.href.match("https://the.*?.fun/videos/") != null) {
+            else if (location.href.match("https://theav.*?.com/videos/") != null || location.href.match("https://the.*?.fun/videos/") != null ) {
                 // 2.解析真实地址
                 //已知缺陷: 可能网站存在限制，控制台中player.api("hls")有值，但脚本获取为null 。只有使用 unsafeWindow.player.api("hls")能获取到 ，
                 //但由于userscript不支持unsafeWindow，故safari浏览器+userscript无效。改为从<script/>内容查找m3u8地址
                 videoUrl = window.player?.api("hls")?.url?.split('?')[0] || window.m3ky?.split('?')[0]; //该方案在safari浏览器+userscript下无效
                 // videoUrl = document.body.innerHTML.match("https:(.*?).m3u8")[0];  // $("script").text()
-                if (videoUrl && typeof (Playerjs) == 'function') {
+                if (videoUrl && typeof(Playerjs)== 'function' ) {
                     console.log("真实地址:", videoUrl);
                     // 3.移除广告
                     ads = document.querySelector(".table"); if (ads) ads.style.display = "none";
@@ -440,7 +456,7 @@
                     /* 3.移除广告 */
                     ads = document.querySelector(".exchangeBg"); if (ads != null) ads.style.display = "none";
                     /* 4.播放正片 */
-                    play_video(videoUrl, document.querySelector("#videoContent > div.video") || document.querySelector("div.backImg"), document.querySelector("div.videoTitle") || document.querySelector("div p.name"));
+                    play_video(videoUrl, document.querySelector("#videoContent > div.video")|| document.querySelector("div.backImg"), document.querySelector("div.videoTitle") || document.querySelector("div p.name"));
                     /* 5.停止定时器 */
                     clearInterval(my_timer);
                 }
@@ -512,29 +528,33 @@
             /* 含羞草视频 ，兼容手机 + PC */
             else if (location.href.match("/play/video/") != null) {
                 /* 2.解除试看限制 */
-                var obj = JSON.parse(localStorage.getItem('preInfo'));
-                if (obj) {
+                var obj = {};
+                if(location.href.match("www") != null){
                     // PC
+                    //obj = JSON.parse(localStorage.getItem('preInfo'));
+                    obj.time = today.replaceAll('/','-');
                     obj.preNum = 99;
                     obj.count = 1;
-                    localStorage.setItem("preInfo", JSON.stringify(obj));
+                    localStorage.setItem("preInfo",JSON.stringify(obj));
                 }
-                else {
+                else{
                     // ios android
-                    obj = JSON.parse(localStorage.getItem('tryPlayNum'));
-                    obj.num = 0;
-                    localStorage.setItem("tryPlayNum", JSON.stringify(obj));
+                    //obj = JSON.parse(localStorage.getItem('tryPlayNum'));
+                    obj.time = today.replaceAll('/','-');
+                    obj.num = -89;
+                    localStorage.setItem("tryPlayNum",JSON.stringify(obj));
                 }
                 shikan = document.querySelector("div.try div.g-flex-jcc") || document.querySelector("div.cursor-pointer.flex-center.space-x-1"); /* 前面为手机。后面为PC */
-                if (window.videoUrl) {
+                let videoUrl = localStorage.getItem("real_video_url");
+                if (videoUrl) {
+                    //5.停止定时器
+                    clearInterval(my_timer); console.log("停止定时器！");
+                    localStorage.removeItem("real_video_url");
                     //3.移除广告
                     ads = document.querySelector("div.relative.bg-overlay > a");
                     if (ads != null) ads.style.display = "none";
                     //4.显示地址
-                    show_videoUrl(window.videoUrl, document.querySelector("div.g-m-t-8.g-flex.title") || document.querySelector("h2.text-base.article-title"), 1);
-                    //5.停止定时器
-                    clearInterval(my_timer); console.log("停止定时器！");
-                    window.videoUrl = null;
+                    show_videoUrl(videoUrl, document.querySelector("div.g-m-t-8.g-flex.title") || document.querySelector("h2.text-base.article-title"), 1);
                 }
                 else if (shikan) {
                     /* 1.点击试看 */
@@ -590,7 +610,7 @@
             err_cnt = 0;
             my_timer = setInterval(get_videourl, 2000);
         }
-        if (today != localStorage.getItem('today_is_show') && Math.abs(new Date().getMinutes() - min) > 10) {//今天在当前站点没弹过，且在当前页面停留5分钟以上时
+        if(today != localStorage.getItem('today_is_show') && Math.abs(new Date().getMinutes() - min) > 10 ){//今天在当前站点没弹过，且在当前页面停留5分钟以上时
             localStorage.setItem("today_is_show", today);
             console.log("支持作者弹窗!");
             show_support_author();
