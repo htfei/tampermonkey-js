@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         快猫/红杏/含羞草/麻豆/AvPron/皇家会所/9sex/91TV/猫咪/小天鹅/福利姬破解VIP视频免费看
 // @namespace    18x_vip_video_free_see
-// @version      0.43
+// @version      0.45
 // @description  来不及解释了，快上车！！！
 // @author       w2f
 
@@ -9,7 +9,7 @@
 
 // @include      /^https://www.hx\w+\.com.+$/
 
-// @include      /^https://(www|h5).fi11\w+\.com/play/video/.*?$/
+// @include      /^http(s)?://(www|h5).fi11\w+\.com/play/video/.*?$/
 // @include      /^https://h5.fi11\w+\.com/smallVideo/.*?$/
 
 // @match        https://madou.bet/*
@@ -47,7 +47,7 @@
 // @match        https://hanxiucao.space/*
 // @match        https://kmav.one/*
 
-// @match       https://*/pc/index.html*
+// @include       /^https://sy3wmh.xyz/(pc|h5)/index.html.*?$/
 
 // @match       https://alltv268.com/*
 // @include      /^https://alltv\w+\.com.*$/
@@ -57,6 +57,8 @@
 // @grant        none
 // @require      https://greasyfork.org/scripts/476730-ajaxhooker-2/code/ajaxHooker_2.js?version=1259979
 // @run-at       document-start
+// @downloadURL https://update.sleazyfork.org/scripts/456496/%E5%BF%AB%E7%8C%AB%E7%BA%A2%E6%9D%8F%E5%90%AB%E7%BE%9E%E8%8D%89%E9%BA%BB%E8%B1%86AvPron%E7%9A%87%E5%AE%B6%E4%BC%9A%E6%89%809sex91TV%E7%8C%AB%E5%92%AA%E5%B0%8F%E5%A4%A9%E9%B9%85%E7%A6%8F%E5%88%A9%E5%A7%AC%E7%A0%B4%E8%A7%A3VIP%E8%A7%86%E9%A2%91%E5%85%8D%E8%B4%B9%E7%9C%8B.user.js
+// @updateURL https://update.sleazyfork.org/scripts/456496/%E5%BF%AB%E7%8C%AB%E7%BA%A2%E6%9D%8F%E5%90%AB%E7%BE%9E%E8%8D%89%E9%BA%BB%E8%B1%86AvPron%E7%9A%87%E5%AE%B6%E4%BC%9A%E6%89%809sex91TV%E7%8C%AB%E5%92%AA%E5%B0%8F%E5%A4%A9%E9%B9%85%E7%A6%8F%E5%88%A9%E5%A7%AC%E7%A0%B4%E8%A7%A3VIP%E8%A7%86%E9%A2%91%E5%85%8D%E8%B4%B9%E7%9C%8B.meta.js
 // ==/UserScript==
 
 (function () {
@@ -344,13 +346,32 @@
                 //clearInterval(my_timer);
                 //console.log("[猫咪]视频页面，未获取到地址，继续尝试...");
             }
-            // 猫咪app
+            // 猫咪app pc （vip精选err,其他ok）
             else if (location.href.match("https://.*?.xyz/pc/index.html*") != null) {
-                document.querySelectorAll("#app div.box div.video_img")?.forEach(
+                var nodelist = document.querySelectorAll("#app div.box div.video_img");
+                nodelist?.forEach(
                     (item,idx,arr) => {
                         var xxx = document.querySelector(`#my_add_dizhi${idx}`);
                         if (xxx) { xxx.parentNode.removeChild(xxx); }
                         var videourl = item.querySelector("div > img")?.src?.split('cover')[2]?.split('.')[0];
+                        if (videourl) {
+                            var mydiv = document.createElement('div');
+                            mydiv.innerHTML = `<div id="my_add_dizhi${idx}" style="color:red;font-size:14px;word-wrap: break-word;word-break: break-all;">
+                            <p><a href="https://wsdfamwasvbnmkijsdd.ue9n10.xyz/uploads/video${videourl}_wm.mp4/index.m3u8" target="_blank">✔点此访问</a></p></div>`;
+                            item.after(mydiv);
+                        }
+                    }
+                );
+                //切换下一页网址不变，无法刷新，故不能停止定时器
+            }
+            // 猫咪app h5 (全部ok)
+            else if (location.href.match("https://.*?.xyz/h5/index.html*") != null) {
+                nodelist = document.querySelectorAll("div.imgbox div div.vue-waterfall-column>div");
+                nodelist?.forEach(
+                    (item,idx,arr) => {
+                        var xxx = document.querySelector(`#my_add_dizhi${idx}`);
+                        if (xxx) { xxx.parentNode.removeChild(xxx); }
+                        var videourl = item.querySelector("img")?.src?.split('cover')[2]?.split('.')[0];
                         if (videourl) {
                             var mydiv = document.createElement('div');
                             mydiv.innerHTML = `<div id="my_add_dizhi${idx}" style="color:red;font-size:14px;word-wrap: break-word;word-break: break-all;">
