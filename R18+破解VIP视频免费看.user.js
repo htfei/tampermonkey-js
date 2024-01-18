@@ -1,16 +1,21 @@
 // ==UserScript==
 // @name         快猫/红杏/含羞草/麻豆/AvPron/皇家会所/9sex/91TV/猫咪/小天鹅/福利姬破解VIP视频免费看
+// @name:zh-TW   快貓/紅杏/含羞草/麻豆/AvPron/皇家會所/9sex/91TV/貓咪/小天鵝/福利姬破解VIP視頻免費看
 // @namespace    18x_vip_video_free_see
-// @version      0.46
+// @version      0.47
 // @description  来不及解释了，快上车！！！
+// @description:zh-TW  來不及解釋了，快上車！！！
 // @author       w2f
 
 // @include      /^https://(www|h5).kmkk\d+\.com/videoContent/.*?$/
 
 // @include      /^https://www.hx\w+\.com.+$/
 
-// @include      /^http(s)?:\/\/(www|h5)\.fi11\w+\.com\/play\/video\/.*?/
-// @include      /^http(s)?:\/\/(www|h5)\.fi11\w+\.com\/smallVideo\/.*?/
+// @match        https://*.com/play/video/*
+// @match        https://*.com/smallVideo/*
+// @include      /^1http(s)?:\/\/(www|h5)\.fi11\w+\.com\/play\/video/
+// @include      /^1http(s)?:\/\/(www|h5)\.\w+\.(com|cn)\/play\/video/
+// @include      /^1http(s)?:\/\/(www|h5)\.fi11\w+\.com\/smallVideo\/.*?/
 
 // @match        https://madou.bet/*
 // @match        https://*.com/index
@@ -31,12 +36,13 @@
 
 // @match        https://kdt29.com/*
 
+// @ 猫咪
 // @match        https://*/vip/index.html
 // @match        https://*/vip/list-*.html
 // @match        https://*/index/home.html
+// @include      /https:\/\/www\.(\w+)\.com\/page\/vip/
 
-// @include       /^https://sy3wmh.xyz/(pc|h5)/index.html.*?$/
-// @include       /^https://ywfyxd.xyz/(pc|h5)/index.html.*?$/
+// @include      /^https:\/\/(.*)\.xyz\/(pc|h5)\/index\.html/
 
 // @match       https://alltv268.com/*
 // @include      /^https://alltv\w+\.com.*$/
@@ -295,10 +301,23 @@
                 return;
             }
             /* 猫咪vip */
-            else if (location.href.match("https://www..*?.com/vip/") != null) {
-                document.querySelectorAll("div.content-item  a.video-pic")?.forEach( a => {a.href = a.href.replace("/vip/play-","/shipin/detail-")});
-                //clearInterval(my_timer);
+            else if (location.href.match(/https:\/\/www\.(\w+)\.com\/page\/vip/) != null) {
+                var nodelist = document.querySelectorAll("div.content-item");
+                nodelist?.forEach(
+                    (item,idx,arr) => {
+                        var xxx = document.querySelector(`#my_add_dizhi${idx}`);
+                        if (xxx) { xxx.parentNode.removeChild(xxx); }
+                        var videourl = item.querySelector("a.video-pic")?.href?.replace("/vip/play-","/shipin/detail-");
+                        if (videourl) {
+                            var mydiv = document.createElement('div');
+                            mydiv.innerHTML = `<div id="my_add_dizhi${idx}" style="color:red;font-size:14px;word-wrap: break-word;word-break: break-all;">
+                            <p><a href="${videourl}" target="_blank">✔点此访问</a></p></div>`;
+                            item.after(mydiv);
+                        }
+                    }
+                );
                 //console.log("[猫咪]视频页面，未获取到地址，继续尝试...");
+                //切换下一页网址不变，无法刷新，故不能停止定时器
             }
             // 快猫app pc （vip精选err,其他ok）
             else if (location.href.match("https://.*?.xyz/pc/index.html*") != null) {
@@ -345,7 +364,8 @@
                         var videourl = item.querySelector("div > img")?.src?.split('cover')[2]?.split('.')[0];
                         if (videourl) {
                             var mydiv = document.createElement('div');
-                            mydiv.innerHTML = `<div id="my_add_dizhi${idx}" style="color:red;font-size:14px;word-wrap: break-word;word-break: break-all;"><p><a href="https://wsdfamwasvbnmkijsdd.ue9n10.xyz/uploads/video${videourl}_wm.mp4/index.m3u8" target="_blank">✔点此访问</a></p></div>`;
+                            mydiv.innerHTML = `<div id="my_add_dizhi${idx}" style="color:red;font-size:14px;word-wrap: break-word;word-break: break-all;">
+                            <p><a href="https://wsdfamwasvbnmkijsdd.ue9n10.xyz/uploads/video${videourl}_wm.mp4/index.m3u8" target="_blank">✔点此访问</a></p></div>`;
                             item.after(mydiv);
                         }
                     }
