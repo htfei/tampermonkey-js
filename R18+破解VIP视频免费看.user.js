@@ -1,8 +1,8 @@
 // ==UserScript==
-// @name         快猫/红杏/含羞草/麻豆/AvPron/皇家会所/9sex/91TV/猫咪/小天鹅/福利姬破解VIP视频免费看
-// @name:zh-TW   快貓/紅杏/含羞草/麻豆/AvPron/皇家會所/9sex/91TV/貓咪/小天鵝/福利姬破解VIP視頻免費看
+// @name         快猫/红杏/含羞草/麻豆TV/AvPron/9sex/91TV/猫咪/小狐狸/橘猫/91pron/91吃鸡破解VIP视频免费看
+// @name:zh-TW   快貓/紅杏/含羞草/麻荳TV/AvPron/9sex/91TV/貓咪/小狐貍/橘貓/91pron/91喫鷄破解VIP眎頻免費看
 // @namespace    18x_vip_video_free_see
-// @version      0.47
+// @version      0.53
 // @description  来不及解释了，快上车！！！
 // @description:zh-TW  來不及解釋了，快上車！！！
 // @author       w2f
@@ -11,18 +11,20 @@
 
 // @include      /^https://www.hx\w+\.com.+$/
 
-// @match        https://*.com/play/video/*
-// @match        https://*.com/smallVideo/*
-// @include      /^1http(s)?:\/\/(www|h5)\.fi11\w+\.com\/play\/video/
-// @include      /^1http(s)?:\/\/(www|h5)\.\w+\.(com|cn)\/play\/video/
-// @include      /^1http(s)?:\/\/(www|h5)\.fi11\w+\.com\/smallVideo\/.*?/
+// @match        https://www.fi11aa81.com/play/video/*
+// @match        https://*/play/video/*
+// @match        https://*/smallVideo/*
+// @include      /^http(s)?:\/\/(www|h5)\.fi11\w+\.com\/play\/video/
+// @include      /^http(s)?:\/\/(www|h5)\.\w+\.(com|cn|xyz)\/play\/video/
+// @include      /^http(s)?:\/\/(www|h5)\.fi11\w+\.(com|cn|xyz)\/smallVideo\/.*?/
 
+// @麻豆tv https://d2s51b8ht.com/ https://hmxxrzi.xyz/new   @91TV https://kdt29.com/
 // @match        https://madou.bet/*
-// @match        https://*.com/index
-// @match        https://*.com/new
-// @match        https://*.com/channel/videoList*
-// @match        https://*.com/tags*
-// @match        https://*.com/rankList
+// @match        https://*/index*
+// @match        https://*/new*
+// @match        https://*/channel/videoList*
+// @match        https://*/tags*
+// @match        https://*/rankList*
 // @match        https://madou.tv/*
 
 // @match        https://afkv28.com/*
@@ -33,8 +35,8 @@
 
 // @match        https://9sex.com/index/movie/play/id/*.html
 // @match        https://*/index/movie/play/id/*
-
-// @match        https://kdt29.com/*
+// @match        http://*/index/movie/play/id/*
+// @include      /^http(s)?:\/\/(www|h5)\.\w+\.xyz\/movie\/play\/id/
 
 // @ 猫咪
 // @match        https://*/vip/index.html
@@ -52,8 +54,8 @@
 // @grant        none
 // @require      https://greasyfork.org/scripts/476730-ajaxhooker-2/code/ajaxHooker_2.js?version=1259979
 // @run-at       document-body
-// @downloadURL https://update.sleazyfork.org/scripts/456496/%E5%BF%AB%E7%8C%AB%E7%BA%A2%E6%9D%8F%E5%90%AB%E7%BE%9E%E8%8D%89%E9%BA%BB%E8%B1%86AvPron%E7%9A%87%E5%AE%B6%E4%BC%9A%E6%89%809sex91TV%E7%8C%AB%E5%92%AA%E5%B0%8F%E5%A4%A9%E9%B9%85%E7%A6%8F%E5%88%A9%E5%A7%AC%E7%A0%B4%E8%A7%A3VIP%E8%A7%86%E9%A2%91%E5%85%8D%E8%B4%B9%E7%9C%8B.user.js
-// @updateURL https://update.sleazyfork.org/scripts/456496/%E5%BF%AB%E7%8C%AB%E7%BA%A2%E6%9D%8F%E5%90%AB%E7%BE%9E%E8%8D%89%E9%BA%BB%E8%B1%86AvPron%E7%9A%87%E5%AE%B6%E4%BC%9A%E6%89%809sex91TV%E7%8C%AB%E5%92%AA%E5%B0%8F%E5%A4%A9%E9%B9%85%E7%A6%8F%E5%88%A9%E5%A7%AC%E7%A0%B4%E8%A7%A3VIP%E8%A7%86%E9%A2%91%E5%85%8D%E8%B4%B9%E7%9C%8B.meta.js
+// @downloadURL https://update.greasyfork.org/scripts/456496/%E5%BF%AB%E7%8C%AB%E7%BA%A2%E6%9D%8F%E5%90%AB%E7%BE%9E%E8%8D%89%E9%BA%BB%E8%B1%86TVAvPron9sex91TV%E7%8C%AB%E5%92%AA%E5%B0%8F%E7%8B%90%E7%8B%B8%E6%A9%98%E7%8C%AB91pron91%E5%90%83%E9%B8%A1%E7%A0%B4%E8%A7%A3VIP%E8%A7%86%E9%A2%91%E5%85%8D%E8%B4%B9%E7%9C%8B.user.js
+// @updateURL https://update.greasyfork.org/scripts/456496/%E5%BF%AB%E7%8C%AB%E7%BA%A2%E6%9D%8F%E5%90%AB%E7%BE%9E%E8%8D%89%E9%BA%BB%E8%B1%86TVAvPron9sex91TV%E7%8C%AB%E5%92%AA%E5%B0%8F%E7%8B%90%E7%8B%B8%E6%A9%98%E7%8C%AB91pron91%E5%90%83%E9%B8%A1%E7%A0%B4%E8%A7%A3VIP%E8%A7%86%E9%A2%91%E5%85%8D%E8%B4%B9%E7%9C%8B.meta.js
 // ==/UserScript==
 
 (function () {
@@ -70,9 +72,9 @@
     }
     import_js("https://cdn.staticfile.org/jquery/1.10.2/jquery.min.js");
     import_js("https://cdnjs.cloudflare.com/ajax/libs/hls.js/1.1.5/hls.min.js");
-    let not_need_dplayer = location.href.match("https://theav.*?.com/videos/") != null || //avporn
-        location.href.match("https://the.*?.fun/videos/") != null || //
-        location.href.match("/play/video/") != null;//含羞草不再需要加载dplayer
+    let not_need_dplayer = location.href.match("https://theav.*?.com/videos/") != null  //avporn
+         || location.href.match("https://the.*?.fun/videos/") != null; //
+        // || location.href.match("/play/video/") != null;//含羞草不再需要加载dplayer
 
     if (!not_need_dplayer) {
         import_js("https://cdnjs.cloudflare.com/ajax/libs/dplayer/1.26.0/DPlayer.min.js");
@@ -81,10 +83,14 @@
 
     ajaxHooker.protect();
     ajaxHooker.filter([
-        {type: 'xhr', url: '/videos/getPreUrl', method: 'POST', async: true},//含羞草预览
+        //{type: 'xhr', url: '/videos/getPreUrl', method: 'POST', async: true},//含羞草预览
+        {type: 'xhr', url: '/videos/getInfo', method: 'POST', async: true},//含羞草真实请求 https://ap638.daoshaort.com/videos/getInfo
     ]);
     ajaxHooker.hook(request => {
-        if (request.url.indexOf('/videos/getPreUrl') > -1 ) {
+        if (request.url.indexOf('/videos/getInfo') > -1 ) {
+            console.log("hooked!!! request ====>",request);
+            //https://ap638.daoshaort.com/videos/v2/getUrl //限免api
+            request.url = "https://api.qianyuewenhua.xyz/videos/getPreUrl";//含羞草预览api
             request.response = async res => {
                 console.log("hooked!!! responseText ====>",JSON.parse(res.responseText));
                 res.responseText = await modifyResponse(res.responseText);
@@ -96,25 +102,45 @@
         let rspjson = await JSON.parse(responseText);
         rspjson.data.url = rspjson.data.url.replace(/start=\d+\&end=\d+\&/,"");
         console.log("fixed url====>",rspjson.data.url);
+        //getPreUrl : {"code":0,"msg":"","data":{"id":55159,"url":"https://t189.ntgdct.com/20240812/KWkC44Jj/index.m3u8?start=600\u0026end=630\u0026sign=X\u0026rSign=Y"},"traceId":"b0GJvO"}
         localStorage.setItem("real_video_url", rspjson.data.url);
-        return await JSON.stringify(rspjson);
+        if(window.navigator.appVersion.includes("Windows")){
+            return await JSON.stringify(rspjson);
+        }
+        let orirsp = {"code":0,"msg":"","data":{
+            "canDownload":true,"canPlay":false,"canPrePlay":true,"discount":70,"discountPoint":0,"downloadPoint":2,
+                                                "info":{"id":55159,"coverImgUrl":"",
+                                                        "coverImgUrlVertical":"",
+                                                        "name":"",
+                                                        "addTime":"2024-08-17 19:25:31","uid":0,"length":782,"point":0,"isVip":1,"videoSort":1,"angleType":0,"disabled":0,"status":1,
+                                                        "transcodingStatus":0,"preTranscodingStatus":0,"isTemporarilyFree":0,"isSetPre":0,"recommend":"","isCollect":0,"isLike":0,
+                                                        "isBuy":0,"isAngle":11,"isSee":0,"isDownload":0,"isNeedLogin":1,"no":"1XGC4509XSF",
+                                                        "tags":"身材,颜值,美女,性感,居家.","typeId":5,"isFeatured":0,"isVertical":0,"url":"",
+                                                        "preUrl":"","urlId":0,"auditReason":"","description":"","width":0,"height":0,"release_type":0,"typeName":"自拍","typeParentId":4,
+                                                        "buyCount":0,"collectionCount":2735,"hot":20736,"likeCount":3376,"seeCount":15591,"commentCount":0,
+                                                        "userInfo":{"id":0,"avatar":"","avatar_thumb":"","user_nicename":"","sex":0,"newsVip":0,"coverImg":"","pcCoverImg":"",
+                                                                    "isattention":0,"fans":0,"offset":0,"isUpdate":0}}},
+                      "traceId":"Q57ad6"};
+        return await JSON.stringify(orirsp);//如果不改回去，手机端缺少部分字段会报错，界面异常； PC可以不加；
     }
 
     let today = new Date().toLocaleDateString();
     let min = new Date().getMinutes();
     let chat = `脚本免费，更新维护不易，若脚本有帮助到你，请随缘打赏⚡，感谢支持！`;
-    function show_support_author() {
-        var secondsLeft = 10;
+    function show_support_author(msg = chat, secondsLeft = 5) {
+        //var secondsLeft = 5;
         var mydiv = document.createElement('div');
         mydiv.innerHTML = `<div id="my_add_div_support_author" style="position: fixed;z-index: 10000;top: 0;left: 0;width: 100%;height: 100%;background: rgba(0,0,0,0.8);">
             <div style="position: absolute;top: 50%;left: 50%;transform: translate(-50%, -50%);max-width: 90%;max-height: 90%;">
-            <p style="color:red;font-size:14px">${chat}（${secondsLeft}s后自动关闭）</p>
+            <p style="color:red;font-size:14px">${msg}</p>
             </div></div>`;
         document.querySelector("head").after(mydiv);
-
+        //navigator.clipboard.writeText(mydiv.innerText);//复制到剪贴板
+        //console.log("以下报错信息已复制到剪贴板：",mydiv.innerText);
+        if(secondsLeft == 0) return;
         var interval = setInterval(function() {
             secondsLeft--;
-            var xxx = document.querySelector("#my_add_div_support_author p");if(xxx) xxx.innerText = `${chat}（${secondsLeft}s后自动关闭)`;
+            var xxx = document.querySelector("#my_add_div_support_author p");if(xxx) xxx.innerText = `${msg}（${secondsLeft}s后自动关闭)`;
             if (secondsLeft <= 0) {
                 var yyy = document.querySelector("#my_add_div_support_author"); if(yyy) yyy.parentNode.removeChild(yyy);
                 clearInterval(interval);
@@ -131,8 +157,8 @@
         if (xxx) xxx.parentNode.removeChild(xxx);
         var mydiv = document.createElement('div');
         mydiv.innerHTML = `<div id="my_add_dizhi" style="color:red;font-size:14px;word-wrap: break-word;word-break: break-all;">
-            <p style="">视频地址：<a href="${videoUrl}" target="_blank">${videoUrl}</a></p>
-            <p style="">问题反馈 or 支持作者请<a href="https://sleazyfork.org/zh-CN/scripts/456496" target="_blank">【点击此处】</a>，使用愉快！</p>
+            <p style="">视频地址：<a href="${videoUrl}" target="_blank">✅点此访问</a></p>
+            <p style="">问题反馈 or 支持作者请<a href="https://greasyfork.org/zh-CN/scripts/456496" target="_blank">【点击此处】</a>，使用愉快！</p>
             </div>`;
         dizhi?.after(mydiv);
         return 1;
@@ -240,18 +266,18 @@
     function show_err_log(err) {
         err && console.log(err);
         err_cnt++;
-        if (err_cnt == 10) {
+        if (err_cnt == 5) {
             //err_cnt = 0;
             var mydiv = document.createElement('div');
-            mydiv.innerHTML = `<div id="my_add_err_log" style="color:red;font-size:14px">
-            解析出错，1.检查是否登录！2.请仔细阅读<a href="https://sleazyfork.org/zh-CN/scripts/456496" target="_blank">【脚本说明】</a>查看是否支持你的平台组合，
-            如需帮助请复制以下内容到脚本评论区，等候作者处理! 请加上使用的平台组合，如：chrome + tampermonkey 。
-            <p style="color:red;font-size:14px">错误信息：${err || "尝试多次仍然未获取到地址,可能是网站已更新..."}</p>
-            <p style="color:red;font-size:14px">操作系统：${navigator.platform}</p>
-            <p style="color:red;font-size:14px">浏览器：${navigator.userAgent}</p>
-            <p style="color:red;font-size:14px">当前地址：${location.href}</p>
-            </div>`;
-            document.querySelector("head").after(mydiv);
+            //mydiv.innerHTML =
+            let msg = `解析出错，复制以下内容到脚本评论区等候作者处理!
+            当前地址：${location.href}
+            错误信息：${err || "尝试多次仍然未获取到地址,可能是网站已更新..."}
+            操作系统：${navigator.platform}
+            浏览器：${navigator.userAgent}`;
+            console.log(msg);
+            //show_support_author(msg,0);
+            //document.querySelector("head").after(mydiv);
             clearInterval(my_timer);
         }
     }
@@ -522,7 +548,7 @@
             } */
             /* 含羞草视频 ，兼容手机 + PC */
             else if (location.href.match("/play/video/") != null) {
-                // 2.解除试看限制
+                /*// 2.解除试看限制
                 var obj = JSON.parse(localStorage.getItem('preInfo'));//解除 pc 次数限制
                 if(obj){
                     obj.preNum = 100;
@@ -538,25 +564,31 @@
                 if(obj3){
                     obj3.count = -90;
                     localStorage.setItem("visitorShortLimit",JSON.stringify(obj3));
-                }
-                shikan = document.querySelector("div.try div.g-flex-jcc") || document.querySelector("div.cursor-pointer.flex-center.space-x-1"); /* 前面为手机。后面为PC */
+                }*/
+                //shikan = document.querySelector("div.try div.g-flex-jcc") || document.querySelector("div.cursor-pointer.flex-center.space-x-1"); /* 前面为手机。后面为PC */
                 let videoUrl = localStorage.getItem("real_video_url");
                 if (videoUrl) {
                     //3.移除广告
-                    ads = document.querySelector("div.relative.bg-overlay > a");
+                    ads = document.querySelector("div.vip-mask");
+                    if (ads != null) ads.style.display = "none";
+                    ads = document.querySelector("div.overflow-hidden");
                     if (ads != null) ads.style.display = "none";
                     //4.显示地址
                     console.log("videoUrl:",videoUrl);
-                    show_videoUrl(videoUrl, document.querySelector("div.g-m-t-8.g-flex.title") || document.querySelector("h2.text-base.article-title"), 1);
+                    //show_videoUrl(videoUrl, document.querySelector("div.g-m-t-8.g-flex.title") || document.querySelector("h2.text-base.article-title"), 1);
+                     //4.播放正片
+                    let el = document.querySelector("#v_prism")|| document.querySelector("#video1");
+                    let dizhi = document.querySelector("div.g-m-t-8.g-flex.title") || document.querySelector("h2.text-base.article-title");
+                    play_video(videoUrl, el, dizhi, 1);
                     //5.停止定时器
                     localStorage.removeItem("real_video_url");
                     console.log("停止定时器！");
                     clearInterval(my_timer);
                 }
-                else if (shikan) {
-                    /* 1.点击试看 */
-                    shikan.click(); console.log("点击试看！"); shikan.parentNode.removeChild(shikan);
-                }
+                //else if (shikan) {
+                    ///* 1.点击试看 */
+                    //shikan.click(); console.log("点击试看！"); shikan.parentNode.removeChild(shikan);
+                //}
                 else {
                     console.log("[含羞草]视频页面，未获取到地址，继续尝试...");
                 }
@@ -590,7 +622,7 @@
             }
         }
         catch (err) {
-            console.log(`${err}`);
+            //console.log(`${err}`);
             show_err_log(err);
         }
     }
@@ -609,7 +641,7 @@
         if(today != localStorage.getItem('today_is_show') && Math.abs(new Date().getMinutes() - min) > 10 ){//今天在当前站点没弹过，且在当前页面停留10分钟以上时
             localStorage.setItem("today_is_show", today);
             console.log("支持作者弹窗!");
-            show_support_author();
+            //show_support_author();
         }
     }, 1000);
 
