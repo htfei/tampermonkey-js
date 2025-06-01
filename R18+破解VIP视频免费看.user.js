@@ -2,7 +2,7 @@
 // @name         快猫/红杏/含羞草/麻豆TV/AvPron/9sex/91TV/猫咪/小狐狸/橘猫/91pron/91吃鸡破解VIP视频免费看
 // @name:zh-TW   快貓/紅杏/含羞草/麻荳TV/AvPron/9sex/91TV/貓咪/小狐貍/橘貓/91pron/91喫鷄破解VIP眎頻免費看
 // @namespace    18x_vip_video_free_see
-// @version      0.53
+// @version      0.54
 // @description  来不及解释了，快上车！！！
 // @description:zh-TW  來不及解釋了，快上車！！！
 // @author       w2f
@@ -18,7 +18,7 @@
 // @include      /^http(s)?:\/\/(www|h5)\.\w+\.(com|cn|xyz)\/play\/video/
 // @include      /^http(s)?:\/\/(www|h5)\.fi11\w+\.(com|cn|xyz)\/smallVideo\/.*?/
 
-// @麻豆tv https://d2s51b8ht.com/ https://hmxxrzi.xyz/new   @91TV https://kdt29.com/
+// @麻豆tv        https://d2s51b8ht.com/ err https://hmxxrzi.xyz/new  ok  @91TV https://kdt29.com/ err
 // @match        https://madou.bet/*
 // @match        https://*/index*
 // @match        https://*/new*
@@ -52,7 +52,7 @@
 // @icon         https://sy3wmh.xyz/pc/favicon.ico
 // @license      MIT
 // @grant        none
-// @require      https://greasyfork.org/scripts/476730-ajaxhooker-2/code/ajaxHooker_2.js?version=1259979
+// @require      https://scriptcat.org/lib/637/1.4.5/ajaxHooker.js#sha256=EGhGTDeet8zLCPnx8+72H15QYRfpTX4MbhyJ4lJZmyg=
 // @run-at       document-body
 // @downloadURL https://update.greasyfork.org/scripts/456496/%E5%BF%AB%E7%8C%AB%E7%BA%A2%E6%9D%8F%E5%90%AB%E7%BE%9E%E8%8D%89%E9%BA%BB%E8%B1%86TVAvPron9sex91TV%E7%8C%AB%E5%92%AA%E5%B0%8F%E7%8B%90%E7%8B%B8%E6%A9%98%E7%8C%AB91pron91%E5%90%83%E9%B8%A1%E7%A0%B4%E8%A7%A3VIP%E8%A7%86%E9%A2%91%E5%85%8D%E8%B4%B9%E7%9C%8B.user.js
 // @updateURL https://update.greasyfork.org/scripts/456496/%E5%BF%AB%E7%8C%AB%E7%BA%A2%E6%9D%8F%E5%90%AB%E7%BE%9E%E8%8D%89%E9%BA%BB%E8%B1%86TVAvPron9sex91TV%E7%8C%AB%E5%92%AA%E5%B0%8F%E7%8B%90%E7%8B%B8%E6%A9%98%E7%8C%AB91pron91%E5%90%83%E9%B8%A1%E7%A0%B4%E8%A7%A3VIP%E8%A7%86%E9%A2%91%E5%85%8D%E8%B4%B9%E7%9C%8B.meta.js
@@ -345,7 +345,7 @@
                 //console.log("[猫咪]视频页面，未获取到地址，继续尝试...");
                 //切换下一页网址不变，无法刷新，故不能停止定时器
             }
-            // 快猫app pc （vip精选err,其他ok）
+            // 快猫app pc （ok）
             else if (location.href.match("https://.*?.xyz/pc/index.html*") != null) {
                 var nodelist = document.querySelectorAll("#app div.box div.video_img");
                 nodelist?.forEach(
@@ -355,8 +355,10 @@
                         var videourl = item.querySelector("div > img")?.src?.split('cover')[2]?.split('.')[0];
                         if (videourl) {
                             var mydiv = document.createElement('div');
+                            //his: https://ghbdfgb3769dfda.zrtxt643w4.xyz/uploads/video${videourl}_wm.mp4/index.m3u8
+                            //20250601：https://oafjdskpqwjnizlqwenmaqwkcxzpty.keyms2r.xyz/uploads/video/20250531/6294348/65b089210585f2b97bb64f992a4ffeac_wm.mp4/index.m3u8?auth_key=1748745132-mwz38xok441nk52dea30k32bkskrc9ap-0-b20b305089f8b3cc97e8796edf8868ac
                             mydiv.innerHTML = `<div id="my_add_dizhi${idx}" style="color:red;font-size:14px;word-wrap: break-word;word-break: break-all;">
-                            <p><a href="https://ghbdfgb3769dfda.zrtxt643w4.xyz/uploads/video${videourl}_wm.mp4/index.m3u8" target="_blank">✔点此访问</a></p></div>`;
+                            <p><a href="https://oafjdskpqwjnizlqwenmaqwkcxzpty.keyms2r.xyz/uploads/video${videourl}_wm.mp4/index.m3u8" target="_blank">✔点此访问</a></p></div>`;
                             item.after(mydiv);
                         }
                     }
@@ -374,7 +376,7 @@
                         if (videourl) {
                             var mydiv = document.createElement('div');
                             mydiv.innerHTML = `<div id="my_add_dizhi${idx}" style="color:red;font-size:14px;word-wrap: break-word;word-break: break-all;">
-                            <p><a href="https://ghbdfgb3769dfda.zrtxt643w4.xyz/uploads/video${videourl}_wm.mp4/index.m3u8" target="_blank">✔点此访问</a></p></div>`;
+                            <p><a href="https://oafjdskpqwjnizlqwenmaqwkcxzpty.keyms2r.xyz/uploads/video${videourl}_wm.mp4/index.m3u8" target="_blank">✔点此访问</a></p></div>`;
                             item.after(mydiv);
                         }
                     }
@@ -405,6 +407,8 @@
                 /* 1.点击试看（不需要） */
                 if (player && dizhi && flag == 0) {
                     /* 2.解析真实地址 */
+                    //https://img.jqotrwkiebik.com/aes/movies/20210824/4541/f87672bcddc4d5509683b12bd0eb36e3.webp.txt  err
+                    //https://ms3.bca834d60257.com/20210824/4541/360P/f87672bcddc4d5509683b12bd0eb36e3_360P.m3u8 err
                     videoUrl = `https://ms3.bca834d60257.com/${dizhi[0]}/${dizhi[1]}/360P/${dizhi[2]}_360P.m3u8`; console.log("真实地址:", videoUrl);
                     videoUrl2 = `https://ms3.bca834d60257.com/${dizhi[0]}/${dizhi[1]}/480P/${dizhi[2]}_480P.m3u8`; console.log("真实地址2:", videoUrl2);
                     videoUrl3 = `https://ms3.bca834d60257.com/${dizhi[0]}/${dizhi[1]}/720P/${dizhi[2]}_720P.m3u8`; console.log("真实地址3:", videoUrl3);
