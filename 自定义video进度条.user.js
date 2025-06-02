@@ -14,46 +14,8 @@
 
     // Your code here...
 
-    // 定义获取视频标题的函数
-    function getVideoTitle(video) {
-        if (video.title) {
-            return video.title;
-        }
-        let currentElement = video.parentElement;
-        while (currentElement) {
-            if (currentElement.textContent.trim()) {
-                let title = currentElement.textContent.trim();
-                if (title.length > 50) {
-                    return title.substring(0, 50) + '...';
-                }
-                return title;
-            }
-            currentElement = currentElement.parentElement;
-        }
-        return document.title;
-    }
-
-    // 定义获取视频封面图的函数
-    function getVideoThumbnail(video) {
-        // 优先获取视频的预览图
-        if (video.poster) {
-            return video.poster;
-        }
-
-        let currentElement = video.parentElement;
-        while (currentElement) {
-            const img = currentElement.querySelector('img');
-            if (img) {
-                return img.src;
-            }
-            currentElement = currentElement.parentElement;
-        }
-
-        return '';
-    }
-
     // 定义定时检测间隔，单位为毫秒，这里设置为每2秒检测一次
-    const checkInterval = 2000;
+    const checkInterval = 1000;
     // 定时执行主函数
     setInterval(mainFunction, checkInterval);
 
@@ -74,7 +36,7 @@
             playerContainer = document.createElement('div');
             playerContainer.id = 'custom-video-controls';
             playerContainer.style.position = 'fixed';
-            playerContainer.style.bottom = '10px';
+            playerContainer.style.bottom = '50px';
             playerContainer.style.left = '50%';
             playerContainer.style.transform = 'translateX(-50%)';
             playerContainer.style.width = '90%';
@@ -86,6 +48,7 @@
             playerContainer.style.padding = '10px';
             playerContainer.style.color = '#fff';
             playerContainer.style.zIndex = '9999';
+            playerContainer.style.backgroundColor = 'rgba(0, 0, 0, 0.3)';
 
             // 创建按钮组（播放、时间在左，其他图标在右）
             const controlsRow = document.createElement('div');
@@ -208,7 +171,7 @@
             newTabButton.style.background = 'transparent';
             newTabButton.style.color = '#fff';
             newTabButton.style.cursor = 'pointer';
-            newTabButton.onclick = () => window.open(video.videosrc || video.src, '_blank');
+            newTabButton.onclick = () => window.open(video.dataset.videosrc || video.videosrc || video.src, '_blank');
 
             // 喜欢按钮
             const likeButton = document.createElement('button');
@@ -229,7 +192,7 @@
                         "id": Date.now().toString(),
                         // 默认获取网页标题
                         "title": getVideoTitle(video),
-                        "videosrc": video.videosrc || video.src,
+                        "videosrc": video.dataset.videosrc || video.src,
                         "author": "示例作者", // 需替换为实际视频作者
                         "referer": window.location.href,
                         // 调用函数获取封面图
@@ -239,7 +202,7 @@
                 } else {
                     likeButton.innerHTML = '💔';
                     const likedVideos = JSON.parse(localStorage.getItem('likedVideos') || '[]');
-                    const newLikedVideos = likedVideos.filter(v => v.videosrc !== (video.videosrc || video.src));
+                    const newLikedVideos = likedVideos.filter(v => v.videosrc !== (video.dataset.videosrc || video.src));
                     localStorage.setItem('likedVideos', JSON.stringify(newLikedVideos));
                 }
             }
@@ -248,17 +211,55 @@
                 for (let mutation of mutationsList) {
                     if (mutation.type === 'attributes' && mutation.attributeName === 'src') {
                         // 监听 src 变化时，根据 localStorage 中 videosrc 的值修改喜欢状态
-                          if (likeButton) {
-                              const likedVideos = JSON.parse(localStorage.getItem('likedVideos')) || [];
-                              const videoSrc = video.videosrc || video.src;
-                              const isLiked = likedVideos.some(v => v.videosrc === videoSrc);
-                              likeButton.innerHTML = isLiked ? '💖' : '💔';
-                          }
+                        if (likeButton) {
+                            const likedVideos = JSON.parse(localStorage.getItem('likedVideos')) || [];
+                            const videoSrc = video.dataset.videosrc || video.src;
+                            const isLiked = likedVideos.some(v => v.videosrc === videoSrc);
+                            likeButton.innerHTML = isLiked ? '💖' : '💔';
+                        }
                     }
                 }
             });
             if (video) {
                 observer.observe(video, { attributes: true, attributeFilter: ['src'] });
+            }
+
+            // 定义获取视频标题的函数
+            function getVideoTitle(video) {
+                if (video.title) {
+                    return video.title;
+                }
+                let currentElement = video.parentElement;
+                while (currentElement) {
+                    if (currentElement.textContent.trim()) {
+                        let title = currentElement.textContent.trim();
+                        if (title.length > 30) {
+                            return title.substring(0, 30) + '...';
+                        }
+                        return title;
+                    }
+                    currentElement = currentElement.parentElement;
+                }
+                return document.title;
+            }
+
+            // 定义获取视频封面图的函数
+            function getVideoThumbnail(video) {
+                // 优先获取视频的预览图
+                if (video.poster) {
+                    return video.poster;
+                }
+
+                let currentElement = video.parentElement;
+                while (currentElement) {
+                    const img = currentElement.querySelector('img');
+                    if (img) {
+                        return img.src;
+                    }
+                    currentElement = currentElement.parentElement;
+                }
+
+                return '';
             }
 
             // 下载逻辑
@@ -269,7 +270,7 @@
             downloadButton.style.color = '#fff';
             downloadButton.style.cursor = 'pointer';
             downloadButton.onclick = () => window.open(video.videosrc || video.src, '_blank');
-            
+
             // 设置按钮
             const settingsButton = document.createElement('button');
             settingsButton.innerHTML = '⚙️';
@@ -285,7 +286,7 @@
             // 创建进度条容器
             const progressContainer = document.createElement('div');
             progressContainer.style.width = '100%';
-            progressContainer.style.height = '6px';
+            progressContainer.style.height = '10px';
             progressContainer.style.background = '#444';
             progressContainer.style.borderRadius = '3px';
             progressContainer.style.cursor = 'pointer';
@@ -304,6 +305,12 @@
                 progressBar.style.width = percentage + '%';
                 timeDisplay.textContent = formatTime(video.currentTime) + ' / ' + formatTime(video.duration);
             });
+            // 格式化时间函数
+            function formatTime(seconds) {
+                const minutes = Math.floor(seconds / 60);
+                const secs = Math.floor(seconds % 60);
+                return minutes.toString().padStart(2, '0') + ':' + secs.toString().padStart(2, '0');
+            }
 
             // 点击进度条跳转
             progressContainer.addEventListener('click', (event) => {
@@ -335,12 +342,4 @@
             document.body.appendChild(playerContainer);
         }
     }
-
-    // 格式化时间函数
-    function formatTime(seconds) {
-        const minutes = Math.floor(seconds / 60);
-        const secs = Math.floor(seconds % 60);
-        return minutes.toString().padStart(2, '0') + ':' + secs.toString().padStart(2, '0');
-    }
-
 })();
