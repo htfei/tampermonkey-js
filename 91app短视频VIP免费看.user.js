@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         91app短视频VIP免费看
 // @namespace    91app_vip_video_free_see
-// @version      0.7
+// @version      0.8
 // @description  来不及解释了，快上车！！！
 // @author       w2f
 // @match        https://webo3.dsp01a.net/*
@@ -16,16 +16,348 @@
 // @icon         https://icons.duckduckgo.com/ip2/dsp01a.net.ico
 // @license      MIT
 // @grant none
-// @require https://scriptcat.org/lib/637/1.4.4/ajaxHooker.js#sha256=Z7PdIQgpK714/oDPnY2r8pcK60MLuSZYewpVtBFEJAc=
+// @require      https://scriptcat.org/lib/637/1.4.5/ajaxHooker.js#sha256=EGhGTDeet8zLCPnx8+72H15QYRfpTX4MbhyJ4lJZmyg=
 // @run-at       document-start
-// @downloadURL https://update.sleazyfork.org/scripts/520756/91app%E7%9F%AD%E8%A7%86%E9%A2%91VIP%E5%85%8D%E8%B4%B9%E7%9C%8B.user.js
-// @updateURL https://update.sleazyfork.org/scripts/520756/91app%E7%9F%AD%E8%A7%86%E9%A2%91VIP%E5%85%8D%E8%B4%B9%E7%9C%8B.meta.js
+// @downloadURL  https://update.sleazyfork.org/scripts/520756/91app%E7%9F%AD%E8%A7%86%E9%A2%91VIP%E5%85%8D%E8%B4%B9%E7%9C%8B.user.js
+// @updateURL    https://update.sleazyfork.org/scripts/520756/91app%E7%9F%AD%E8%A7%86%E9%A2%91VIP%E5%85%8D%E8%B4%B9%E7%9C%8B.meta.js
 // ==/UserScript==
 
 (function() {
     'use strict';
 
     // Your code here...
+    const checkInterval = 1000;
+    // 定时执行主函数
+    setInterval(mainFunction, checkInterval);
+
+    function mainFunction() {
+        // 获取视频元素
+        const video = document.querySelector('video');
+        // 检查video是否消失，若消失则卸载playerContainer组件
+        let playerContainer = document.getElementById('custom-video-controls');
+        if (!video && playerContainer) {
+            console.log('video 消失，卸载 playerContainer');
+            playerContainer.remove();
+            return;
+        }
+        // 检查video是否存在，若存在则加载playerContainer组件
+        if (video && !playerContainer) {
+            console.log('video 存在，加载 playerContainer');
+            // 创建播放器容器
+            playerContainer = document.createElement('div');
+            playerContainer.id = 'custom-video-controls';
+            playerContainer.style.position = 'fixed';
+            playerContainer.style.bottom = '50px';
+            playerContainer.style.left = '50%';
+            playerContainer.style.transform = 'translateX(-50%)';
+            playerContainer.style.width = '100%';
+            playerContainer.style.background = '#222';
+            playerContainer.style.borderRadius = '5px';
+            playerContainer.style.display = 'flex';
+            playerContainer.style.flexDirection = 'column';
+            playerContainer.style.alignItems = 'center';
+            playerContainer.style.padding = '10px';
+            playerContainer.style.color = '#fff';
+            playerContainer.style.zIndex = '9999';
+            playerContainer.style.backgroundColor = 'rgba(0, 0, 0, 0.3)';
+
+            // 创建按钮组（播放、时间在左，其他图标在右）
+            const controlsRow = document.createElement('div');
+            controlsRow.style.display = 'flex';
+            controlsRow.style.justifyContent = 'space-between';
+            controlsRow.style.width = '100%';
+            controlsRow.style.marginBottom = '8px';
+            controlsRow.style.alignItems = 'center';
+
+            // 左侧：播放/暂停 + 时间显示
+            const leftControls = document.createElement('div');
+            leftControls.style.display = 'flex';
+            leftControls.style.alignItems = 'center';
+            leftControls.style.gap = '10px';
+
+            // 右侧：音量、倍速、全屏、新标签页打开、收藏、下载
+            const rightControls = document.createElement('div');
+            rightControls.style.display = 'flex';
+            rightControls.style.alignItems = 'center';
+            rightControls.style.gap = '15px';
+
+            // 播放/暂停按钮
+            const playPauseButton = document.createElement('button');
+            playPauseButton.innerHTML = '⏸️';
+            playPauseButton.style.border = 'none';
+            playPauseButton.style.background = 'transparent';
+            playPauseButton.style.color = '#fff';
+            playPauseButton.style.cursor = 'pointer';
+
+            playPauseButton.onclick = () => {
+                if (video.paused) {
+                    video.play();
+                    playPauseButton.innerHTML = '⏸️';
+                } else {
+                    video.pause();
+                    playPauseButton.innerHTML = '▶️';
+                }
+            }
+
+            // 时间显示
+            const timeDisplay = document.createElement('span');
+            timeDisplay.textContent = '00:00 / 00:00';
+            timeDisplay.style.fontSize = '12px';
+
+            // 音量图标
+            const volumeButton = document.createElement('button');
+            volumeButton.innerHTML = '🔊';
+            volumeButton.style.border = 'none';
+            volumeButton.style.background = 'transparent';
+            volumeButton.style.color = '#fff';
+            volumeButton.style.cursor = 'pointer';
+
+            volumeButton.onclick = () => {
+                video.muted = !video.muted;
+                volumeButton.innerHTML = video.muted ? '🔇' : '🔊';
+            }
+
+            // **优化倍速播放：点击后切换**
+            const speedLevels = [1, 1.5, 2, 4]; // 预设倍速
+            let currentSpeedIndex = 0; // 默认为1倍速
+
+            const speedButton = document.createElement('button');
+            speedButton.innerHTML = `⏩ ${speedLevels[currentSpeedIndex]}x`;
+            speedButton.style.border = 'none';
+            speedButton.style.background = 'transparent';
+            speedButton.style.color = '#fff';
+            speedButton.style.cursor = 'pointer';
+
+            speedButton.onclick = () => {
+                currentSpeedIndex = (currentSpeedIndex + 1) % speedLevels.length;
+                video.playbackRate = speedLevels[currentSpeedIndex];
+                speedButton.innerHTML = `⏩ ${speedLevels[currentSpeedIndex]}x`;
+            }
+
+            // 画中画按钮
+            const pipButton = document.createElement('button');
+            pipButton.innerHTML = '📺';
+            pipButton.style.border = 'none';
+            pipButton.style.background = 'transparent';
+            pipButton.style.color = '#fff';
+            pipButton.style.cursor = 'pointer';
+
+            pipButton.onclick = async () => {
+                if (video !== document.pictureInPictureElement) {
+                    try {
+                        await video.requestPictureInPicture();
+                    } catch (error) {
+                        console.error('画中画模式请求失败:', error);
+                    }
+                } else {
+                    try {
+                        await document.exitPictureInPicture();
+                    } catch (error) {
+                        console.error('退出画中画模式失败:', error);
+                    }
+                }
+            };
+
+            // 全屏按钮
+            const fullScreenButton = document.createElement('button');
+            fullScreenButton.innerHTML = '⛶';
+            fullScreenButton.style.border = 'none';
+            fullScreenButton.style.background = 'transparent';
+            fullScreenButton.style.color = '#fff';
+            fullScreenButton.style.cursor = 'pointer';
+
+            fullScreenButton.onclick = () => {
+                if (document.fullscreenElement) {
+                    document.exitFullscreen();
+                } else {
+                    video.requestFullscreen();
+                }
+            }
+
+
+            // 新标签页打开按钮
+            const newTabButton = document.createElement('button');
+            newTabButton.innerHTML = '🌐';
+            newTabButton.style.border = 'none';
+            newTabButton.style.background = 'transparent';
+            newTabButton.style.color = '#fff';
+            newTabButton.style.cursor = 'pointer';
+            newTabButton.onclick = () => window.open(video.dataset.videosrc || video.src, '_blank');
+
+            // 喜欢按钮
+            const likeButton = document.createElement('button');
+            likeButton.innerHTML = '🤍';
+            likeButton.style.border = 'none';
+            likeButton.style.background = 'transparent';
+            likeButton.style.color = '#fff';
+            likeButton.style.cursor = 'pointer';
+            // 初始化喜欢状态
+            let isLiked = false;
+            // 点击事件逻辑
+            likeButton.onclick = () => {
+                isLiked = !isLiked;
+                if (isLiked) {
+                    likeButton.innerHTML = '💖';
+                    const videoInfo = {
+                        // 生成唯一ID，使用当前时间戳
+                        "id": Date.now().toString(),
+                        // 默认获取网页标题
+                        "title": getVideoTitle(video),
+                        "videosrc": video.dataset.videosrc || video.src,
+                        "author": "示例作者", // 需替换为实际视频作者
+                        "referer": window.location.href,
+                        // 调用函数获取封面图
+                        "imgsrc": getVideoThumbnail(video),
+                    };
+                    localStorage.setItem('likedVideos', JSON.stringify([...JSON.parse(localStorage.getItem('likedVideos') || '[]'), videoInfo]));
+                } else {
+                    likeButton.innerHTML = '💔';
+                    const likedVideos = JSON.parse(localStorage.getItem('likedVideos') || '[]');
+                    const newLikedVideos = likedVideos.filter(v => v.videosrc !== (video.dataset.videosrc || video.src));
+                    localStorage.setItem('likedVideos', JSON.stringify(newLikedVideos));
+                }
+            }
+            // 监听 video 的 src 变化
+            const observer = new MutationObserver((mutationsList) => {
+                for (let mutation of mutationsList) {
+                    if (mutation.type === 'attributes' && mutation.attributeName === 'src') {
+                        // 监听 src 变化时，根据 localStorage 中 videosrc 的值修改喜欢状态
+                        if (likeButton) {
+                            const likedVideos = JSON.parse(localStorage.getItem('likedVideos')) || [];
+                            const videoSrc = video.dataset.videosrc || video.src;
+                            const isLiked = likedVideos.some(v => v.videosrc === videoSrc);
+                            likeButton.innerHTML = isLiked ? '💖' : '💔';
+                        }
+                    }
+                }
+            });
+            if (video) {
+                observer.observe(video, { attributes: true, attributeFilter: ['src'] });
+            }
+
+            // 定义获取视频标题的函数
+            function getVideoTitle(video) {
+                if (video.title) {
+                    return video.title;
+                }
+                let currentElement = video.parentElement;
+                while (currentElement) {
+                    if (currentElement.textContent.trim()) {
+                        let title = currentElement.textContent.trim();
+                        if (title.length > 50) {
+                            return title.substring(0, 50) + '...';
+                        }
+                        return title;
+                    }
+                    currentElement = currentElement.parentElement;
+                }
+                return document.title;
+            }
+
+            // 定义获取视频封面图的函数
+            function getVideoThumbnail(video) {
+                // 优先获取视频的预览图
+                if (video.poster) {
+                    return video.poster;
+                }
+
+                let currentElement = video.parentElement;
+                while (currentElement) {
+                    const img = currentElement.querySelector('img');
+                    if (img) {
+                        return img.src;
+                    }
+                    currentElement = currentElement.parentElement;
+                }
+
+                return '';
+            }
+
+            // 下载逻辑
+            const downloadButton = document.createElement('button');
+            downloadButton.innerHTML = '⬇️';
+            downloadButton.style.border = 'none';
+            downloadButton.style.background = 'transparent';
+            downloadButton.style.color = '#fff';
+            downloadButton.style.cursor = 'pointer';
+            downloadButton.onclick = () => {
+                const downurl = `https://tools.thatwind.com/tool/m3u8downloader#m3u8=${video.dataset.videosrc}&referer=${window.location.href}&filename=${video.dataset.filename}`;
+                window.open(downurl, '_blank');
+            }
+
+            // 设置按钮
+            const settingsButton = document.createElement('button');
+            settingsButton.innerHTML = '⚙️';
+            settingsButton.style.border = 'none';
+            settingsButton.style.background = 'transparent';
+            settingsButton.style.color = '#fff';
+            settingsButton.style.cursor = 'pointer';
+            // 可添加点击事件逻辑
+            settingsButton.onclick = () => {
+                console.log('点击了设置按钮');
+            }
+
+            // 创建进度条容器
+            const progressContainer = document.createElement('div');
+            progressContainer.style.width = '100%';
+            progressContainer.style.height = '10px';
+            progressContainer.style.background = '#444';
+            progressContainer.style.borderRadius = '3px';
+            progressContainer.style.cursor = 'pointer';
+
+            // 创建进度条
+            const progressBar = document.createElement('div');
+            progressBar.style.width = '0%';
+            progressBar.style.height = '100%';
+            progressBar.style.background = '#4CAF50';
+            progressBar.style.borderRadius = '3px';
+            progressContainer.appendChild(progressBar);
+
+            // 监听视频播放进度
+            video.addEventListener('timeupdate', () => {
+                const percentage = (video.currentTime / video.duration) * 100;
+                progressBar.style.width = percentage + '%';
+                timeDisplay.textContent = formatTime(video.currentTime) + ' / ' + formatTime(video.duration);
+            });
+            // 格式化时间函数
+            function formatTime(seconds) {
+                const minutes = Math.floor(seconds / 60);
+                const secs = Math.floor(seconds % 60);
+                return minutes.toString().padStart(2, '0') + ':' + secs.toString().padStart(2, '0');
+            }
+
+            // 点击进度条跳转
+            progressContainer.addEventListener('click', (event) => {
+                const offsetX = event.offsetX;
+                const newTime = (offsetX / progressContainer.offsetWidth) * video.duration;
+                video.currentTime = newTime;
+            });
+
+            // 组装控制面板
+            leftControls.appendChild(playPauseButton);
+            leftControls.appendChild(timeDisplay);
+
+            rightControls.appendChild(volumeButton);
+            rightControls.appendChild(speedButton);
+            rightControls.appendChild(fullScreenButton);
+            rightControls.appendChild(pipButton);
+            //rightControls.appendChild(likeButton);
+            rightControls.appendChild(newTabButton);
+            rightControls.appendChild(downloadButton);
+            //rightControls.appendChild(settingsButton);
+
+            controlsRow.appendChild(leftControls);
+            controlsRow.appendChild(rightControls);
+
+            playerContainer.appendChild(controlsRow);
+            playerContainer.appendChild(progressContainer); // **进度条独立放在底部**
+
+            // 添加到页面
+            document.body.appendChild(playerContainer);
+        }
+    }
+
+
     ajaxHooker.protect();
     ajaxHooker.filter([
         {type: 'xhr', url: '.m3u8?auth_key=', method: 'GET', async: true},
@@ -33,44 +365,16 @@
     ]);
     ajaxHooker.hook(request => {
         if (1) {
-            // --- 91app 视频播放地址 ---
-            //https://10play.nndez.cn/AAA/BBB/BBB.m3u8?auth_key=CCC&via_m=nineone
-            //https://10play.nndez.cn/watch9/080c4e7723ddb43c0118c7b9d6c4b606/080c4e7723ddb43c0118c7b9d6c4b606.m3u8?auth_key=1748778765-0-0-9f8301fee48d59c433ccc45a64c96180&via_m=nineone
-            //https://10play.nndez.cn/videos2/608d7be194d7ad372d113f896d212f5e/608d7be194d7ad372d113f896d212f5e.m3u8?auth_key=1748778765-0-0-0bf9f302b020bb225d0ace2bdbdaed50&via_m=nineone
-            //https://10play.nndez.cn/upload/7ed065e038afcfeb9dff7b239d75af78/7ed065e038afcfeb9dff7b239d75af78.m3u8?auth_key=1748779729-0-0-27e525af73c66187b8b84e227c56bb9b&via_m=nineone
-            //https://10play.nndez.cn/videos4/25ad1eaf8d9978c100ad778b450c5b38/25ad1eaf8d9978c100ad778b450c5b38.m3u8?auth_key=1748779729-0-0-8224f9bad32a1d362732574763b9bcd0&via_m=nineone
-            //https://10play.nndez.cn/watch8/41736d7083667aebe9cc89b554f2d3b3/41736d7083667aebe9cc89b554f2d3b3.m3u8?auth_key=1748779826-0-0-df45275266fa94c88bf33b5ffb2caf19&via_m=nineone
-            // long.nndez.cn   
-            //https://w6.vtknladz.xyz/
-            //https://10play.nndez.cn/videos4/193502cb35d65a66f6a678f6a681c34d/193502cb35d65a66f6a678f6a681c34d.m3u8?auth_key=1748783361-0-0-46397db31a4fb87da10a71979f06ed13&via_m=91pornwebapp
-            //https://10play.nndez.cn/useruploadfiles/76f090763146d68e86e090eab9672371/76f090763146d68e86e090eab9672371.m3u8?auth_key=1748783456-0-0-606cbe4edc5f5f36e2ec1ed4d0e97eb1&via_m=91pornwebapp
-            /*
-                //汤头条    https://5797.zqzxctc.org/ 
-                var dataMap = {
-                    affCode: "",
-                    iosLink: "https://5797.zqzxctc.org/index.php/index/index/pwa?aff_code=",
-                    androidLink: "https://d1cppxnz2bmkwv.cloudfront.net/down/tbr/ttt_9.3.0_250601_2.apk",
-                    special_and: "/apk/down/tbr/ttt_9.3.0_250601_2.apk",
-                    link1: "https://t.me/shangwulr", // 商务合作
-                    link2:"https://t.me/chuangzuottt", // 官方TG
-                    link3: "",
-                    web: "https://p2.xpyortno.cc/?aff_code=",
-                    copyText: "|",
-                };
-                https://120play.nndez.cn/watch3/d930cbb0435ac6fac69664a8288b3505/d930cbb0435ac6fac69664a8288b3505.m3u8?auth_key=1748783911-0-0-fbb1b19aa5952d33e9c8c683fa5683fa&via_m=tbr&seconds=10
-                https://120play.nndez.cn/watch8/10e07486b621f582d11e1ee53d312f45/10e07486b621f582d11e1ee53d312f45.m3u8?auth_key=1748783946-0-0-2b1111bd0e890162b70bf194472ecd00&via_m=tbr&seconds=10
+            //https://10play.nndez.cn/AAA/BBB/BBB.m3u8?auth_key=CCC&via_m=nineone/wmq
+            //https://long.nndez.cn/watch4/7f396f270663012c66b02d848632f3f6/7f396f270663012c66b02d848632f3f6.m3u8?auth_key=1748844858-0-0-5f6fb62aa519049abce398ec08c3380b&via_m=wmq
 
-                https://long.nndez.cn/cloud_01/upload/video/able/video/19834/ab03788b2a77389654e657a8d28e51dc.m3u8?auth_key=1748785693-0-0-a244693bb801cd9575deed5d5e9d6cbf&via_m=kissavtv
-                
-                https://hls.qzkj.tech/videos3/57e9117ad2436f9d9cb099a59d7aae2d/57e9117ad2436f9d9cb099a59d7aae2d.m3u8?auth_key=1748777476-683c3a040f7f8-0-12cc806c2788e20dbfe2abb49da0eb04&v=3&time=0&via=tiktok&via_bm=dx
-            */
-            console.log("hooked!!! request ====>",request);
+            //console.log("hooked!!! request ====>",request);
             let url = new URL(request.url);
             let seg = url.host.split('.');
             seg[0] = 'long';
             url.host = seg.join('.');
             request.url = url.href;
-            console.log("url fixed ====>",request.url);
+            //console.log("url fixed ====>",request.url);
             show_tips(url.href);//显示优化
         }
     });
@@ -79,8 +383,9 @@
         let nodes = document.querySelectorAll("div.swiper-slide");
         for(var i = 0 ; i < nodes.length ; i++){
             let cur = nodes[i];
+            window.now_node= cur;
+            //console.log("now node:",cur);
             cur.querySelector("div.collect-topics-container")?.remove();//去除热点推荐
-            cur.querySelector("div.username span").innerHTML = `<a href="${m3u8url}" target="_blank">❤️视频地址</a>`;//m3u8地址
             let tmp = cur.querySelectorAll("div.club");
             if(tmp.length == 0){
                 ;//do nothing
@@ -91,7 +396,14 @@
                 tmp[1].querySelector("span").innerText = `✅已破解`;//破解提示
             }
         }
-        let ac = document.querySelector("div.action-container"); if(ac) ac.innerHTML = `<a href="${m3u8url}" target="_blank">✅已破解❤️视频地址</a>`;
+        // 获取 video 元素
+        const video = document.querySelector('video')
+        // 添加自定义属性
+        if (video) {
+            video.dataset.filename = document.querySelector("div.video-caption > div.title")?.innerText || document.title;;
+            video.dataset.videosrc = m3u8url;
+            //<video data-videosrc="https://example.com/video.m3u8"></video>
+        }
     }
 
     function remove_ad(){
@@ -99,5 +411,5 @@
         document.querySelector("body > div.van-dialog.notice")?.remove();//去首次加载时的广告弹窗
         document.querySelector("div.preview-tip-container")?.remove();//去试看弹窗
     }
-    let my_timer = setInterval(remove_ad, 2000);
+    let my_timer = setInterval(remove_ad, 1000);
 })();
