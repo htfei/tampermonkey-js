@@ -48,7 +48,8 @@
             playerContainer.style.padding = '10px';
             playerContainer.style.color = '#fff';
             playerContainer.style.zIndex = '9999';
-            playerContainer.style.backgroundColor = 'rgba(0, 0, 0, 0.3)';
+            playerContainer.style.backgroundColor = 'rgba(0, 0, 0, 0.3)'; // 半透明背景
+            playerContainer.style.fontSize = "20px"; // 让图标更大
 
             // 创建按钮组（播放、时间在左，其他图标在右）
             const controlsRow = document.createElement('div');
@@ -64,7 +65,7 @@
             leftControls.style.alignItems = 'center';
             leftControls.style.gap = '10px';
 
-            // 右侧：音量、倍速、全屏、新标签页打开、收藏、下载
+            // 右侧：音量、倍速、全屏、新标签页打开、收藏、下载、展开按钮
             const rightControls = document.createElement('div');
             rightControls.style.display = 'flex';
             rightControls.style.alignItems = 'center';
@@ -163,6 +164,44 @@
                 }
             }
 
+
+            // 展开按钮
+            const expandButton = document.createElement('button');
+            expandButton.innerHTML = '🔼';
+            expandButton.style.border = 'none';
+            expandButton.style.background = 'transparent';
+            expandButton.style.color = '#fff';
+            expandButton.style.cursor = 'pointer';
+            let isExpanded = false;
+            const expandedDiv = document.createElement('div');
+            expandedDiv.style.display = 'none';
+            expandedDiv.style.position = 'absolute';
+            expandedDiv.style.bottom = '100%';
+            expandedDiv.style.left = '0';
+            expandedDiv.style.width = '100%';
+            // 直接引用页面已有 video 元素
+            const expandedVideo = video.cloneNode(true);
+            expandedVideo.controls = false;
+            expandedDiv.appendChild(expandedVideo);
+            // 将展开按钮添加到右侧控制栏合适位置，假设设置按钮前
+            rightControls.prepend(expandButton);
+            playerContainer.appendChild(expandedDiv);
+            expandButton.onclick = () => {
+                isExpanded = !isExpanded;
+                if (isExpanded) {
+                    try {
+                        expandedVideo.play();
+                    } catch (error) {
+                        console.error('播放展开视频时出错:', error);
+                    }
+                    expandButton.innerHTML = '🔽';
+                    expandedDiv.style.display = 'block';
+                    expandedVideo.currentTime = video.currentTime;
+                } else {
+                    expandButton.innerHTML = '🔼';
+                    expandedDiv.style.display = 'none';
+                }
+            };
 
             // 新标签页打开按钮
             const newTabButton = document.createElement('button');
