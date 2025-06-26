@@ -165,43 +165,32 @@
             }
 
 
-            // 展开按钮
-            const expandButton = document.createElement('button');
-            expandButton.innerHTML = '🔼';
-            expandButton.style.border = 'none';
-            expandButton.style.background = 'transparent';
-            expandButton.style.color = '#fff';
-            expandButton.style.cursor = 'pointer';
-            let isExpanded = false;
-            const expandedDiv = document.createElement('div');
-            expandedDiv.style.display = 'none';
-            expandedDiv.style.position = 'absolute';
-            expandedDiv.style.bottom = '100%';
-            expandedDiv.style.left = '0';
-            expandedDiv.style.width = '100%';
-            // 直接引用页面已有 video 元素
-            const expandedVideo = video.cloneNode(true);
-            expandedVideo.controls = false;
-            expandedDiv.appendChild(expandedVideo);
-            // 将展开按钮添加到右侧控制栏合适位置，假设设置按钮前
-            rightControls.prepend(expandButton);
-            playerContainer.appendChild(expandedDiv);
-            expandButton.onclick = () => {
-                isExpanded = !isExpanded;
-                if (isExpanded) {
-                    try {
-                        expandedVideo.play();
-                    } catch (error) {
-                        console.error('播放展开视频时出错:', error);
-                    }
-                    expandButton.innerHTML = '🔽';
-                    expandedDiv.style.display = 'block';
-                    expandedVideo.currentTime = video.currentTime;
-                } else {
-                    expandButton.innerHTML = '🔼';
-                    expandedDiv.style.display = 'none';
-                }
+
+            // 创建快进 10s 按钮
+            const fastForwardButton = document.createElement('button');
+            fastForwardButton.textContent = '⏩ 10s';
+            fastForwardButton.style.border = 'none';
+            fastForwardButton.style.background = 'transparent';
+            fastForwardButton.style.color = '#fff';
+            fastForwardButton.style.cursor = 'pointer';
+            fastForwardButton.onclick = () => {
+                video.currentTime += 10;
             };
+
+            // 创建快退 10s 按钮
+            const rewindButton = document.createElement('button');
+            rewindButton.textContent = '⏪ 10s';
+            rewindButton.style.border = 'none';
+            rewindButton.style.background = 'transparent';
+            rewindButton.style.color = '#fff';
+            rewindButton.style.cursor = 'pointer';
+            rewindButton.onclick = () => {
+                video.currentTime -= 10;
+            };
+
+            // 将按钮添加到右侧控制栏
+            rightControls.prepend(fastForwardButton);
+            rightControls.prepend(rewindButton);
 
             // 新标签页打开按钮
             const newTabButton = document.createElement('button');
@@ -369,7 +358,7 @@
             //rightControls.appendChild(likeButton);
             //rightControls.appendChild(newTabButton);
             //rightControls.appendChild(downloadButton);
-            rightControls.appendChild(settingsButton);
+            //rightControls.appendChild(settingsButton);
 
             controlsRow.appendChild(leftControls);
             controlsRow.appendChild(rightControls);

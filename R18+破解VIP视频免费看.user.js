@@ -2,7 +2,7 @@
 // @name         快猫/红杏/含羞草/麻豆TV/AvPron/9sex/91TV/猫咪/小狐狸/橘猫/91pron/91吃鸡破解VIP视频免费看
 // @name:zh-TW   快貓/紅杏/含羞草/麻荳TV/AvPron/9sex/91TV/貓咪/小狐貍/橘貓/91pron/91喫鷄破解VIP眎頻免費看
 // @namespace    18x_vip_video_free_see
-// @version      0.54
+// @version      0.55
 // @description  来不及解释了，快上车！！！
 // @description:zh-TW  來不及解釋了，快上車！！！
 // @author       w2f
@@ -44,7 +44,7 @@
 // @match        https://*/index/home.html
 // @include      /https:\/\/www\.(\w+)\.com\/page\/vip/
 
-// @include      /^https:\/\/(.*)\.xyz\/(pc|h5)\/index\.html/
+// @include      /^http(s)?:\/\/(.*)\.xyz\/(pc|h5)\/index\.html/
 
 // @match       https://alltv268.com/*
 // @include      /^https://alltv\w+\.com.*$/
@@ -346,7 +346,7 @@
                 //切换下一页网址不变，无法刷新，故不能停止定时器
             }
             // 快猫app pc （ok）
-            else if (location.href.match("https://.*?.xyz/pc/index.html*") != null) {
+            else if (location.href.match("http.*?.xyz/pc/index.html*") != null) {
                 var nodelist = document.querySelectorAll("#app div.box div.video_img");
                 nodelist?.forEach(
                     (item,idx,arr) => {
@@ -366,7 +366,7 @@
                 //切换下一页网址不变，无法刷新，故不能停止定时器
             }
             // 快猫app h5 (全部ok)
-            else if (location.href.match("https://.*?.xyz/h5/index.html*") != null) {
+            else if (location.href.match("http.*?.xyz/h5/index.html*") != null) {
                 nodelist = document.querySelectorAll("div.imgbox div div.vue-waterfall-column>div");
                 nodelist?.forEach(
                     (item,idx,arr) => {
