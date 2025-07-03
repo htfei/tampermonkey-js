@@ -2,7 +2,7 @@
 // @name         在线网页聊天室
 // @namespace    http://tampermonkey.net/
 // @version      3.3
-// @description  Supabase realtime chat 基于Supabase的跨网页聊天室（优化版）
+// @description  Supabase realtime chat 基于Supabase的跨网页聊天室
 // @match        https://www.guozaoke.com/*
 // @match        https://juejin.cn/*
 // @match        https://*/*
@@ -13,7 +13,61 @@
 // @run-at       document-start
 // @connect      supabase.co
 // @require      https://unpkg.com/@supabase/supabase-js@2.49.3/dist/umd/supabase.js
+// @require      https://cdnjs.cloudflare.com/ajax/libs/hls.js/1.1.5/hls.min.js
 // ==/UserScript==
+
+// HLS播放器模块
+const HlsPlayer = {
+    config: {
+        BUFFER_LENGTH: 10,
+        MAX_RETRY: 3,
+        ERROR_DELAY: 5000
+    },
+
+    init: function (videoElement, streamUrl) {
+        console.log('[HLS Init] 开始初始化HLS播放器', streamUrl);
+        if (typeof Hls === 'undefined') {
+            console.error('[HLS Init] Hls库未加载');
+            return null;
+        }
+
+        const hls = new Hls({
+            maxBufferLength: this.config.BUFFER_LENGTH,
+            maxMaxBufferLength: this.config.BUFFER_LENGTH * 3
+        });
+
+        hls.loadSource(streamUrl);
+        hls.attachMedia(videoElement);
+
+        hls.on(Hls.Events.MANIFEST_PARSED, () => {
+            videoElement.play().catch(err => {
+                console.error('[HLS]播放失败:', err);
+                this.retryPlay(videoElement, streamUrl);
+            });
+        });
+
+        hls.on(Hls.Events.ERROR, (event, data) => {
+            if (data.fatal) {
+                hls.destroy();
+                console.error('[HLS]致命错误:', data);
+                this.retryPlay(videoElement, streamUrl);
+            }
+        });
+
+        return hls;
+    },
+
+    retryPlay: function (videoElement, streamUrl, attempt = 0) {
+        if (attempt >= this.config.MAX_RETRY) return;
+
+        setTimeout(() => {
+            const newHls = this.init(videoElement, streamUrl);
+            if (newHls) newHls.on(Hls.Events.ERROR, () => {
+                this.retryPlay(videoElement, streamUrl, attempt + 1);
+            });
+        }, this.config.ERROR_DELAY);
+    }
+};
 
 (function () {
     'use strict';
@@ -232,54 +286,54 @@
             return button;
         }
 
-       // 新增IP获取方法
+        // 新增IP获取方法
         async getClientIP() {
             try {
                 // 备选方案：使用第三方IP查询
                 const { ip } = await fetch('https://api.ipify.org?format=json').then(r => r.json());
                 return ip;
-            } catch(error) {
+            } catch (error) {
                 // 备选方案
                 console.log('获取IP失败', error);
                 return '0.0.0.0';
             }
-        } 
+        }
 
         /**
          * 初始化用户：检查登录状态，若无则匿名登录
          */
         async initializeUser() {
             try {
-               // GM_getValue 实现跨域一致性
-               this.userId = await GM_getValue('user_id');
-               if (this.userId) {
+                // GM_getValue 实现跨域一致性
+                this.userId = await GM_getValue('user_id');
+                if (this.userId) {
                     console.log('===已存在用户ID===', this.userId);
                     //GM_deleteValue('user_id');//仅测试
-                    return ;
-               }
-               else{
-                // 匿名登录
-                const { data, error } = await this.supabase.auth.signInAnonymously({
-                    options: {
-                        data: {
-                        ip: await this.getClientIP(),
-                        device_info: {
-                            screen_resolution: `${screen.width}x${screen.height}`,
-                            color_depth: screen.colorDepth + 'bit',
-                            preferred_language: navigator.language,
-                            timezone_offset: new Date().getTimezoneOffset()/60,
-                            hardware_concurrency: navigator.hardwareConcurrency || 'unknown',
-                            os_platform: navigator.platform,
-                            user_agent: navigator.userAgent.substring(0, 100)
+                    return;
+                }
+                else {
+                    // 匿名登录
+                    const { data, error } = await this.supabase.auth.signInAnonymously({
+                        options: {
+                            data: {
+                                ip: await this.getClientIP(),
+                                device_info: {
+                                    screen_resolution: `${screen.width}x${screen.height}`,
+                                    color_depth: screen.colorDepth + 'bit',
+                                    preferred_language: navigator.language,
+                                    timezone_offset: new Date().getTimezoneOffset() / 60,
+                                    hardware_concurrency: navigator.hardwareConcurrency || 'unknown',
+                                    os_platform: navigator.platform,
+                                    user_agent: navigator.userAgent.substring(0, 100)
+                                }
+                            }
                         }
-                        }
-                    }
                     });
-                console.log('===注册匿名用户===', data, error);
-                if (error) throw error;
-                this.userId = data.session.user.id;
-                GM_setValue('user_id', this.userId);
-               }
+                    console.log('===注册匿名用户===', data, error);
+                    if (error) throw error;
+                    this.userId = data.session.user.id;
+                    GM_setValue('user_id', this.userId);
+                }
             } catch (error) {
                 console.error('用户初始化失败:', error);
                 //alert('无法连接到聊天服务器，请刷新页面重试');
@@ -300,21 +354,21 @@
                     }
                 }
             })
-            .on('postgres_changes', {
-                event: 'INSERT',
-                schema: 'public',
-                table: 'messages'
-            }, payload => this.addMessage(payload.new))
-            .on('presence', { event: 'sync' }, () => {
-                try {
-                    const states = this.messageChannel.presenceState();
-                    const onlineCount = Object.values(states).length;
-                    this.updateOnlineCount(onlineCount);
-                } catch (e) {
-                    console.error('[Presence状态同步异常]', e);
-                }
-            })
-            .subscribe();
+                .on('postgres_changes', {
+                    event: 'INSERT',
+                    schema: 'public',
+                    table: 'messages'
+                }, payload => this.addMessage(payload.new))
+                .on('presence', { event: 'sync' }, () => {
+                    try {
+                        const states = this.messageChannel.presenceState();
+                        const onlineCount = Object.values(states).length;
+                        this.updateOnlineCount(onlineCount);
+                    } catch (e) {
+                        console.error('[Presence状态同步异常]', e);
+                    }
+                })
+                .subscribe();
 
             // 跟踪用户在线状态
             await this.messageChannel.track({
@@ -328,16 +382,100 @@
             //if (message.domain !== location.host) return; // 过滤非法消息
             const isOwn = message.user_id === this.userId;
             const msgElement = document.createElement('div');
-            msgElement.innerHTML = `
-                <div style="margin: 8px 0; padding: 12px;
-                    background: ${isOwn ? 'var(--primary-color)' : '#2D2D2D'};
-                    border-radius: 8px;
-                    color: ${isOwn ? '#FFF' : 'var(--chat-text)'};
-                    animation: fadeIn 0.3s ease;">
-                    <div style="font-weight: 500;">${message.user_id}</div>
-                    <div>${message.content}</div>
-                </div>
-            `;
+            // 智能内容解析与样式优化
+            // 消息气泡渲染组件
+            const renderMessageBubble = (message, isOwn) => {
+                const timeStr = new Date(message.created_at).toLocaleString('zh-CN', {
+                    hour12: false,
+                    year: 'numeric',
+                    month: '2-digit',
+                    day: '2-digit',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                }).replace(/(\d+)\/(\d+)\/(\d+), (\d+:\d+)/, '$1-$2-$3 $4');
+                return `
+                    <div style="
+                        margin: 8px 0;
+                        padding: 2px 5px;
+                        background: ${isOwn ? '#1A73E8' : '#2D2D2D'};
+                        border-radius: 6px;
+                        color: ${isOwn ? '#FFF' : '#E0E0E0'};
+                        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+                        max-width: 100%;
+                        align-self: ${isOwn ? 'flex-end' : 'flex-start'};">
+                        <div style="
+                            font-size: 0.85em;
+                            color: ${isOwn ? 'rgba(255,255,255,0.7)' : 'rgba(224,224,224,0.7)'};
+                            margin-bottom: 4px;">
+                            user_${message.user_id.split('-')?.[0] || message.user_id} • ${timeStr}
+                        </div>
+                        ${createMessageContent(message)}
+                    </div>
+                `;
+            };
+
+            // 多媒体内容解析器
+            const createMessageContent = (message) => {
+                const content = message.content;
+                const mediaPattern = /(https?:\/\/.*\.(?:png|jpg|gif|mp4|m3u8|webm|mp3))\b/gi;
+                const elements = [];
+
+                content.split('\n').forEach(text => {
+                    let remaining = text;
+                    let match;
+                    while ((match = mediaPattern.exec(text)) !== null) {
+                        const media_id = `msg_${message.id}-media_${match.index}`;
+                        const [url] = match;
+                        const prefix = remaining.slice(0, match.index);
+                        if (prefix) elements.push(`<div>${prefix}</div>`);
+
+                        let mediaTag = null;
+                        if (url.match(/\.(png|jpg|gif)$/i)) {
+                            mediaTag = `<img src="${url}?ts=${Date.now()}"
+                                 referrerpolicy="no-referrer-when-downgrade"
+                                 style="max-width: min(400px, 100%); border-radius: 4px; margin: 8px 0;">`;
+                        }
+                        else if (url.match(/\.(mp3)$/i)) {
+                            mediaTag = `<audio controls style="width: 100%; margin: 8px 0;" src="${url}"></audio>`;
+                        }
+                        else if (url.match(/\.(mp4|webm)$/i)) {
+                            mediaTag = `<video controls style="max-width: 100%; border-radius: 8px; margin: 8px 0;" id="${media_id}" src="${url}"></video>`;
+                        }
+                        else if (url.match(/\.(m3u8)$/i)) {
+                            mediaTag = `<video controls style="max-width: 100%; border-radius: 8px; margin: 8px 0;" 
+                                id="${media_id}" 
+                                data-hls-src="${url}"
+                                data-hls-observer="pending"></video>`;
+                        }
+                        elements.push(mediaTag);
+                        remaining = remaining.slice(match.index + url.length);
+                    }
+                    if (remaining) elements.push(`<div>${remaining}</div>`);
+                });
+
+                return elements.join('');
+            };
+
+            // 消息渲染异常防御机制
+            try {
+                const messageContainer = document.querySelector('#message-container');
+                console.assert(messageContainer, '消息容器未找到');
+
+                const bubbleHTML = renderMessageBubble(message, isOwn);
+                if (typeof bubbleHTML === 'string' && bubbleHTML.length > 0) {
+                    msgElement.innerHTML = bubbleHTML;
+                } else {
+                    console.error('消息渲染异常:', { message, isOwn });
+                    msgElement.innerHTML = `<div class="error-message">消息渲染失败</div>`;
+                }
+            } catch (e) {
+                console.error('消息加载失败:', e);
+                GM_notification({
+                    title: '系统错误',
+                    text: `消息加载失败: ${e.message}`,
+                    timeout: 5000
+                });
+            }
             this.messageArea.appendChild(msgElement);
             this.scrollToBottom();
         }
@@ -355,32 +493,20 @@
                     .from('messages')
                     .select('*')
                     .order('created_at', { ascending: false })
-                    .limit(50);
+                    .limit(20);
 
                 if (error) throw error;
                 if (!data || data.length === 0) return;
 
                 const fragment = document.createDocumentFragment();
-                data.reverse().forEach(msg => {
-                    const div = document.createElement('div');
-                    div.innerHTML = `
-                    <div style="margin: 8px 0; padding: 12px;
-                        background: #2D2D2D;
-                        border-radius: 8px;
-                        color: var(--chat-text);">
-                        <div style="font-weight: 500;">${msg.user_id}</div>
-                        <div>${msg.content}</div>
-                    </div>
-                `;
-                    fragment.appendChild(div);
-                });
+                data.reverse().forEach(msg => { this.addMessage(msg) });
                 this.messageArea.appendChild(fragment);
                 this.scrollToBottom();
             } catch (error) {
                 console.error('加载消息历史失败:', error);
             }
         }
-        
+
         /**
          * 更新在线人数显示
          * @param {number} count - 当前在线用户数量
