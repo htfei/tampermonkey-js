@@ -1,16 +1,15 @@
 // ==UserScript==
-// @name         在线网页聊天室
-// @namespace    http://tampermonkey.net/
-// @version      3.3
-// @description  Supabase realtime chat 基于Supabase的跨网页聊天室
-// @match        https://www.guozaoke.com/*
-// @match        https://juejin.cn/*
+// @name         贤者之家
+// @namespace    sage_home
+// @version      1.0
+// @description  和所有人在线交流分享，安全匿名，无需账号，无需客户端，保护隐私，在线网页聊天室，基于Supabase
 // @match        https://*/*
 // @grant        GM_xmlhttpRequest
 // @grant        GM_getValue
 // @grant        GM_setValue
 // @grant        GM_deleteValue
 // @run-at       document-start
+// @license      MIT
 // @connect      supabase.co
 // @require      https://unpkg.com/@supabase/supabase-js@2.49.3/dist/umd/supabase.js
 // @require      https://cdnjs.cloudflare.com/ajax/libs/hls.js/1.1.5/hls.min.js
@@ -40,33 +39,20 @@ const HlsPlayer = {
         hls.attachMedia(videoElement);
 
         hls.on(Hls.Events.MANIFEST_PARSED, () => {
-            videoElement.play().catch(err => {
+            console.log('[HLS] 视频流已解析');
+            /* videoElement.play().catch(err => {
                 console.error('[HLS]播放失败:', err);
-                this.retryPlay(videoElement, streamUrl);
-            });
+            }); */
         });
 
         hls.on(Hls.Events.ERROR, (event, data) => {
             if (data.fatal) {
-                hls.destroy();
                 console.error('[HLS]致命错误:', data);
-                this.retryPlay(videoElement, streamUrl);
             }
         });
 
         return hls;
     },
-
-    retryPlay: function (videoElement, streamUrl, attempt = 0) {
-        if (attempt >= this.config.MAX_RETRY) return;
-
-        setTimeout(() => {
-            const newHls = this.init(videoElement, streamUrl);
-            if (newHls) newHls.on(Hls.Events.ERROR, () => {
-                this.retryPlay(videoElement, streamUrl, attempt + 1);
-            });
-        }, this.config.ERROR_DELAY);
-    }
 };
 
 (function () {
@@ -458,8 +444,8 @@ const HlsPlayer = {
 
             // 消息渲染异常防御机制
             try {
-                const messageContainer = document.querySelector('#message-container');
-                console.assert(messageContainer, '消息容器未找到');
+                //const messageContainer = document.querySelector('#message-container');
+                //console.assert(messageContainer, '消息容器未找到');
 
                 const bubbleHTML = renderMessageBubble(message, isOwn);
                 if (typeof bubbleHTML === 'string' && bubbleHTML.length > 0) {
@@ -477,6 +463,11 @@ const HlsPlayer = {
                 });
             }
             this.messageArea.appendChild(msgElement);
+            // Initialize HLS for video elements
+            msgElement.querySelectorAll('video[data-hls-src]').forEach(video => {
+                const hlsSrc = video.dataset.hlsSrc;
+                HlsPlayer.init(video, hlsSrc);
+            });
             this.scrollToBottom();
         }
 
