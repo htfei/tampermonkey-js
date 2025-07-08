@@ -63,8 +63,6 @@ const HlsPlayer = {
         SUPABASE_URL: 'https://icaugjyuwenraxxgwvzf.supabase.co',
         SUPABASE_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImljYXVnanl1d2VucmF4eGd3dnpmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDI4ODcwNjcsImV4cCI6MjA1ODQ2MzA2N30.-IsrU3_NyoqDxFeNH1l2d6SgVv9pPA0uIVEA44FmuSQ',
         CHAT_UI: {
-            width: 320,
-            height: 420,
             position: { right: '20px', bottom: '20px' },
             theme: {
                 primary: '#007FFF',
@@ -112,14 +110,17 @@ const HlsPlayer = {
             }
             #chat-input {
                 width: 100%;
-                height: 40px;
-                padding: 10px;
+                height: 50px;
                 background-color: var(--input-bg);
                 border: 1px solid #3A3A3A;
                 border-radius: 8px;
                 color: var(--chat-text);
                 resize: none;
                 box-sizing: border-box;
+                overflow-y: auto;
+            }
+            #chat-input::-webkit-scrollbar {
+                display: none;
             }
             #chat-send-button {
                 width: auto;
@@ -211,15 +212,17 @@ const HlsPlayer = {
                 position: 'fixed',
                 right: CONFIG.CHAT_UI.position.right,
                 bottom: CONFIG.CHAT_UI.position.bottom,
-                width: `${CONFIG.CHAT_UI.width}px`,
-                height: `${CONFIG.CHAT_UI.height}px`,
+                width: '400px',
+                height: '80dvh',
                 backgroundColor: 'var(--chat-bg)',
                 borderRadius: '12px',
                 boxShadow: '0 4px 16px rgba(0,0,0,0.2)',
                 zIndex: 9999,
                 boxSizing: 'border-box',
                 display: 'flex',
-                flexDirection: 'column'
+                flexDirection: 'column',
+                wordWrap: 'break-word',
+                overflowWrap: 'break-word',
             });
 
             this.header = document.createElement('div');
@@ -371,14 +374,14 @@ const HlsPlayer = {
             // 智能内容解析与样式优化
             // 消息气泡渲染组件
             const renderMessageBubble = (message, isOwn) => {
+                const userName = message.user_id.split('-')[0] || '匿名用户';
                 const timeStr = new Date(message.created_at).toLocaleString('zh-CN', {
                     hour12: false,
-                    year: 'numeric',
                     month: '2-digit',
                     day: '2-digit',
                     hour: '2-digit',
                     minute: '2-digit'
-                }).replace(/(\d+)\/(\d+)\/(\d+), (\d+:\d+)/, '$1-$2-$3 $4');
+                }).replace(/(\d+)\/(\d+), (\d+:\d+)/, '$2-$3 $4');
                 return `
                     <div style="
                         margin: 8px 0;
@@ -393,7 +396,7 @@ const HlsPlayer = {
                             font-size: 0.85em;
                             color: ${isOwn ? 'rgba(255,255,255,0.7)' : 'rgba(224,224,224,0.7)'};
                             margin-bottom: 4px;">
-                            user_${message.user_id.split('-')?.[0] || message.user_id} • ${timeStr}
+                            ${userName} • ${timeStr}
                         </div>
                         ${createMessageContent(message)}
                     </div>
