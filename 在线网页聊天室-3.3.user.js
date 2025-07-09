@@ -213,7 +213,7 @@ const HlsPlayer = {
                 right: CONFIG.CHAT_UI.position.right,
                 bottom: CONFIG.CHAT_UI.position.bottom,
                 width: '400px',
-                height: '80dvh',
+                height: '90dvh',
                 backgroundColor: 'var(--chat-bg)',
                 borderRadius: '12px',
                 boxShadow: '0 4px 16px rgba(0,0,0,0.2)',
