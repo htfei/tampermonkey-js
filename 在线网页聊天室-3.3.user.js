@@ -1,8 +1,8 @@
 // ==UserScript==
-// @name         贤者之家
+// @name         贤者之家--在线网页聊天室
 // @namespace    sage_home
-// @version      1.0
-// @description  和所有人在线交流分享，安全匿名，无需账号，无需客户端，保护隐私，在线网页聊天室，基于Supabase
+// @version      1.1
+// @description  和所有人在线交流分享，安全匿名，无需账号，无需客户端，保护隐私，在线网页聊天室
 // @match        https://*/*
 // @grant        GM_xmlhttpRequest
 // @grant        GM_getValue
@@ -212,7 +212,7 @@ const HlsPlayer = {
                 position: 'fixed',
                 right: CONFIG.CHAT_UI.position.right,
                 bottom: CONFIG.CHAT_UI.position.bottom,
-                width: '400px',
+                width: '300px',
                 height: '90dvh',
                 backgroundColor: 'var(--chat-bg)',
                 borderRadius: '12px',
@@ -422,7 +422,7 @@ const HlsPlayer = {
                         if (url.match(/\.(png|jpg|gif)$/i)) {
                             mediaTag = `<img src="${url}?ts=${Date.now()}"
                                  referrerpolicy="no-referrer-when-downgrade"
-                                 style="max-width: min(400px, 100%); border-radius: 4px; margin: 8px 0;">`;
+                                 style="max-width: min(300px, 100%); border-radius: 4px; margin: 8px 0;">`;
                         }
                         else if (url.match(/\.(mp3)$/i)) {
                             mediaTag = `<audio controls style="width: 100%; margin: 8px 0;" src="${url}"></audio>`;
