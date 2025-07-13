@@ -6,7 +6,7 @@
 // @author       开发者
 // @match        *://*/*
 // @grant        none
-// @require      file:///d:/dev/油猴/floating-ui-library.js
+// @require      file:///c:/GitProject/tampermonkey-js/floating-ui-library.js
 // ==/UserScript==
 
 /**
