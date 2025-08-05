@@ -1,15 +1,14 @@
 // ==UserScript==
-// @name         查看全局属性
+// @name         [tools]🔍$searchKey查看全局属性
 // @description  一键查看挂载到window上的非原生属性，并注入一个$searchKey函数搜索属性名。
 // @namespace    cxxjackie
 // @author       cxxjackie
 // @version      2.0.4
 // @match        *://*/*
+// @icon         http://iciba.com/favicon.ico
 // @grant        unsafeWindow
 // @grant        GM_registerMenuCommand
 // @run-at       document-idle
-// @homepage     https://bbs.tampermonkey.net.cn/thread-916-1-1.html
-// @supportURL   https://bbs.tampermonkey.net.cn/thread-916-1-1.html
 // ==/UserScript==
 
 (function() {

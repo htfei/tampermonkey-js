@@ -1,11 +1,11 @@
 // ==UserScript==
-// @name         自定义video进度条
+// @name         [tools]📺自定义video进度条
 // @namespace    http://tampermonkey.net/
-// @version      2025-06-02
+// @version      1.0
 // @description  try to take over the world!
 // @author       w2f
 // @match        https://*/*
-// @icon         data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==
+// @icon         http://iciba.com/favicon.ico
 // @grant        none
 // ==/UserScript==
 
@@ -112,7 +112,7 @@
             let currentSpeedIndex = 0; // 默认为1倍速
 
             const speedButton = document.createElement('button');
-            speedButton.innerHTML = `⏩ ${speedLevels[currentSpeedIndex]}x`;
+            speedButton.innerHTML = `⏫ ${speedLevels[currentSpeedIndex]}x`;
             speedButton.style.border = 'none';
             speedButton.style.background = 'transparent';
             speedButton.style.color = '#fff';
@@ -121,7 +121,7 @@
             speedButton.onclick = () => {
                 currentSpeedIndex = (currentSpeedIndex + 1) % speedLevels.length;
                 video.playbackRate = speedLevels[currentSpeedIndex];
-                speedButton.innerHTML = `⏩ ${speedLevels[currentSpeedIndex]}x`;
+                speedButton.innerHTML = `⏫ ${speedLevels[currentSpeedIndex]}x`;
             }
 
             // 画中画按钮
@@ -168,7 +168,7 @@
 
             // 创建快进 10s 按钮
             const fastForwardButton = document.createElement('button');
-            fastForwardButton.textContent = '⏩ 10s';
+            fastForwardButton.textContent = '⏩';
             fastForwardButton.style.border = 'none';
             fastForwardButton.style.background = 'transparent';
             fastForwardButton.style.color = '#fff';
@@ -179,7 +179,7 @@
 
             // 创建快退 10s 按钮
             const rewindButton = document.createElement('button');
-            rewindButton.textContent = '⏪ 10s';
+            rewindButton.textContent = '⏪';
             rewindButton.style.border = 'none';
             rewindButton.style.background = 'transparent';
             rewindButton.style.color = '#fff';
@@ -351,10 +351,10 @@
             leftControls.appendChild(playPauseButton);
             leftControls.appendChild(timeDisplay);
 
-            rightControls.appendChild(volumeButton);
+            //rightControls.appendChild(volumeButton);
             rightControls.appendChild(speedButton);
-            rightControls.appendChild(fullScreenButton);
-            rightControls.appendChild(pipButton);
+            //rightControls.appendChild(fullScreenButton);
+            //rightControls.appendChild(pipButton);
             //rightControls.appendChild(likeButton);
             //rightControls.appendChild(newTabButton);
             //rightControls.appendChild(downloadButton);

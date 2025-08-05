@@ -1,11 +1,11 @@
 // ==UserScript==
-// @name         去除网页F12的无限debugger暂停
+// @name         [tools]🚧去除网页F12的无限debugger暂停
 // @namespace    http://tampermonkey.net/
 // @version      0.1
 // @description  try to take over the world!
 // @author       w2f
 // @match        https://*/*
-// @icon         http://52pojie.cn/favicon.ico
+// @icon         http://iciba.com/favicon.ico
 // @grant        none
 // ==/UserScript==
 
