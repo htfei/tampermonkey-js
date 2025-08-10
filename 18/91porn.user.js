@@ -1,21 +1,18 @@
 // ==UserScript==
 // @name         91porn破解VIP视频免费看
 // @namespace    91porn_vip_video_free_see
-// @version      0.3
+// @version      0.4
 // @description  来不及解释了，快上车！！！功能:自动替换VIP线路 + VIP下载 + HD跳转
 // @author       w2f
-
-// @match        https://1231.9p47q.com/*
-// @match        https://w0202.9p47q.com/*
-// @include      /^https://\w+.9p47q.com/.*?$/
-
-// @icon         https://1231.9p47q.com/favicon.ico
+// @include      /^https://\w+.9p58b.com/.*?$/
+// @match        https://w1226.9p58b.com/*
+// @icon         https://w1226.9p58b.com/favicon.ico
 // @license      MIT
 // @grant        none
 // @run-at       document-start
 // @require      https://greasyfork.org/scripts/476730-ajaxhooker-2/code/ajaxHooker_2.js?version=1259979
-// @downloadURL https://update.greasyfork.org/scripts/483600/91porn%E7%A0%B4%E8%A7%A3VIP%E8%A7%86%E9%A2%91%E5%85%8D%E8%B4%B9%E7%9C%8B.user.js
-// @updateURL https://update.greasyfork.org/scripts/483600/91porn%E7%A0%B4%E8%A7%A3VIP%E8%A7%86%E9%A2%91%E5%85%8D%E8%B4%B9%E7%9C%8B.meta.js
+// @downloadURL https://update.sleazyfork.org/scripts/483600/91porn%E7%A0%B4%E8%A7%A3VIP%E8%A7%86%E9%A2%91%E5%85%8D%E8%B4%B9%E7%9C%8B.user.js
+// @updateURL https://update.sleazyfork.org/scripts/483600/91porn%E7%A0%B4%E8%A7%A3VIP%E8%A7%86%E9%A2%91%E5%85%8D%E8%B4%B9%E7%9C%8B.meta.js
 // ==/UserScript==
 
 (function () {
@@ -27,15 +24,15 @@
                 var nodelist = document.querySelectorAll("div.videos-text-align");
                 nodelist?.forEach(
                     (item,idx,arr) => {
-                        /* 该方案已失效
+                        /*
                         var xxx = document.querySelector(`#my_add_dizhi${idx}`);
                         if (xxx) { xxx.parentNode.removeChild(xxx); }
                         var videourl = item.querySelector("div > img")?.src?.split('thumb/')[1]?.split('.')[0];
                         if (videourl) {
                             var mydiv = document.createElement('div');
                             mydiv.innerHTML = `<div id="my_add_dizhi${idx}" style="color:red;font-size:14px;word-wrap: break-word;word-break: break-all;">
-                            <p>✅点此访问:<a href="https://la.btc35000.com/m3u8/${videourl}/${videourl}.m3u8" target="_blank">线路A</a>
-                            <a href="https://1729130453.rsc.cdn77.org/m3u8/${videourl}/${videourl}.m3u8" target="_blank">线路H</a>
+                            <p>✅点此访问:<a href="https://la.btc620.com/m3u8/${videourl}/${videourl}.m3u8" target="_blank">线路A</a>
+                            <a href="http://1470423830.rsc.cdn77.org/m3u8/${videourl}/${videourl}.m3u8" target="_blank">线路H</a>
                             <a href="https://cns.killcovid2021.com/m3u8/${videourl}/${videourl}.m3u8" target="_blank">VIP线路I</a></p></div>`;
                             item.after(mydiv);
                         }*/
@@ -46,7 +43,7 @@
             }
             else if (location.href.match("view_video_hd.php") != null) {location.href = location.href.replace("view_video_hd","view_video") }
             else if (location.href.match("view_video.php") != null) {
-                var url = document.querySelector("video").src;
+                var url = document.querySelector("video source").src;
                 var fixurl = "https://cns.killcovid2021.com/mp43/" + url.split("mp43/")[1];
                 //console.log(fixurl);
                 document.querySelector("video").src = fixurl;
