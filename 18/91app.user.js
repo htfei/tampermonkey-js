@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         91app短视频VIP免费看
 // @namespace    91app_vip_video_free_see
-// @version      0.8
+// @version      0.9
 // @description  来不及解释了，快上车！！！
 // @author       w2f
 // @match        https://webo3.dsp01a.net/*
@@ -88,6 +88,7 @@
             playPauseButton.style.background = 'transparent';
             playPauseButton.style.color = '#fff';
             playPauseButton.style.cursor = 'pointer';
+            playPauseButton.style.fontSize = '18px'; // 统一按钮大小
 
             playPauseButton.onclick = () => {
                 if (video.paused) {
@@ -111,6 +112,7 @@
             volumeButton.style.background = 'transparent';
             volumeButton.style.color = '#fff';
             volumeButton.style.cursor = 'pointer';
+            volumeButton.style.fontSize = '18px'; // 统一按钮大小
 
             volumeButton.onclick = () => {
                 video.muted = !video.muted;
@@ -122,16 +124,17 @@
             let currentSpeedIndex = 0; // 默认为1倍速
 
             const speedButton = document.createElement('button');
-            speedButton.innerHTML = `⏩ ${speedLevels[currentSpeedIndex]}x`;
+            speedButton.innerHTML = `${speedLevels[currentSpeedIndex]}x`;
             speedButton.style.border = 'none';
             speedButton.style.background = 'transparent';
             speedButton.style.color = '#fff';
             speedButton.style.cursor = 'pointer';
+            speedButton.style.fontSize = '18px'; // 统一按钮大小
 
             speedButton.onclick = () => {
                 currentSpeedIndex = (currentSpeedIndex + 1) % speedLevels.length;
                 video.playbackRate = speedLevels[currentSpeedIndex];
-                speedButton.innerHTML = `⏩ ${speedLevels[currentSpeedIndex]}x`;
+                speedButton.innerHTML = `${speedLevels[currentSpeedIndex]}x`;
             }
 
             // 画中画按钮
@@ -141,6 +144,7 @@
             pipButton.style.background = 'transparent';
             pipButton.style.color = '#fff';
             pipButton.style.cursor = 'pointer';
+            pipButton.style.fontSize = '18px'; // 统一按钮大小
 
             pipButton.onclick = async () => {
                 if (video !== document.pictureInPictureElement) {
@@ -165,6 +169,7 @@
             fullScreenButton.style.background = 'transparent';
             fullScreenButton.style.color = '#fff';
             fullScreenButton.style.cursor = 'pointer';
+            fullScreenButton.style.fontSize = '18px'; // 统一按钮大小
 
             fullScreenButton.onclick = () => {
                 if (document.fullscreenElement) {
@@ -182,6 +187,7 @@
             newTabButton.style.background = 'transparent';
             newTabButton.style.color = '#fff';
             newTabButton.style.cursor = 'pointer';
+            newTabButton.style.fontSize = '18px'; // 统一按钮大小
             newTabButton.onclick = () => window.open(video.dataset.videosrc || video.src, '_blank');
 
             // 喜欢按钮
@@ -191,6 +197,7 @@
             likeButton.style.background = 'transparent';
             likeButton.style.color = '#fff';
             likeButton.style.cursor = 'pointer';
+            likeButton.style.fontSize = '18px'; // 统一按钮大小
             // 初始化喜欢状态
             let isLiked = false;
             // 点击事件逻辑
@@ -280,6 +287,7 @@
             downloadButton.style.background = 'transparent';
             downloadButton.style.color = '#fff';
             downloadButton.style.cursor = 'pointer';
+            downloadButton.style.fontSize = '18px'; // 统一按钮大小
             downloadButton.onclick = () => {
                 const downurl = `https://tools.thatwind.com/tool/m3u8downloader#m3u8=${video.dataset.videosrc}&referer=${window.location.href}&filename=${video.dataset.filename}`;
                 window.open(downurl, '_blank');
@@ -292,6 +300,7 @@
             settingsButton.style.background = 'transparent';
             settingsButton.style.color = '#fff';
             settingsButton.style.cursor = 'pointer';
+            settingsButton.style.fontSize = '18px'; // 统一按钮大小
             // 可添加点击事件逻辑
             settingsButton.onclick = () => {
                 console.log('点击了设置按钮');
@@ -333,14 +342,42 @@
                 video.currentTime = newTime;
             });
 
+            // 快退按钮
+            const rewindButton = document.createElement('button');
+            rewindButton.innerHTML = '⏪';
+            rewindButton.style.border = 'none';
+            rewindButton.style.background = 'transparent';
+            rewindButton.style.color = '#fff';
+            rewindButton.style.cursor = 'pointer';
+            rewindButton.style.fontSize = '18px'; // 增大按钮大小
+            rewindButton.title = '快退10秒';
+            rewindButton.onclick = () => {
+                video.currentTime = Math.max(0, video.currentTime - 10);
+            };
+
+            // 快进按钮
+            const forwardButton = document.createElement('button');
+            forwardButton.innerHTML = '⏩';
+            forwardButton.style.border = 'none';
+            forwardButton.style.background = 'transparent';
+            forwardButton.style.color = '#fff';
+            forwardButton.style.cursor = 'pointer';
+            forwardButton.style.fontSize = '18px'; // 增大按钮大小
+            forwardButton.title = '快进10秒';
+            forwardButton.onclick = () => {
+                video.currentTime = Math.min(video.duration, video.currentTime + 10);
+            };
+
             // 组装控制面板
             leftControls.appendChild(playPauseButton);
             leftControls.appendChild(timeDisplay);
 
             rightControls.appendChild(volumeButton);
+            rightControls.appendChild(rewindButton);
+            rightControls.appendChild(forwardButton);
             rightControls.appendChild(speedButton);
-            rightControls.appendChild(fullScreenButton);
-            rightControls.appendChild(pipButton);
+            //rightControls.appendChild(fullScreenButton);
+            //rightControls.appendChild(pipButton);
             //rightControls.appendChild(likeButton);
             rightControls.appendChild(newTabButton);
             rightControls.appendChild(downloadButton);
