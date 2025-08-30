@@ -1,5 +1,23 @@
 # web逆向分析笔记
 
+
+2025年8月30日
+
+## luoliwo ✅
+
+试看
+https://pp.91uu95.xyz:2200/20220221/PsqFng6P/1.jpg
+https://91uu95.xyz/index.php/vod/play/id/9438/sid/1/nid/1.html
+https://pp.91uu95.xyz:2200/20220221/PsqFng6P/index.m3u8
+
+https://pp.91uu95.xyz:2200/20250312/vu8WpB0g/1.jpg
+https://91uu95.xyz/index.php/vod/play/id/9437/sid/1/nid/1.html
+https://pp.91uu95.xyz:2200/20250312/vu8WpB0g/index.m3u8
+
+破解：
+直接根据图片猜测
+
+
 ##  红杏视频  ❌
 
 2025年7月19日
@@ -18,9 +36,12 @@ https://seseav.top/vod/play/id/185058/sid/1/nid/1.html
 /////[🔍关键词扫描器] 发现 1 条含 .m3u8 的内容：
 https://player.huanguaplay.com/20231122/6kLZ2pZ1/index.m3u8
 ////////$searchKey函数已注入！$searchKey('_isVue')
+
 https://senlinzy.com 发现CMS资源站✅
 window['MacPlayer']['PlayUrl']
 'https://player.huanguaplay.com/20231122/6kLZ2pZ1/index.m3u8'
+
+https://v6.slv525627.com/20250829/Hp1OmY9j/index.m3u8
 ```
 
 ##  海角社区 ✅
