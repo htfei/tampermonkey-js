@@ -1,5 +1,5 @@
 // ==UserScript==
-// @name         [tools]🔍关键词扫描器
+// @name         [tools]🔍html关键词扫描器
 // @namespace    http://tampermonkey.net/
 // @version      0.3
 // @description  支持配置关键词的源码扫描工具
@@ -30,7 +30,7 @@
         if (targetLines.length > 0) {
             console.log(`[🔍关键词扫描器] 发现 ${targetLines.length} 条含 ${keywords} 的内容：`);
             targetLines.forEach((line, i) => {
-                console.log(`(${i + 1})`, "https://sdg.qyhtia.com" + line.trim());
+                console.log(`(${i + 1})`, line.trim());//"https://sdg.qyhtia.com"
             });
         } else {
             console.log(`[🔍关键词扫描器] 未发现包含 ${keywords.join(' 或 ')} 的内容`);

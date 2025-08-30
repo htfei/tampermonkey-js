@@ -1,5 +1,5 @@
 // ==UserScript==
-// @name         [tools]🚧ajaxHooker请求拦截器
+// @name         [tools]🚧ajaxHooker请求拦截器-为m3u8文件追加ts分片
 // @namespace    http://tampermonkey.net/
 // @version      1.0
 // @description  拦截请求极其响应,对其进行修改
