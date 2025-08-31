@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name       萝莉窝破解VIP视频免费看
-// @namespace    w2
-// @version      1.0
+// @namespace    w2f
+// @version      1.1
 // @description  来不及解释了，快上车！！！
 // @author       w2f
 // @match       https://91uu95.xyz/*
@@ -22,7 +22,7 @@
     player.id = 'hlsPlayer';
     player.innerHTML = `<video id="videoElement" controls></video>
         <div class="player-footer">
-            <text id="showTips">⌛️破解中...</text>
+            <text id="showTips">⌛️loliwo破解中...</text>
             <a id="changeSrc1" href="" target="_blank" style="color:red;"></a>
             <a id="changeSrc" href="" target="_blank" style="color:red;"></a>
         </div>`;
@@ -41,7 +41,7 @@
             top: 0px;
             right: 0px;
             max-width: 100vw;
-            mex-height:100vh;
+            mex-height:50vh;
             background: #1a1a1a;
             border-radius: 8px;
             box-shadow: 0 4px 12px rgba(0,0,0,0.3);
@@ -50,7 +50,7 @@
             color:red;font-size:14px;word-wrap: break-word;word-break: break-all;
         }
         #videoElement {
-            max-width: 50vw;
+            max-width: 100vw;
             max-height: 50vh;
             border-radius: 0 0 8px 8px;
         }
@@ -86,7 +86,7 @@
 
     function check_circle(){
 
-        const el = document.querySelector('.video-before-ad.noVip');
+        const el = document.querySelector('.video-before-ad.noVip') || document.querySelector('.img-bg.openVip');
         const bgUrl = el.style.backgroundImage.match(/url\(["']?(.*?)["']?\)/)[1];
         //console.log('🎯 背景图链接:', bgUrl);
         window.m3u8_url = bgUrl.replace('1.jpg','index.m3u8');
