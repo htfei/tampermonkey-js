@@ -18,6 +18,8 @@
 // @grant none
 // @require      https://scriptcat.org/lib/637/1.4.5/ajaxHooker.js#sha256=EGhGTDeet8zLCPnx8+72H15QYRfpTX4MbhyJ4lJZmyg=
 // @run-at       document-start
+// @downloadURL https://update.sleazyfork.org/scripts/538228/%E5%BE%AE%E5%AF%86%E5%9C%88VIP%E8%AF%95%E7%9C%8B%E8%A7%86%E9%A2%91%E7%A0%B4%E8%A7%A3%E5%85%8D%E8%B4%B9%E7%9C%8B.user.js
+// @updateURL https://update.sleazyfork.org/scripts/538228/%E5%BE%AE%E5%AF%86%E5%9C%88VIP%E8%AF%95%E7%9C%8B%E8%A7%86%E9%A2%91%E7%A0%B4%E8%A7%A3%E5%85%8D%E8%B4%B9%E7%9C%8B.meta.js
 // ==/UserScript==
 
 (function() {

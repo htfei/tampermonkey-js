@@ -1,19 +1,42 @@
 // ==UserScript==
 // @name         91app短视频VIP免费看
 // @namespace    91app_vip_video_free_see
-// @version      0.9
+// @version      1.0
 // @description  来不及解释了，快上车！！！
 // @author       w2f
+// @match        https://webo1.dsp01a.net/*
+// @match        https://webo2.dsp01a.net/*
 // @match        https://webo3.dsp01a.net/*
 // @match        https://webo4.dsp01a.net/*
 // @match        https://webo5.dsp01a.net/*
-// @match        https://webo3.azxyictb.com/*
-// @match        https://webo4.azxyictb.com/*
-// @match        https://webo5.azxyictb.com/*
 // @include      /^http(s)?:\/\/webo\w+\.\w+\.(com|net)/
-// @match        https://yypwa3.f82udwl.com/*
+
+// @match        https://p1.ykzmxuq.cc/*
+// @match        https://p2.ykzmxuq.cc/*
+// @match        https://p3.ykzmxuq.cc/*
+// @match        https://p4.ykzmxuq.cc/*
+// @match        https://p5.ykzmxuq.cc/*
+// @include      /^http(s)?:\/\/p\w+\.\w+\.cc/
+
+// @91视频 todo:去ad
+// @match        https://yypwa1.xtrltgwm.xyz/*
+// @match        https://yypwa2.xtrltgwm.xyz/*
+// @match        https://yypwa3.xtrltgwm.xyz/*
+// @match        https://yypwa4.xtrltgwm.xyz/*
+// @match        https://yypwa5.xtrltgwm.xyz/*
+
+// @汤头条 todo:err
 // @match        https://p4.zacdqpi.com/*
-// @icon         https://icons.duckduckgo.com/ip2/dsp01a.net.ico
+
+// @50度灰 todo:err
+// @match        https://p5.hmmcxkd.xyz/*
+
+// @TikTok成人版 抖阴 优质 todo:err
+// @match        https://p3.cugleqmo.xyz/*
+
+// @园区淫乱 todo:err
+// @match        https://w1.zhecxbm.cc/*
+// @icon         https://p4.ykzmxuq.cc/favicon.ico
 // @license      MIT
 // @grant none
 // @require      https://scriptcat.org/lib/637/1.4.5/ajaxHooker.js#sha256=EGhGTDeet8zLCPnx8+72H15QYRfpTX4MbhyJ4lJZmyg=
@@ -372,8 +395,8 @@
             leftControls.appendChild(playPauseButton);
             leftControls.appendChild(timeDisplay);
 
-            rightControls.appendChild(volumeButton);
-            rightControls.appendChild(rewindButton);
+            //rightControls.appendChild(volumeButton);
+            //rightControls.appendChild(rewindButton);
             rightControls.appendChild(forwardButton);
             rightControls.appendChild(speedButton);
             //rightControls.appendChild(fullScreenButton);
@@ -404,25 +427,27 @@
         if (1) {
             //https://10play.nndez.cn/AAA/BBB/BBB.m3u8?auth_key=CCC&via_m=nineone/wmq
             //https://long.nndez.cn/watch4/7f396f270663012c66b02d848632f3f6/7f396f270663012c66b02d848632f3f6.m3u8?auth_key=1748844858-0-0-5f6fb62aa519049abce398ec08c3380b&via_m=wmq
+            //https://120play.igalaz.cn/videos5/8cd86dad5328b21221c9be59888080b1/8cd86dad5328b21221c9be59888080b1.m3u8?auth_key=1765368758-0-0-e90812901eeb946de5ab894103d2a7a5&via_m=tbr&seconds=10
 
-            //console.log("hooked!!! request ====>",request);
+            console.log("hooked!!! request ====>",request);
             let url = new URL(request.url);
             let seg = url.host.split('.');
             seg[0] = 'long';
             url.host = seg.join('.');
             request.url = url.href;
-            //console.log("url fixed ====>",request.url);
+            console.log("url fixed ====>",request.url);
             show_tips(url.href);//显示优化
         }
     });
 
     function show_tips(m3u8url){
-        let nodes = document.querySelectorAll("div.swiper-slide");
+        let nodes = document.querySelectorAll("div.swiper-slide") || document.querySelectorAll("div.swiper-slide-active");
         for(var i = 0 ; i < nodes.length ; i++){
             let cur = nodes[i];
             window.now_node= cur;
             //console.log("now node:",cur);
             cur.querySelector("div.collect-topics-container")?.remove();//去除热点推荐
+            cur.querySelector("div.index_item_bottom")?.remove();
             let tmp = cur.querySelectorAll("div.club");
             if(tmp.length == 0){
                 ;//do nothing
@@ -432,12 +457,15 @@
                 tmp[0].remove();//去除位置
                 tmp[1].querySelector("span").innerText = `✅已破解`;//破解提示
             }
+            let vip = cur.querySelector("div.index_info_bottom_vip_tips span"); 
+            if(vip) vip.innerText = `✅已破解`;//破解提示
         }
         // 获取 video 元素
         const video = document.querySelector('video')
         // 添加自定义属性
         if (video) {
-            video.dataset.filename = document.querySelector("div.video-caption > div.title")?.innerText || document.title;;
+            video.dataset.filename = document.querySelector("div.video-caption > div.title")?.innerText || 
+            document.querySelector("div.swiper-slide.swiper-slide-active > div > div.index_item_info > p")?.innerText || document.title;
             video.dataset.videosrc = m3u8url;
             //<video data-videosrc="https://example.com/video.m3u8"></video>
         }
@@ -447,6 +475,18 @@
         document.querySelector("body > div.van-overlay")?.remove();//去首次加载时的遮层
         document.querySelector("body > div.van-dialog.notice")?.remove();//去首次加载时的广告弹窗
         document.querySelector("div.preview-tip-container")?.remove();//去试看弹窗
+
+        //微密圈去广告
+        document.querySelector("welcome-ad")?.remove();//去除 开屏广告 5s倒计时
+        document.querySelector("div.notice-header-02")?.click();//去除 4次 广告 弹窗
+        document.querySelector("div.notice-header-02")?.click();
+        document.querySelector("div.notice-header-02")?.click();
+        document.querySelector("div.notice-header-02")?.click();
+        let ad = document.querySelector("div.notice_scaleLayer"); if(ad) ad.style.display = 'none';//去除 应用中心 弹窗
+        ad = document.querySelector("div.home-screen-pwa-container"); if(ad) ad.style.display = 'none';//去除 添加到主屏幕 弹窗
+        document.querySelector("div.alertvip-in")?.remove(); //去除 开通VIP 弹窗
+        document.querySelector("div.index_item_bottom")?.remove();//去除 热点推荐
+        document.querySelector("div.flex.items-center")?.remove();
     }
     let my_timer = setInterval(remove_ad, 1000);
 })();
