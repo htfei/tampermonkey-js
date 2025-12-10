@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         小狐狸VIP视频免费看
 // @namespace    small_fox_vip_video_free_see_2
-// @version      2.7
+// @version      2.8
 // @description  来不及解释了，快上车！！！
 // @author       w2f
 // @match        https://xhlld24244.cyou/*
@@ -10,12 +10,13 @@
 // @match        https://dfrd1009.cyou/*
 // @match        https://asf4fss265.shop/*
 // @match        https://asf4fss430.shop/*
+// @match        https://*.xhlld077.shop/*
 // @include      /^http(s)?:\/\/ld01.xhlld\d+\.(cyou|xyz)/
 // @include      /^http(s)?:\/\/ld.xhlld\d+\.(cyou|xyz)/
 // @include      /^http(s)?:\/\/xhlld\d+\.(cyou|xyz)/
 // @include      /^http(s)?:\/\/df\S+\.(cyou|xyz)/
 // @include      /^http(s)?:\/\/\S+\.(cyou|xyz|shop)/
-// @icon         https://dfrd1009.cyou/favicon.ico
+// @icon         https://06.xhlld080.shop/favicon.ico
 // @license      MIT
 // @run-at       document-start
 // @grant        GM_addStyle
@@ -27,6 +28,11 @@
 
 (function() {
     'use strict';
+
+    //2025年9月18日
+    //最新地址发布页： https://xhlyj702.shop/#/index?tag=yjdi
+    //最新跳转地址: https://xhlld044.shop/#/index?tag=yjdi
+    //2025年12月10日 https://06.xhlld080.shop/#/index?tag=yjdi
 
     // 1.创建播放器容器
     const player = document.createElement('div');
