@@ -1,8 +1,8 @@
 // ==UserScript==
-// @name         快猫/红杏/含羞草/麻豆TV/AvPron/9sex/91TV/猫咪/小狐狸/橘猫/91pron/91吃鸡破解VIP视频免费看
-// @name:zh-TW   快貓/紅杏/含羞草/麻荳TV/AvPron/9sex/91TV/貓咪/小狐貍/橘貓/91pron/91喫鷄破解VIP眎頻免費看
+// @name         快猫/含羞草/麻豆TV/艾薇社区/AvPron/9sex/小狐狸/91pron/91吃鸡破解VIP视频免费看
+// @name:zh-TW   快貓/含羞草/麻荳TV/艾薇社区/AvPron/9sex/小狐貍/91pron/91喫鷄破解VIP眎頻免費看
 // @namespace    18x_vip_video_free_see
-// @version      0.55
+// @version      0.56
 // @description  来不及解释了，快上车！！！
 // @description:zh-TW  來不及解釋了，快上車！！！
 // @author       w2f
@@ -85,12 +85,17 @@
     ajaxHooker.filter([
         //{type: 'xhr', url: '/videos/getPreUrl', method: 'POST', async: true},//含羞草预览
         {type: 'xhr', url: '/videos/getInfo', method: 'POST', async: true},//含羞草真实请求 https://ap638.daoshaort.com/videos/getInfo
+        //https://a5p3.95agri.com/videos/getInfo
+        //https://a5p3.95agri.com/videos/getList
+        //https://a5p3.95agri.com/base/getConfigPub
+        //https://a8n9.i4x2.com/analyse/online
     ]);
     ajaxHooker.hook(request => {
         if (request.url.indexOf('/videos/getInfo') > -1 ) {
             console.log("hooked!!! request ====>",request);
-            //https://ap638.daoshaort.com/videos/v2/getUrl //限免api
-            request.url = "https://api.qianyuewenhua.xyz/videos/getPreUrl";//含羞草预览api
+            //request.url = "https://a5p3.95agri.com/videos/v2/getUrl"; //限免api //rsp: {"code": 2002,"msg": "无权限获取","data": {},"traceId": "MLuEda"}
+            //request.url = "https://api.qianyuewenhua.xyz/videos/getPreUrl";//含羞草预览api
+            request.url = "https://a5p3.95agri.com/videos/getPreUrl";//含羞草预览api
             request.response = async res => {
                 console.log("hooked!!! responseText ====>",JSON.parse(res.responseText));
                 res.responseText = await modifyResponse(res.responseText);
@@ -100,13 +105,15 @@
 
     async function modifyResponse(responseText){
         let rspjson = await JSON.parse(responseText);
-        rspjson.data.url = rspjson.data.url.replace(/start=\d+\&end=\d+\&/,"");
-        console.log("fixed url====>",rspjson.data.url);
-        //getPreUrl : {"code":0,"msg":"","data":{"id":55159,"url":"https://t189.ntgdct.com/20240812/KWkC44Jj/index.m3u8?start=600\u0026end=630\u0026sign=X\u0026rSign=Y"},"traceId":"b0GJvO"}
-        localStorage.setItem("real_video_url", rspjson.data.url);
-        if(window.navigator.appVersion.includes("Windows")){
-            return await JSON.stringify(rspjson);
-        }
+        window.xxxadrfgaddsasd = rspjson.data.url.replace(/start=\d+\&end=\d+\&/,"start=0&end=9999&");
+        //rspjson.data.url = realurl;
+        console.log("fixed url====>",window.xxxadrfgaddsasd);
+        //getPreUrl : {"code":0,"msg":"","data":{"id":55159,"url":"https://t189.ntgdct.com/20240812/KWkC44Jj/index.m3u8?start=600&end=630&sign=XXX&rSign=YYY"},"traceId":"b0GJvO"}
+        //2025年12月10日： https://t01e.frist-art.com/play/m3u8/vc/23819/v_23819_nc4W.m3u8?start=900&end=930&sign=XXX&rSign=YYY
+        //localStorage.setItem("real_video_url", rspjson.data.url);
+        //if(window.navigator.appVersion.includes("Windows")){
+        //    return await JSON.stringify(rspjson);
+        //}
         let orirsp = {"code":0,"msg":"","data":{
             "canDownload":true,"canPlay":false,"canPrePlay":true,"discount":70,"discountPoint":0,"downloadPoint":2,
                                                 "info":{"id":55159,"coverImgUrl":"",
@@ -570,7 +577,7 @@
                     localStorage.setItem("visitorShortLimit",JSON.stringify(obj3));
                 }*/
                 //shikan = document.querySelector("div.try div.g-flex-jcc") || document.querySelector("div.cursor-pointer.flex-center.space-x-1"); /* 前面为手机。后面为PC */
-                let videoUrl = localStorage.getItem("real_video_url");
+                let videoUrl = window.xxxadrfgaddsasd.replace(/start=\d+\&end=\d+\&/,"");//localStorage.getItem("real_video_url");
                 if (videoUrl) {
                     //3.移除广告
                     ads = document.querySelector("div.vip-mask");
@@ -579,13 +586,13 @@
                     if (ads != null) ads.style.display = "none";
                     //4.显示地址
                     console.log("videoUrl:",videoUrl);
-                    //show_videoUrl(videoUrl, document.querySelector("div.g-m-t-8.g-flex.title") || document.querySelector("h2.text-base.article-title"), 1);
+                    show_videoUrl(videoUrl, document.querySelector("div.g-m-t-8.g-flex.title") || document.querySelector("h2.text-base.article-title"), 1);
                      //4.播放正片
                     let el = document.querySelector("#v_prism")|| document.querySelector("#video1");
                     let dizhi = document.querySelector("div.g-m-t-8.g-flex.title") || document.querySelector("h2.text-base.article-title");
-                    play_video(videoUrl, el, dizhi, 1);
+                    //play_video(videoUrl, el, dizhi, 1); // 2025年12月10日：只要在当前页面加载这个dplayer就会导致返回异常,无法播放；应该是页面捕获了信息，做了反逆向限制
                     //5.停止定时器
-                    localStorage.removeItem("real_video_url");
+                    //localStorage.removeItem("real_video_url");
                     console.log("停止定时器！");
                     clearInterval(my_timer);
                 }
