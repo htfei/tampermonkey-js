@@ -285,6 +285,47 @@ https://media.javtrailers.com/hlsvideo/freepv/s/son/sone00720/sone00720mmb.m3u8
 
 ## 91app ok
 
+### 如何在app下载页找到对应的web地址?
+
+以下适用于所有的91系列app，不少于10多款应用的web地址。 其他类似app也有参考价值。
+1. 当前页面搜关键字 'dataMap','affCode','webLink' (已编写 ./tools/[tools]🔍html关键词自动扫描器.js 脚本可自动扫描)
+2. 直接将当前地址修改 https://a20a.ykhwpsjl.cc/  改成 https://webo3.ykhwpsjl.cc/ 极可能得到web地址
+3. 查看网络xhr请求 ，有一个返回的json包含 web_app_url , 如下：
+4. 在这来找 https://github.com/ailiu258099-blip/master/
+5. 在91系列任意一个app里面，点击我的-应用推荐，就能得到相关的app地址推荐页，然后再进行1~4查找
+6. 在网页indexdb中可以查看到网址等很多信息
+
+0: "https://sapi02.dpcagsg.com/api.php"
+1: "https://sapi01.eihpijd.xyz/api.php"
+2: "https://sapi03.eihpijd.xyz/api.php"
+
+
+3. 查看网络xhr请求 ，有一个返回的json包含 web_app_url , 如下：
+https://webo6.ykhwpsjl.cc/index.php/index/config?tpl=B&url=xxx
+
+{
+  "ishowBusiness": true,
+  "pwaUrl": "/index.php/index/pwa?aff_code=&tpl=B",
+  "jumpPwaUrl": "/index.php/index/pwa?aff_code=&tpl=B",
+  "androidURL": "https://dupzh1gwy97uy.cloudfront.net/down/dsp/dsp_lite_7.2.1_251214_2.apk",
+  "androidmaskURL": "https://dn02d5dsnl300.cloudfront.net/1863566171212460033.apk",
+  "aff": "",
+  "share": "91porn_aff:",
+  "channel": "",
+  "tg_url": "https://t.me/swhz91",
+  "td_url": "https://ptcc.in/CG_guanfang",
+  "user_tg_url": "https://t.me/huijiaxiazai",
+  "tw_url": "https://mobile.twitter.com/91porn2012",
+  "home_page": "https://a20a.ykhwpsjl.cc/chan-1907/aff-kz8Ks",
+  "email": "91dsp2008@gmail.com",
+  "github": "https://{share.91porn_web}",
+  "web_app_url": "https://webo1.yibzdjo.cc?aff_code=",
+  "pc_url": "https://fnnufph.top",
+  "is_download": 0,
+  "store_url": ""
+}
+
+
 ```js
 91app   https://w6.vtknladz.xyz/
 汤头条   https://5797.zqzxctc.org/
@@ -300,4 +341,108 @@ https://long.nndez.cn/AAA/BBB/BBB.m3u8?auth_key=CCC&via_m=nineone
 举例：
 https://10play.nndez.cn/watch9/080c4e7723ddb43c0118c7b9d6c4b606/080c4e7723ddb43c0118c7b9d6c4b606.m3u8?auth_key=1748778765-0-0-9f8301fee48d59c433ccc45a64c96180&via_m=nineone
 ```
+### 海角cc/暗网禁区/91暗网 ok flutter
+flutter 
+无法去AD
+不能点击自带的播放，否则10s后弹出VIP无法关闭 （应该点击脚本生成的DIV中的 快进、控制条等）
 
+同91app (10play改成long即可), 但m3u8直接在web中，不发起xhr
+破解原理：获取页面的m3u8,并修改long
+
+海角cc
+https://p5.tyhytqs.xyz
+https://p4.lsqykbvl.com/
+
+暗网禁区
+https://p3.pvltmnl.xyz/
+
+91暗网
+https://p4.zjsrxfj.cc/
+
+https://10play.iycsmq.cn/static/e3fa2760d16039d338512cb3f01d79fd/e3fa2760d16039d338512cb3f01d79fd.m3u8?auth_key=1765618518-0-0-c0b6903ab123af887cfca43cc0a87c99&via_m=mbjd
+
+https://10play.iycsmq.cn/videos5/f9dbba59e73830a2622e91ab93bcd38d/f9dbba59e73830a2622e91ab93bcd38d.m3u8?auth_key=1765618927-0-0-2a173ec1b45c43c7973ceb627192c615&via_m=mbjd
+
+### 17岁、16岁 ok todo flutter
+17
+https://e50.ibchqmr.xyz/aff-Tjp
+https://w4.ibchqmr.xyz/
+https://baks.shiqis.com/api.php
+trace_o7s2ek37gnd6
+16
+打开控制台会跳转到百度
+猫抓能捕获完整m3u8url
+破解方法1：直接显示m3u8url or 显示一个DIV播放
+
+
+https://d17rhkrwip15vt.cloudfront.net
+free:
+https://16year.top/api/app/vid/h5/m3u8/bktappupdata/sp/ty/29/85/ad/bfe740dfa0154d729d02a7ef75520712.m3u8?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0aW1lc3RhbXAiOjE3NjU2MDcxMzY4Nzc5MzgyMDAsInR5cGUiOjAsInVpZCI6MTEzMTE3NTl9.chXA3qV_q9p6uZxmdEhP-Q7dPUKPiO3Q2EGZSqHZGwY&cdn=https://yhuji9o.rwfywa.cn
+
+https://16year.top/api/app/vid/h5/m3u8/bktappupdata/sp/vy/rx/x5/rt/45859fea98cc4610bfcaaadb75f0369e.m3u8?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0aW1lc3RhbXAiOjE3NjU2MDcxMzY4Nzc5MzgyMDAsInR5cGUiOjAsInVpZCI6MTEzMTE3NTl9.chXA3qV_q9p6uZxmdEhP-Q7dPUKPiO3Q2EGZSqHZGwY&cdn=https://yhuji9o.rwfywa.cn
+
+vip: 
+https://16year.top/api/app/vid/h5/m3u8/bktappupdata/sp/xe/yy/9v/xy/f7cc349c247f4c25af548c34a91b5549.m3u8?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0aW1lc3RhbXAiOjE3NjU2MDcxMzY4Nzc5MzgyMDAsInR5cGUiOjAsInVpZCI6MTEzMTE3NTl9.chXA3qV_q9p6uZxmdEhP-Q7dPUKPiO3Q2EGZSqHZGwY&cdn=https://yhuji9o.rwfywa.cn
+
+### 草榴短视频/泡芙 ok todo
+
+说明：当前页面就有完整视频地址，只是通过前端暂停不让播放。
+破解原理：去掉暂停继续播放。
+
+草榴短视频
+https://cl624.ol8snb2kx.xyz/
+泡芙
+https://d1x3rzq2txjc6c.cloudfront.net/
+
+
+https://cl624.ol8snb2kx.xyz/api/m3u8/h5/decode?path=jpe/20251212/g8/fr/j8/nx/7cdd8804073840f7a0cdc00128463131.m3u8
+
+https://cl624.ol8snb2kx.xyz/api/m3u8/h5/decode?path=jpe/20251103/7p/cq/r2/b3/dbfce252f82c4e688183f5eef3283d85.m3u8
+https://cl624.ol8snb2kx.xyz/api/m3u8/h5/decode?path=sp/fc/wa/om/k4/dc671158f9ec48d59f60d208acadeaa3.m3u8
+https://cl624.ol8snb2kx.xyz/api/m3u8/h5/decode?path=sp/jb/iz/op/wy/c9f09639f1f34d758c91047f755a3613.m3u8
+
+
+
+### 麻豆视频 todo aes解密
+https://d3df6hjcjf7ng5.cloudfront.net
+
+有free vip 金币
+vip可预览 ，可破
+
+https://d3df6hjcjf7ng5.cloudfront.net/api/app/media/m3u8ex/v3/av/0q/at/dx/1g/bfb60d75b7f74b72b34e655b860bb4ca.m3u8?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdWQiOiJwdWJsaWMiLCJleHAiOjE3NjgyMDEzMDcsImlzc3VlciI6ImNvbS5idXR0ZXJmbHkiLCJzdWIiOiJhc2lnbiIsInVzZXJJZCI6MTczMzMzNzk3fQ.6Ar-kdckGzsKgahxIJBX7TTBkwmf0BzQjcyfU43FcJE
+
+https://d3df6hjcjf7ng5.cloudfront.net/api/app/media/m3u8ex/v3/av/ku/22/84/mf/a1fb34f34437437b950741589a1bc588.m3u8?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdWQiOiJwdWJsaWMiLCJleHAiOjE3NjgyMDEzMDcsImlzc3VlciI6ImNvbS5idXR0ZXJmbHkiLCJzdWIiOiJhc2lnbiIsInVzZXJJZCI6MTczMzMzNzk3fQ.6Ar-kdckGzsKgahxIJBX7TTBkwmf0BzQjcyfU43FcJE
+
+### 极乐禁地/bili ok todo
+
+原理： X_0001.m3u8?token=Y 改成 X.m3u8?token=Y
+
+极乐禁地
+https://d34vyrelvmcjzt.cloudfront.net
+
+bili
+https://d1kek4wgeaw03m.cloudfront.net/
+https://d3r24dh3fve23e.cloudfront.net/
+
+
+https://d1kek4wgeaw03m.cloudfront.net/play/longVideo/397115
+https://d3r24dh3fve23e.cloudfront.net/SubPage/longViodePlay/?id=16244
+
+https://d3r24dh3fve23e.cloudfront.net/api/app/media/h5/m3u8/v2/sp/xs/0f/l4/r3/acd39a46e33348388ee3e2de20e5732e.m3u8?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdWQiOiJwdWJsaWMiLCJleHAiOjE3NjgyMDQ2NjIsImlzc3VlciI6ImNvbS5idXR0ZXJmbHkiLCJzdWIiOiJhc2lnbiIsInVzZXJJZCI6NTk1NDIxOH0.vCTaBELtKTWp-7RWsgc9IbXSZxSHS8fQD5WtMqzfk7w&timestamp=1765612664&sign=96e3b5ab8801c3c5f1d0082ed6cdcac693cb0f89&nonce=4d35d9cc-dbe1-49fc-aad8-fd21b6d6e68a
+
+https://d3r24dh3fve23e.cloudfront.net/api/app/media/h5/m3u8/v3/av/gq/qx/c5/sp/7c2b7dbf1bc2431ba655ed7acf21b264_0001.m3u8?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdWQiOiJwdWJsaWMiLCJleHAiOjE3NjgyMDQ2NjIsImlzc3VlciI6ImNvbS5idXR0ZXJmbHkiLCJzdWIiOiJhc2lnbiIsInVzZXJJZCI6NTk1NDIxOH0.vCTaBELtKTWp-7RWsgc9IbXSZxSHS8fQD5WtMqzfk7w&timestamp=1765612756&sign=cb220a49cbff363cd8626f296a556e7862a88bc3&nonce=4f4342f3-a5f5-4f52-8ee0-fc3d8f7ae77d
+
+
+https://d3r24dh3fve23e.cloudfront.net/api/app/media/h5/m3u8/v3/sp/bv/j9/7c/7x/031f4bfeaaba46d98859395f7ebafbc0.m3u8?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdWQiOiJwdWJsaWMiLCJleHAiOjE3NjgyMDQ2NjIsImlzc3VlciI6ImNvbS5idXR0ZXJmbHkiLCJzdWIiOiJhc2lnbiIsInVzZXJJZCI6NTk1NDIxOH0.vCTaBELtKTWp-7RWsgc9IbXSZxSHS8fQD5WtMqzfk7w&timestamp=1765613055&sign=5f4c6953493f5a5a73df19d9a1d80ad7b2875428&nonce=91187fca-c596-4e7e-9e98-5d67eb7e8d75
+
+
+https://d1kek4wgeaw03m.cloudfront.net/api/app/media/h5/m3u8/bktappupdata/sp/g4/3o/0x/ie/b30ad64a8549494bbad7fd8706659b89.m3u8?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdWQiOiJwdWJsaWMiLCJleHAiOjE3NjgyMDU2NjIsImlzc3VlciI6ImNvbS5idXR0ZXJmbHkiLCJzdWIiOiJhc2lnbiIsInVzZXJJZCI6NjA0Mjk5MTN9.d1e5jSwLpYXPKFyi2fq8WGmT1dnOiXWeyZ-FuEPeVj8
+
+
+## todo
+糖心Vlog 
+https://txh067.com
+Swag
+https://ri306.xyz
+19J
+https://19jtv10.xyz

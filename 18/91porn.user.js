@@ -1,9 +1,10 @@
 // ==UserScript==
 // @name         91porn破解VIP视频免费看
 // @namespace    91porn_vip_video_free_see
-// @version      0.4
+// @version      0.5
 // @description  来不及解释了，快上车！！！功能:自动替换VIP线路 + VIP下载 + HD跳转
 // @author       w2f
+// @match        https://w823.a2507app.com/*
 // @include      /^https://\w+.9p58b.com/.*?$/
 // @match        https://w1226.9p58b.com/*
 // @icon         https://w1226.9p58b.com/favicon.ico
@@ -14,6 +15,15 @@
 // @downloadURL https://update.sleazyfork.org/scripts/483600/91porn%E7%A0%B4%E8%A7%A3VIP%E8%A7%86%E9%A2%91%E5%85%8D%E8%B4%B9%E7%9C%8B.user.js
 // @updateURL https://update.sleazyfork.org/scripts/483600/91porn%E7%A0%B4%E8%A7%A3VIP%E8%A7%86%E9%A2%91%E5%85%8D%E8%B4%B9%E7%9C%8B.meta.js
 // ==/UserScript==
+
+/*
+正版91pron地址：https://www.91dizhi8.com
+
+功能:
+1.高清HD视频可跳转观看
+2.自动替换VIP线路播放
+3.VIP下载功能
+*/
 
 (function () {
     'use strict';

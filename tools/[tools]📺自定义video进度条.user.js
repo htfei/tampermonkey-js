@@ -50,6 +50,26 @@
             playerContainer.style.zIndex = '9999';
             playerContainer.style.backgroundColor = 'rgba(0, 0, 0, 0.3)'; // 半透明背景
             playerContainer.style.fontSize = "20px"; // 让图标更大
+            
+            // 添加媒体查询：PC宽屏时默认在右下角占1/4屏幕
+            const style = document.createElement('style');
+            style.textContent = `
+                @media screen and (min-width: 768px) and (min-height: 768px) {
+                    #custom-video-controls:not(.has-moved-video) {
+                        bottom: 20px !important;
+                        right: 20px !important;
+                        left: auto !important;
+                        transform: none !important;
+                        width: 50vw !important;
+                        height: 50vh !important;
+                    }
+                    
+                    #custom-video-controls:not(.has-moved-video) video {
+                        max-height: calc(50vh - 100px) !important;
+                    }
+                }
+            `;
+            document.head.appendChild(style);
 
             // 创建按钮组（播放、时间在左，其他图标在右）
             const controlsRow = document.createElement('div');
@@ -144,6 +164,83 @@
                         await document.exitPictureInPicture();
                     } catch (error) {
                         console.error('退出画中画模式失败:', error);
+                    }
+                }
+            };
+
+            // 移动视频按钮
+            const moveVideoButton = document.createElement('button');
+            moveVideoButton.innerHTML = '⬆️';
+            moveVideoButton.style.border = 'none';
+            moveVideoButton.style.background = 'transparent';
+            moveVideoButton.style.color = '#fff';
+            moveVideoButton.style.cursor = 'pointer';
+            moveVideoButton.title = '将视频移动到自定义容器';
+
+            // 保存原始视频容器引用
+            let originalVideoContainer = null;
+
+            moveVideoButton.onclick = () => {
+                // 获取video元素和自定义容器
+                const video = document.querySelector('video');
+                const container = document.getElementById('custom-video-controls');
+                
+                if (video && container) {
+                    // 如果视频已经在自定义容器内，将其移回原位
+                    if (video.parentNode === container) {
+                        if (originalVideoContainer) {
+                            // 恢复视频的原始样式
+                            video.style.cssText = video.dataset.originalStyle || '';
+                            
+                            // 将视频移回原始容器
+                            originalVideoContainer.appendChild(video);
+                            
+                            // 重置容器样式
+                            container.style.paddingTop = '10px';
+                            container.style.width = '90%';
+                            container.classList.remove('has-moved-video');
+                            
+                            // 重置按钮状态
+                            moveVideoButton.innerHTML = '⬆️';
+                            moveVideoButton.title = '将视频移动到自定义容器';
+                            
+                            console.log('视频已移回原始位置');
+                        }
+                    } else {
+                        // 保存原始视频容器
+                        originalVideoContainer = video.parentNode;
+                        
+                        // 保存视频的原始样式和位置信息
+                        if (!video.dataset.originalStyle) {
+                            video.dataset.originalStyle = video.style.cssText;
+                            video.dataset.originalParent = video.parentNode.id || 'body';
+                        }
+                        
+                        // 将视频移动到自定义容器内，作为第一个子元素
+                        container.insertBefore(video, container.firstChild);
+                        
+                        // 设置视频的样式
+                        video.style.width = '100%';
+                        video.style.height = 'auto';
+                        video.style.maxHeight = '400px';
+                        video.style.borderRadius = '5px 5px 0 0';
+                        video.style.display = 'block';
+                        video.style.objectFit = 'contain';
+                        video.style.marginBottom = '10px';
+                        
+                        // 调整容器的样式
+                        container.style.paddingTop = '0';
+                        container.style.width = '80%';
+                        container.style.bottom = '20px';
+                        container.style.background = 'rgba(0, 0, 0, 0.9)';
+                        container.style.paddingBottom = '15px';
+                        container.classList.add('has-moved-video');
+                        
+                        // 更新按钮状态
+                        moveVideoButton.innerHTML = '⬇️';
+                        moveVideoButton.title = '将视频移回原始位置';
+                        
+                        console.log('视频已移动到自定义容器');
                     }
                 }
             };
@@ -353,6 +450,7 @@
 
             //rightControls.appendChild(volumeButton);
             rightControls.appendChild(speedButton);
+            rightControls.appendChild(moveVideoButton); // 添加移动视频按钮
             //rightControls.appendChild(fullScreenButton);
             //rightControls.appendChild(pipButton);
             //rightControls.appendChild(likeButton);

@@ -1,10 +1,11 @@
 // ==UserScript==
 // @name         艾薇社区破解VIP视频免费看
 // @namespace    aiwei_vip_video_free_see
-// @version      1.1
+// @version      1.2
 // @description  来不及解释了，快上车！！！
 // @author       w2f
 // @match        https://avjb.com/*
+// @match        https://avjb.cc/*
 // @grant        GM_addStyle
 // @license      MIT
 // @require      https://cdnjs.cloudflare.com/ajax/libs/hls.js/1.1.5/hls.min.js

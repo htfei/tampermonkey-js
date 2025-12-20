@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         含羞草研究所免费看
 // @namespace    http://tampermonkey.net/
-// @version      2.3.1
+// @version      2.4.0
 // @description  针对 含羞草研究所 的优化脚本，此脚本可以让用户观看VIP视频
 // @description  中转页 https://www.Fi11.tv ; https://www.Fi11.live
 // @description  一位网友推荐：https://5z4qc0.91hub.one:2096/index?ref=40951
@@ -51,35 +51,34 @@
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=hxcbb101.com
 // @grant        none
 // @require https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.0.0/crypto-js.min.js
-// @downloadURL https://update.greasyfork.org/scripts/456275/%E5%90%AB%E7%BE%9E%E8%8D%89%E7%A0%94%E7%A9%B6%E6%89%80%E5%85%8D%E8%B4%B9%E7%9C%8B.user.js
-// @updateURL https://update.greasyfork.org/scripts/456275/%E5%90%AB%E7%BE%9E%E8%8D%89%E7%A0%94%E7%A9%B6%E6%89%80%E5%85%8D%E8%B4%B9%E7%9C%8B.meta.js
 // ==/UserScript==
-
+ 
 let Global = {
     deviceType: "pc",
     pageType: "live",
     isReloadVideo: false
 }
-
+ 
 function importLib() {
     importJS("https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.0.0/crypto-js.min.js")
     importJS("https://cdnjs.cloudflare.com/ajax/libs/hls.js/1.1.5/hls.min.js")
     importJS("https://cdnjs.cloudflare.com/ajax/libs/dplayer/1.26.0/DPlayer.min.js")
 }
-
+ 
 function importJS(src) {
     let script = document.createElement('script');
     script.src = src;
     document.head.appendChild(script);
 }
-
+ 
 VITE_APP_AES_KEY = 'B77A9FF7F323B5404902102257503C2F'
 VITE_APP_AES_IV = 'B77A9FF7F323B5404902102257503C2F'
 VITE_APP_AES_PASSWORD_KEY = "0123456789123456"
 VITE_APP_AES_PASSWORD_IV = "0123456789123456"
 defaultPassword = "123456"
-baseURL = "https://api.qianyuewenhua.xyz"
+//baseURL = "https://api.qianyuewenhua.xyz"
 //baseURL = "https://api.hydzswyxgs.com"
+baseURL ="https://ap859.hanbige.com"
 registerParam = {
     user_login: "",
     user_pass: "",
@@ -88,19 +87,19 @@ registerParam = {
     //visitorId: null == (d = t.visitorInfo) ? void 0 : d.visitorId
     visitorId: 10000000 + Math.floor(Math.random() * 10000000)
 }
-
+ 
 function randomPhoneNumber() {
     let prefixArray = new Array("130", "131", "132", "133", "135", "137", "138", "170", "187", "189");
     let i = parseInt(10 * Math.random());
     let prefix = prefixArray[i];
-
+ 
     for (var j = 0; j < 8; j++) {
         prefix = prefix + Math.floor(Math.random() * 10);
     }
-
+ 
     return prefix;
 }
-
+ 
 function genRegisterData() {
     registerParam.user_login = randomPhoneNumber()
     encryptParam = {
@@ -110,8 +109,8 @@ function genRegisterData() {
     registerParam.user_pass = encrypt(defaultPassword, encryptParam)
     return registerParam;
 }
-
-
+ 
+ 
 function encrypt(ciphertext, { key: key, iv: iv } = {}) {
     var a = CryptoJS.enc.Utf8.parse(ciphertext)
         , i = CryptoJS.AES.encrypt(a, CryptoJS.enc.Utf8.parse(key || VITE_APP_AES_KEY), {
@@ -121,7 +120,7 @@ function encrypt(ciphertext, { key: key, iv: iv } = {}) {
         });
     return CryptoJS.enc.Base64.stringify(i.ciphertext)
 }
-
+ 
 function getVideoId() {
     let url = window.location.href;
     //集合类视频
@@ -137,8 +136,9 @@ function getVideoId() {
     console.log('The videoId is',videoId);
     return parseInt(videoId);
 }
-
+ 
 // https://api.hydzswyxgs.com/videos/v2/getUrl
+// https://ap859.hanbige.com/videos/v2/getUrl
 async function getVideoUrl(token, videoId) {
     window.videoId = videoId
     let vipPath = "/videos/getPreUrl"
@@ -151,18 +151,18 @@ async function getVideoUrl(token, videoId) {
     }
     videoUrlParam = JSON.stringify(videoUrlParam)
     let now = new Date()
-    data = {
+    let data = {
         endata: encrypt(videoUrlParam || {}),
         ents: encrypt(parseInt(now.getTime() / 1e3) + 60 * now.getTimezoneOffset())
     }
-
+ 
     let requestOptions = {
         method: 'POST',
         headers: myHeaders,
         body: JSON.stringify(data),
         //    redirect: 'follow'
     };
-
+ 
     let res = await fetch(baseURL + vipPath, requestOptions);
     let json = await res.json()
     m3u8Url = json.data.url
@@ -181,7 +181,7 @@ async function getVideoUrl(token, videoId) {
         return null
     }
 }
-
+ 
 function setCopyBtn(elementClass,newM3U8Url){
     document.querySelector(elementClass).innerHTML='<button id="copyM3U8" style="color: red;">复制地址</button>'
     document.querySelector("#copyM3U8").addEventListener("click", async (e) => {
@@ -189,7 +189,7 @@ function setCopyBtn(elementClass,newM3U8Url){
         alert("复制成功")
   });
 }
-
+ 
 function play(playerUrl, pic, container, playType) {
     //container.style.zIndex = 1
     //container.style.position="relative";
@@ -201,10 +201,13 @@ function play(playerUrl, pic, container, playType) {
         plug: 'hls.js',//使用hls.js插件播放m3u8
         video: playerUrl//视频地址
     }
+    if( window.ck){
+         window.ck.remove();
+    }
     window.ck = new ckplayer(videoObject);
     window.ck.play()
 }
-
+ 
 function mobilePlay(playerUrl, pic, container, playType) {
     container.style.zIndex = 99999
     window.dp = new DPlayer({
@@ -223,7 +226,7 @@ function mobilePlay(playerUrl, pic, container, playType) {
         }
     });
 }
-
+ 
 async function pc() {
     if (window.location.pathname.endsWith("home")) {
         return
@@ -239,6 +242,8 @@ async function pc() {
         pic = pic.getAttribute("src")
     }
     container = document.querySelector("#v_prism")
+    container.style.position="relative"
+    container.style.zIndex=9999
     playType = 'live'
     elem = document.querySelector(".vip-mask")
     if (elem) {
@@ -264,11 +269,11 @@ async function pc() {
     if (elem) {
         elem.remove()
     }
-
+ 
     play(videoUrl, pic, container, playType)
 }
-
-
+ 
+ 
 async function mobile() {
     if (!window.location.pathname.endsWith("0")) {
         return
@@ -288,7 +293,7 @@ async function mobile() {
     //document.querySelector(".try-detail-video").remove()
     mobilePlay(videoUrl, pic, container, playType)
 }
-
+ 
 async function main() {
     setTimeout(async () => {
         if(window.navigator.appVersion.includes("Windows")){
@@ -299,7 +304,7 @@ async function main() {
                         return
                     }
                     pc()
-                }, 300)
+                }, 200)
             }, true)
             pc()
         } else {
@@ -314,13 +319,13 @@ async function main() {
                         return
                     }
                     mobile()
-                }, 100)
-
+                }, 200)
+ 
             }, true)
             mobile()
         }
     }, 1800)
 }
-
-
+ 
+ 
 main()
