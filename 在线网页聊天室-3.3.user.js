@@ -1,8 +1,8 @@
 // ==UserScript==
-// @name         贤者之家--在线网页聊天室
+// @name         onlineChat-在线网页聊天室
 // @namespace    sage_home
-// @version      1.1
-// @description  和所有人在线交流分享，安全匿名，无需账号，无需客户端，保护隐私，在线网页聊天室
+// @version      1.2
+// @description  和所有人在线交流，安全匿名，无需账号，无需客户端，保护隐私，在线网页聊天室
 // @match        https://*/*
 // @grant        GM_xmlhttpRequest
 // @grant        GM_getValue
@@ -63,12 +63,20 @@ const HlsPlayer = {
         SUPABASE_URL: 'https://icaugjyuwenraxxgwvzf.supabase.co',
         SUPABASE_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImljYXVnanl1d2VucmF4eGd3dnpmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDI4ODcwNjcsImV4cCI6MjA1ODQ2MzA2N30.-IsrU3_NyoqDxFeNH1l2d6SgVv9pPA0uIVEA44FmuSQ',
         CHAT_UI: {
-            position: { right: '20px', bottom: '20px' },
+            width: 380,
+            height: 550,
+            position: { right: '30px', bottom: '0px' }, // 容器初始化位置：右边30px，底部0px（尾部在最底部）
+            bubblePosition: { right: '30px', top: '0px' }, // 气泡位置
             theme: {
-                primary: '#007FFF',
-                background: '#1A1A1A',
-                text: '#FFFFFF',
-                inputBg: '#2D2D2D'
+                primary: '#8b5cf6',
+                primaryLight: '#a78bfa',
+                background: '#0a0a0a',
+                surface: '#1a1a1a',
+                surfaceLight: '#2a2a2a',
+                text: '#e0e0e0',
+                textSecondary: '#999999',
+                border: '#333333',
+                shadow: 'rgba(0, 0, 0, 0.8)'
             }
         }
     };
@@ -78,94 +86,221 @@ const HlsPlayer = {
         const cssVariables = `
             :root {
                 --chat-bg: ${CONFIG.CHAT_UI.theme.background};
+                --chat-surface: ${CONFIG.CHAT_UI.theme.surface};
+                --chat-surface-light: ${CONFIG.CHAT_UI.theme.surfaceLight};
                 --chat-text: ${CONFIG.CHAT_UI.theme.text};
+                --chat-text-secondary: ${CONFIG.CHAT_UI.theme.textSecondary};
                 --primary-color: ${CONFIG.CHAT_UI.theme.primary};
-                --input-bg: ${CONFIG.CHAT_UI.theme.inputBg};
+                --primary-light: ${CONFIG.CHAT_UI.theme.primaryLight};
+                --border-color: ${CONFIG.CHAT_UI.theme.border};
+                --shadow-color: ${CONFIG.CHAT_UI.theme.shadow};
             }
         `;
 
         const scrollbarCSS = `
             #chat-messages::-webkit-scrollbar {
-                width: 8px;
+                width: 6px;
                 background: transparent;
             }
+            #chat-messages::-webkit-scrollbar-track {
+                background: var(--chat-surface);
+                border-radius: 3px;
+            }
             #chat-messages::-webkit-scrollbar-thumb {
-                background: #5c5c5c;
-                border-radius: 4px;
+                background: var(--chat-surface-light);
+                border-radius: 3px;
+                transition: background 0.2s ease;
+            }
+            #chat-messages::-webkit-scrollbar-thumb:hover {
+                background: #475569;
             }
             #chat-messages {
-                height: calc(100% - 140px);
                 scrollbar-width: thin;
-                scrollbar-color: #5c5c5c #2d2d2d;
-                box-sizing: border-box;
+                scrollbar-color: var(--chat-surface-light) var(--chat-surface);
             }
-             #input-container {
-                display: flex;
-                flex-direction: column;
-                align-items: stretch;
-                padding: 10px;
-                gap: 8px;
+        `;
+
+        const animationsCSS = `
+            @keyframes fadeIn {
+                from {
+                    opacity: 0;
+                    transform: translateY(8px);
+                }
+                to {
+                    opacity: 1;
+                    transform: translateY(0);
+                }
+            }
+            @keyframes fadeInUp {
+                from {
+                    opacity: 0;
+                    transform: translateY(15px);
+                }
+                to {
+                    opacity: 1;
+                    transform: translateY(0);
+                }
+            }
+            @keyframes slideIn {
+                from {
+                    opacity: 0;
+                    transform: translateY(20px);
+                }
+                to {
+                    opacity: 1;
+                    transform: translateY(0);
+                }
+            }
+            @keyframes pulse {
+                0%, 100% {
+                    opacity: 1;
+                }
+                50% {
+                    opacity: 0.7;
+                }
+            }
+        `;
+
+        const globalStylesCSS = `
+            #chat-container {
+                animation: slideIn 0.4s ease-out;
+                background: var(--chat-bg);
+                border: 1px solid var(--border-color);
+                border-radius: 16px;
+            }
+            #chat-messages {
+                background: var(--chat-surface);
+            }
+            #input-container {
+                padding: 12px;
+                border-top: 1px solid var(--border-color);
                 box-sizing: border-box;
-                height: 100px;
+                background: var(--chat-surface);
+                position: relative;
             }
             #chat-input {
                 width: 100%;
-                height: 50px;
-                background-color: var(--input-bg);
-                border: 1px solid #3A3A3A;
+                min-height: 48px;
+                max-height: 120px;
+                padding: 12px 16px;
+                background: var(--chat-surface-light);
+                border: 1px solid var(--border-color);
                 border-radius: 8px;
                 color: var(--chat-text);
-                resize: none;
-                box-sizing: border-box;
+                resize: vertical;
+                font-size: 14px;
+                line-height: 1.5;
+                transition: all 0.3s ease;
                 overflow-y: auto;
+                box-sizing: border-box;
             }
             #chat-input::-webkit-scrollbar {
                 display: none;
             }
-            #chat-send-button {
-                width: auto;
-                padding: 5px 10px;
-                background-color: var(--primary-color);
-                color: #FFF;
-                border: none;
-                border-radius: 8px;
-                cursor: pointer;
-                margin-left: auto;
+            #chat-input:focus {
+                outline: none;
+                background: rgba(255, 255, 255, 0.2);
+                border-color: rgba(255, 255, 255, 0.3);
+                box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            }
+
+
+            #chat-send-button:active {
+                transform: translateY(0);
             }
             .online-dot {
                 width: 8px;
                 height: 8px;
                 border-radius: 50%;
-                background-color: #4CAF50;
+                background-color: #10b981;
                 margin-right: 6px;
                 display: inline-block;
                 animation: pulse 2s infinite;
             }
-            @keyframes pulse {
-                0% { opacity: 1; }
-                50% { opacity: 0.5; }
-                100% { opacity: 1; }
-            }
-            @keyframes fadeIn {
-                from { opacity: 0; transform: translateY(10px); }
-                to { opacity: 1; transform: translateY(0); }
-            }
             #chat-header {
-                height: 36px;
-                padding: 0 12px;
-                color: white;
+                padding: 20px 24px;
+                border-bottom: 1px solid var(--border-color);
+                background: linear-gradient(135deg, var(--chat-bg), var(--chat-surface));
+                border-top-left-radius: 20px;
+                border-top-right-radius: 20px;
                 display: flex;
                 align-items: center;
                 justify-content: center;
+                position: relative;
+                height: auto;
+            }
+            .online-count {
+                font-size: 16px;
                 font-weight: 600;
-                font-size: 14px;
+                color: white;
+            }
+            #online-users {
+                color: white;
+                font-weight: 600;
+            }
+            #chat-minimize-button {
+                position: absolute;
+                top: 12px;
+                right: 12px;
+                width: 32px;
+                height: 32px;
+                border-radius: 50%;
+                background-color: rgba(255, 255, 255, 0.1);
+                border: none;
+                cursor: pointer;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                color: white;
+                font-size: 20px;
+                font-weight: bold;
+                transition: all 0.2s ease;
+            }
+            #chat-minimize-button:hover {
+                background-color: rgba(255, 255, 255, 0.2);
+                transform: scale(1.1);
+            }
+            #chat-minimize-button:active {
+                transform: scale(0.95);
+            }
+            #chat-bubble {
+                position: fixed;
+                right: ${CONFIG.CHAT_UI.position.right};
+                bottom: ${CONFIG.CHAT_UI.position.bottom};
+                width: 60px;
+                height: 60px;
+                border-radius: 50%;
+                background: linear-gradient(135deg, var(--chat-surface), var(--border-color));
+                box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6), 0 0 1px rgba(255,255,255,0.05) inset;
+                z-index: 9999;
+                cursor: pointer;
+                display: none;
+                align-items: center;
+                justify-content: center;
+                transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);;
+            }
+            #chat-bubble.show {
+                display: flex;
+                animation: slideIn 0.4s ease-out;
+            }
+            #chat-bubble:hover {
+                transform: scale(1.1) rotate(5deg);
+                box-shadow: 0 15px 40px rgba(0, 0, 0, 0.7);
+            }
+            #chat-bubble:active {
+                transform: scale(0.95);
+            }
+            #chat-bubble-icon {
+                color: var(--chat-text);
+                font-size: 28px;
+                font-weight: bold;
             }
         `;
 
         return {
             inject: () => {
                 const style = document.createElement('style');
-                style.textContent = `${cssVariables} ${scrollbarCSS}`;
+                style.textContent = `${cssVariables} ${scrollbarCSS} ${animationsCSS} ${globalStylesCSS}`;
                 document.head.appendChild(style);
             }
         };
@@ -206,25 +341,29 @@ const HlsPlayer = {
 
 
         initUI() {
+            // 聊天窗口容器 - 初始化时头部在40vh，尾部在最底部
             this.container = document.createElement('div');
             this.container.id = 'chat-container';
+            const containerTop = window.innerHeight * 0.4 - CONFIG.CHAT_UI.height; // 40vh高度减去容器高度，使头部在40vh，尾部在底部
             Object.assign(this.container.style, {
                 position: 'fixed',
                 right: CONFIG.CHAT_UI.position.right,
                 bottom: CONFIG.CHAT_UI.position.bottom,
-                width: '300px',
-                height: '90dvh',
+                width: `${CONFIG.CHAT_UI.width}px`,
+                height: `${CONFIG.CHAT_UI.height}px`,
                 backgroundColor: 'var(--chat-bg)',
-                borderRadius: '12px',
-                boxShadow: '0 4px 16px rgba(0,0,0,0.2)',
+                borderRadius: '20px',
+                boxShadow: '0 20px 60px var(--shadow-color), 0 0 1px rgba(255,255,255,0.1) inset',
                 zIndex: 9999,
-                boxSizing: 'border-box',
                 display: 'flex',
                 flexDirection: 'column',
                 wordWrap: 'break-word',
                 overflowWrap: 'break-word',
+                boxSizing: 'border-box',
+                transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
             });
 
+            // 聊天窗口头部
             this.header = document.createElement('div');
             this.header.id = 'chat-header';
             this.header.innerHTML = `
@@ -235,27 +374,56 @@ const HlsPlayer = {
             `;
             this.container.appendChild(this.header);
 
+            // 添加最小化按钮
+            this.minimizeButton = document.createElement('button');
+            this.minimizeButton.id = 'chat-minimize-button';
+            this.minimizeButton.innerHTML = '-';
+            this.minimizeButton.addEventListener('click', (e) => {
+                e.stopPropagation();
+                this.toggleMinimize();
+            });
+            this.header.appendChild(this.minimizeButton);
+
+            // 最小化气泡
+            this.bubble = document.createElement('div');
+            this.bubble.id = 'chat-bubble';
+            this.bubble.innerHTML = '<div id="chat-bubble-icon">💬</div>';
+            // 设置气泡初始位置
+            Object.assign(this.bubble.style, {
+                right: CONFIG.CHAT_UI.position.right,
+                top: (window.innerHeight * 0.4 - 30) + 'px' // 气泡中心在容器最小化按钮位置（头部40vh）
+            });
+            this.bubble.addEventListener('click', (e) => {
+                e.stopPropagation();
+                this.toggleMinimize();
+            });
+            document.body.appendChild(this.bubble);
+
             this.messageArea = this.createMessageArea();
             this.input = this.createInput();
-            this.sendButton = this.createButton();
-            this.sendButton.addEventListener('click', () => this.sendMessage());
 
-            // 创建输入区域容器，用于水平排列输入框和发送按钮
+            // 创建输入区域容器
             this.inputContainer = document.createElement('div');
             this.inputContainer.id = 'input-container';
-            this.inputContainer.append(this.input, this.sendButton);
+            this.inputContainer.append(this.input);
 
             this.container.append(this.messageArea, this.inputContainer);
             document.body.appendChild(this.container);
+
+            // 初始化拖动和调整功能
+            this.initDraggable();
         }
 
         createMessageArea() {
             const div = document.createElement('div');
             Object.assign(div.style, {
-                height: 'calc(100% - 120px)',
-                padding: '16px',
+                flex: 1,
+                padding: '20px 24px',
                 overflowY: 'auto',
-                color: 'var(--chat-text)'
+                color: 'var(--chat-text)',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '12px'
             });
             div.id = 'chat-messages';
             return div;
@@ -264,16 +432,35 @@ const HlsPlayer = {
         createInput() {
             const input = document.createElement('textarea');
             input.id = 'chat-input';
-            input.placeholder = '输入消息（Ctrl + Enter 发送）';
+            input.placeholder = '输入消息（Enter 发送）';
+
+            // 自动调整输入框高度和检查输入内容
+            input.addEventListener('input', () => {
+                input.style.height = 'auto';
+                input.style.height = Math.min(input.scrollHeight, 120) + 'px';
+
+                // 检查输入内容，启用或禁用发送按钮
+                if (this.sendButton) {
+                    if (input.value.trim()) {
+                        this.sendButton.disabled = false;
+                    } else {
+                        this.sendButton.disabled = true;
+                    }
+                }
+            });
+
+            // 输入框键盘事件 - 支持按Enter直接发送
+            input.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    this.sendMessage();
+                }
+            });
+
             return input;
         }
 
-        createButton() {
-            const button = document.createElement('button');
-            button.id = 'chat-send-button';
-            button.textContent = '发送';
-            return button;
-        }
+
 
         // 新增IP获取方法
         async getClientIP() {
@@ -371,8 +558,17 @@ const HlsPlayer = {
             //if (message.domain !== location.host) return; // 过滤非法消息
             const isOwn = message.user_id === this.userId;
             const msgElement = document.createElement('div');
+
+            // 设置消息容器样式，确保左右对齐
+            Object.assign(msgElement.style, {
+                display: 'flex',
+                width: '100%',
+                margin: '12px 0',
+                justifyContent: isOwn ? 'flex-end' : 'flex-start'
+            });
+
             // 智能内容解析与样式优化
-            // 消息气泡渲染组件
+            // 消息气泡渲染组件 - 优化版（支持左右分开显示）
             const renderMessageBubble = (message, isOwn) => {
                 const userName = message.user_id.split('-')[0] || '匿名用户';
                 const timeStr = new Date(message.created_at).toLocaleString('zh-CN', {
@@ -382,28 +578,96 @@ const HlsPlayer = {
                     hour: '2-digit',
                     minute: '2-digit'
                 }).replace(/(\d+)\/(\d+), (\d+:\d+)/, '$2-$3 $4');
+
+                // 用户头像颜色 - 根据用户名生成唯一颜色
+                const userColor = `hsl(${(userName.length * 37 + userName.charCodeAt(0)) % 360}, 70%, 60%)`;
+
                 return `
                     <div style="
-                        margin: 8px 0;
-                        padding: 2px 5px;
-                        background: ${isOwn ? '#1A73E8' : '#2D2D2D'};
-                        border-radius: 6px;
-                        color: ${isOwn ? '#FFF' : '#E0E0E0'};
-                        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-                        max-width: 100%;
-                        align-self: ${isOwn ? 'flex-end' : 'flex-start'};">
+                        padding: 16px 20px;
+                        background: ${isOwn ?
+                            'linear-gradient(135deg, var(--chat-surface), var(--chat-surface-light))' :
+                            'linear-gradient(135deg, var(--chat-surface), var(--chat-surface-light))'};
+                        border-radius: ${isOwn ? '20px 20px 8px 20px' : '20px 20px 20px 8px'};
+                        color: ${isOwn ? 'var(--chat-text)' : 'var(--chat-text)'};
+                        box-shadow: ${isOwn ?
+                            '0 6px 20px rgba(0, 0, 0, 0.5)' :
+                            '0 6px 20px rgba(0, 0, 0, 0.5)'};
+                        max-width: 70%;
+                        animation: fadeInUp 0.4s ease-out forwards;
+                        opacity: 0;
+                        transform: translateY(10px);
+                        position: relative;
+                        overflow: hidden;">
+
+                        <!-- 气泡装饰元素 -->
                         <div style="
-                            font-size: 0.85em;
-                            color: ${isOwn ? 'rgba(255,255,255,0.7)' : 'rgba(224,224,224,0.7)'};
-                            margin-bottom: 4px;">
-                            ${userName} • ${timeStr}
+                            position: absolute;
+                            top: 0;
+                            ${isOwn ? 'right: 0;' : 'left: 0;'}
+                            width: 60px;
+                            height: 60px;
+                            background: ${isOwn ?
+                                'radial-gradient(circle, rgba(255,255,255,0.15), transparent)' :
+                                'radial-gradient(circle, rgba(139, 92, 246, 0.1), transparent)'};
+                            border-radius: 50%;
+                            transform: translate(${isOwn ? '20px' : '-20px'}, -20px);
+                        "></div>
+
+                        <!-- 用户信息栏 -->
+                        <div style="
+                            display: flex;
+                            align-items: center;
+                            gap: 8px;
+                            font-size: 12px;
+                            font-weight: 600;
+                            color: ${isOwn ? 'var(--chat-text-secondary)' : 'var(--chat-text-secondary)'};
+                            margin-bottom: 8px;">
+
+                            <!-- 用户头像 -->
+                            <div style="
+                                width: 20px;
+                                height: 20px;
+                                border-radius: 50%;
+                                background: ${userColor};
+                                display: flex;
+                                align-items: center;
+                                justify-content: center;
+                                font-size: 10px;
+                                font-weight: 700;
+                                color: white;
+                                flex-shrink: 0;
+                                box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+                            ">${userName.charAt(0).toUpperCase()}</div>
+
+                            <span>${userName}</span>
+                            <span style="color: ${isOwn ? 'rgba(255, 255, 255, 0.6)' : 'var(--chat-text-tertiary)'};">•</span>
+                            <span style="font-weight: 400;">${timeStr}</span>
+
+                            <!-- 消息状态标识 -->
+                            ${isOwn ? `
+                                <div style="
+                                    margin-left: auto;
+                                    display: flex;
+                                    align-items: center;
+                                    gap: 4px;">                                    <svg style="width: 14px; height: 14px; color: var(--chat-text-tertiary);" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <polyline points="20 6 9 17 4 12"></polyline>
+                                    </svg>
+                                </div>` : ''}
                         </div>
-                        ${createMessageContent(message)}
+
+                        <!-- 消息内容 -->
+                        <div style="
+                            word-wrap: break-word;
+                            line-height: 1.5;
+                            font-size: 14px;">
+                            ${createMessageContent(message)}
+                        </div>
                     </div>
                 `;
             };
 
-            // 多媒体内容解析器
+            // 多媒体内容解析器 - 优化版
             const createMessageContent = (message) => {
                 const content = message.content;
                 const mediaPattern = /(https?:\/\/.*\.(?:png|jpg|gif|mp4|m3u8|webm|mp3))\b/gi;
@@ -416,30 +680,39 @@ const HlsPlayer = {
                         const media_id = `msg_${message.id}-media_${match.index}`;
                         const [url] = match;
                         const prefix = remaining.slice(0, match.index);
-                        if (prefix) elements.push(`<div>${prefix}</div>`);
+                        if (prefix) elements.push(`<div style="margin-bottom: 8px;">${prefix}</div>`);
 
                         let mediaTag = null;
                         if (url.match(/\.(png|jpg|gif)$/i)) {
-                            mediaTag = `<img src="${url}?ts=${Date.now()}"
-                                 referrerpolicy="no-referrer-when-downgrade"
-                                 style="max-width: min(300px, 100%); border-radius: 4px; margin: 8px 0;">`;
+                            mediaTag = `<div style="margin: 10px 0; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2); transition: transform 0.2s ease;">
+                                <img src="${url}?ts=${Date.now()}"
+                                     referrerpolicy="no-referrer-when-downgrade"
+                                     style="max-width: 100%; height: auto; display: block;"
+                                     loading="lazy">
+                            </div>`;
                         }
                         else if (url.match(/\.(mp3)$/i)) {
-                            mediaTag = `<audio controls style="width: 100%; margin: 8px 0;" src="${url}"></audio>`;
+                            mediaTag = `<div style="margin: 10px 0;">
+                                <audio controls style="width: 100%; background: rgba(0, 0, 0, 0.05); border-radius: 12px; padding: 8px; border: none;" src="${url}"></audio>
+                            </div>`;
                         }
                         else if (url.match(/\.(mp4|webm)$/i)) {
-                            mediaTag = `<video controls style="max-width: 100%; border-radius: 8px; margin: 8px 0;" id="${media_id}" src="${url}"></video>`;
+                            mediaTag = `<div style="margin: 10px 0; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);">
+                                <video controls style="max-width: 100%; height: auto; display: block;" id="${media_id}" src="${url}"></video>
+                            </div>`;
                         }
                         else if (url.match(/\.(m3u8)$/i)) {
-                            mediaTag = `<video controls style="max-width: 100%; border-radius: 8px; margin: 8px 0;" 
-                                id="${media_id}" 
-                                data-hls-src="${url}"
-                                data-hls-observer="pending"></video>`;
+                            mediaTag = `<div style="margin: 10px 0; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);">
+                                <video controls style="max-width: 100%; height: auto; display: block;"
+                                    id="${media_id}"
+                                    data-hls-src="${url}"
+                                    data-hls-observer="pending"></video>
+                            </div>`;
                         }
                         elements.push(mediaTag);
                         remaining = remaining.slice(match.index + url.length);
                     }
-                    if (remaining) elements.push(`<div>${remaining}</div>`);
+                    if (remaining) elements.push(`<div style="margin-bottom: 8px;">${remaining}</div>`);
                 });
 
                 return elements.join('');
@@ -509,6 +782,198 @@ const HlsPlayer = {
             const counter = document.getElementById('online-users');
             counter.textContent = count;
             counter.style.fontWeight = count > 0 ? '600' : '400';
+        }
+
+        /**
+         * 切换聊天界面的最小化/最大化状态
+         */
+        toggleMinimize() {
+            this.isMinimized = this.container.style.display === 'none';
+            this.isMinimized = !this.isMinimized;
+            const display = this.isMinimized ? 'none' : 'flex';
+            this.container.style.display = display;
+            this.bubble.style.display = this.isMinimized ? 'flex' : 'none';
+
+            // 获取容器的高度
+            const containerHeight = this.container.offsetHeight;
+
+            // 精确同步位置，确保最小化按钮与气泡完全重合
+            if (!this.isMinimized) {
+                // 从气泡同步到容器：计算容器位置，使最小化按钮与气泡位置重合
+                const bubbleRight = parseFloat(this.bubble.style.right || CONFIG.CHAT_UI.position.right.replace('px', ''));
+                const bubbleTop = parseFloat(this.bubble.style.top || (window.innerHeight * 0.4 - 30) + 'px');
+
+                // 计算容器位置：使容器的最小化按钮(right:12px, top:12px)与气泡中心完全重合
+                const containerRight = bubbleRight + 30 - 12; // 气泡右边距 + 气泡半径 - 按钮right偏移量
+                const containerTopPosition = bubbleTop + 30 - 12; // 气泡top + 气泡半径 - 按钮top偏移量
+                const containerBottom = window.innerHeight - (containerTopPosition + containerHeight);
+
+                this.container.style.right = containerRight + 'px';
+                this.container.style.bottom = containerBottom + 'px';
+
+                console.log('容器展开：气泡与最小化按钮对齐', { bubbleRight, bubbleTop, containerRight, containerBottom, containerHeight });
+            } else {
+                // 从容器同步到气泡：计算气泡位置，使其与容器最小化按钮精确重合
+                const containerRight = parseFloat(this.container.style.right || CONFIG.CHAT_UI.position.right.replace('px', ''));
+                const containerBottom = parseFloat(this.container.style.bottom || CONFIG.CHAT_UI.position.bottom.replace('px', ''));
+
+                // 计算按钮在页面中的绝对位置
+                const buttonX = containerRight + 12; // 容器right + 按钮right偏移
+                const buttonY = window.innerHeight - containerBottom - containerHeight + 12; // 按钮top位置
+
+                // 气泡位置 = 按钮位置 - 气泡半径
+                const bubbleRight = buttonX - 30; // 按钮X - 气泡半径
+                const bubbleTop = buttonY - 30; // 按钮Y - 气泡半径
+
+                this.bubble.style.right = bubbleRight + 'px';
+                this.bubble.style.top = bubbleTop + 'px';
+
+                console.log('气泡最小化：与按钮位置精确重合', { containerRight, containerBottom, buttonX, buttonY, bubbleRight, bubbleTop, containerHeight });
+            }
+        }
+
+        /**
+         * 初始化拖动功能
+         */
+        initDraggable() {
+            // 最小化图标拖动（只允许上下拖动，不允许左右拖动，范围0-100vh）
+            let isDraggingBubble = false;
+            let startY = 0;
+            let startTop = 0;
+
+            this.bubble.addEventListener('mousedown', (e) => {
+                // 只有左键点击且不是点击打开时才允许拖动
+                if (e.button !== 0 || e.target.id === 'chat-bubble-icon') return;
+                e.preventDefault();
+                e.stopPropagation();
+                isDraggingBubble = true;
+                startY = e.clientY;
+                startTop = parseFloat(this.bubble.style.top || CONFIG.CHAT_UI.position.top.replace('px', ''));
+            });
+
+            document.addEventListener('mousemove', (e) => {
+                if (!isDraggingBubble) return;
+                e.preventDefault();
+                // 只计算垂直移动距离
+                const deltaY = e.clientY - startY;
+
+                // 调整上下位置，限制在0到100vh范围内
+                let newTop = startTop + deltaY;
+                newTop = Math.max(0, Math.min(newTop, window.innerHeight - this.bubble.offsetHeight));
+                this.bubble.style.top = newTop + 'px';
+            });
+
+            document.addEventListener('mouseup', () => {
+                isDraggingBubble = false;
+            });
+
+            // 为整个聊天容器添加拖动功能（只允许上下拖动）
+            this.initContainerDraggable();
+
+            // 整个UI的高度调整
+            this.initHeightResize();
+        }
+
+        /**
+         * 初始化整个聊天容器的拖动功能（只允许上下拖动，使用bottom定位）
+         */
+        initContainerDraggable() {
+            let isDraggingContainer = false;
+            let startY = 0;
+            let startBottom = 0;
+
+            this.header.addEventListener('mousedown', (e) => {
+                // 避免与最小化按钮冲突
+                if (e.target.id === 'chat-minimize-button') return;
+                e.preventDefault();
+                e.stopPropagation();
+                isDraggingContainer = true;
+                startY = e.clientY;
+                startBottom = parseFloat(this.container.style.bottom || CONFIG.CHAT_UI.position.bottom.replace('px', ''));
+            });
+
+            document.addEventListener('mousemove', (e) => {
+                if (!isDraggingContainer) return;
+                e.preventDefault();
+                const deltaY = startY - e.clientY;
+
+                // 只调整上下位置，限制在0到100vh范围内
+                let newBottom = startBottom + deltaY;
+                newBottom = Math.max(0, Math.min(newBottom, window.innerHeight - this.container.offsetHeight));
+                this.container.style.bottom = newBottom + 'px';
+            });
+
+            document.addEventListener('mouseup', () => {
+                isDraggingContainer = false;
+            });
+        }
+
+        /**
+         * 初始化高度调整功能（修复：调整时尾部不变，头部变化，符合直觉；调整后同步气泡位置）
+         */
+        initHeightResize() {
+            const resizer = document.createElement('div');
+            Object.assign(resizer.style, {
+                position: 'absolute',
+                top: '0',
+                left: '0',
+                right: '0',
+                height: '8px',
+                cursor: 'ns-resize',
+                zIndex: '10',
+                backgroundColor: 'transparent'
+            });
+            this.container.appendChild(resizer);
+
+            let isResizing = false;
+            let startY = 0;
+            let startHeight = 0;
+            let startBottom = 0;
+
+            resizer.addEventListener('mousedown', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                isResizing = true;
+                startY = e.clientY;
+                startHeight = this.container.offsetHeight;
+                startBottom = parseFloat(this.container.style.bottom || CONFIG.CHAT_UI.position.bottom.replace('px', ''));
+            });
+
+            document.addEventListener('mousemove', (e) => {
+                if (!isResizing) return;
+                e.preventDefault();
+                const deltaY = startY - e.clientY; // 计算垂直移动距离
+                const newHeight = Math.max(300, startHeight + deltaY); // 最小高度300px
+                this.container.style.height = newHeight + 'px';
+                // 保持尾部（底部）位置不变，头部位置随高度变化而变化（符合直觉）
+                this.container.style.bottom = startBottom + 'px';
+            });
+
+            document.addEventListener('mouseup', () => {
+                isResizing = false;
+                // 调整高度后同步气泡位置
+                if (!this.isMinimized) {
+                    this.syncBubblePosition();
+                }
+            });
+        }
+
+        /**
+         * 同步气泡与容器最小化按钮的位置
+         */
+        syncBubblePosition() {
+            const containerRight = parseFloat(this.container.style.right || CONFIG.CHAT_UI.position.right.replace('px', ''));
+            const containerBottom = parseFloat(this.container.style.bottom || CONFIG.CHAT_UI.position.bottom.replace('px', ''));
+            const containerHeight = this.container.offsetHeight;
+
+            // 气泡位置 = 容器的最小化按钮位置
+            const bubbleRight = containerRight + 12 - 30; // 容器右边距 + 按钮X偏移(12) - 气泡中心X(30)
+            const bubbleTop = window.innerHeight - containerBottom - containerHeight + 12 - 30; // 计算气泡顶部位置
+
+            this.bubble.style.right = bubbleRight + 'px';
+            this.bubble.style.top = bubbleTop + 'px';
+
+            console.log('气泡位置已同步:', { right: bubbleRight, top: bubbleTop, containerHeight });
         }
 
         async cleanup() {

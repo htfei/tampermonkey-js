@@ -289,7 +289,7 @@ https://media.javtrailers.com/hlsvideo/freepv/s/son/sone00720/sone00720mmb.m3u8
 
 以下适用于所有的91系列app，不少于10多款应用的web地址。 其他类似app也有参考价值。
 1. 当前页面搜关键字 'dataMap','affCode','webLink' (已编写 ./tools/[tools]🔍html关键词自动扫描器.js 脚本可自动扫描)
-2. 直接将当前地址修改 https://a20a.ykhwpsjl.cc/  改成 https://webo3.ykhwpsjl.cc/ 极可能得到web地址
+2. 直接将当前地址修改 https://a20a.ykhwpsjl.cc/  改成 https://webo3.ykhwpsjl.cc/ 或者 p3 极可能得到web地址
 3. 查看网络xhr请求 ，有一个返回的json包含 web_app_url , 如下：
 4. 在这来找 https://github.com/ailiu258099-blip/master/
 5. 在91系列任意一个app里面，点击我的-应用推荐，就能得到相关的app地址推荐页，然后再进行1~4查找
@@ -413,14 +413,41 @@ https://d3df6hjcjf7ng5.cloudfront.net/api/app/media/m3u8ex/v3/av/0q/at/dx/1g/bfb
 
 https://d3df6hjcjf7ng5.cloudfront.net/api/app/media/m3u8ex/v3/av/ku/22/84/mf/a1fb34f34437437b950741589a1bc588.m3u8?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdWQiOiJwdWJsaWMiLCJleHAiOjE3NjgyMDEzMDcsImlzc3VlciI6ImNvbS5idXR0ZXJmbHkiLCJzdWIiOiJhc2lnbiIsInVzZXJJZCI6MTczMzMzNzk3fQ.6Ar-kdckGzsKgahxIJBX7TTBkwmf0BzQjcyfU43FcJE
 
-### 极乐禁地/bili ok todo
+### Xvideo/bili ok todo
 
 原理： X_0001.m3u8?token=Y 改成 X.m3u8?token=Y
 
-极乐禁地
+#### Xvideo 📺+🎬+🌍=✅
 https://d34vyrelvmcjzt.cloudfront.net
 
-bili
+长视频✅ 
+原理： X_0001.m3u8?token=Y 改成 X.m3u8?token=Y
+
+短视频✅
+6s后回退到0s并暂停+弹窗
+覆写currentTime的set函数(bug:会导致进度条失效) + 去除弹窗 + 破解提示 + 新标签页打开
+
+https://d34vyrelvmcjzt.cloudfront.net/api/app/media/h5/m3u8/v3/sp/f0/te/s5/tp/7a262bcbb270420e990f2be259b755e8.m3u8?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdWQiOiJwdWJsaWMiLCJleHAiOjE3Njg2NjA1NTgsImlzc3VlciI6ImNvbS5idXR0ZXJmbHkiLCJzdWIiOiJhc2lnbiIsInVzZXJJZCI6NTA2ODc1MH0.-9P6cBM2IkOBfBxWNAOaAdEw0y7U3JSmZGVnjypPArs&timestamp=1766302248&sign=ba992b98da4652ae758ee762bbdfda68f83e06bd&nonce=d520be37-d832-4142-b2d8-5d5f35fe0140
+
+https://d34vyrelvmcjzt.cloudfront.net/api/app/media/h5/m3u8/v3/sp/dx/lv/0w/91/ca081741f0214bc08cec35d4e7631d36.m3u8?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdWQiOiJwdWJsaWMiLCJleHAiOjE3Njg2NjA1NTgsImlzc3VlciI6ImNvbS5idXR0ZXJmbHkiLCJzdWIiOiJhc2lnbiIsInVzZXJJZCI6NTA2ODc1MH0.-9P6cBM2IkOBfBxWNAOaAdEw0y7U3JSmZGVnjypPArs&timestamp=1766302269&sign=a308d5a9911c101d55e8a149d433f2a1298a4499&nonce=73458d31-299f-4b7c-8707-0b5a920ad935
+
+https://d34vyrelvmcjzt.cloudfront.net/api/app/media/h5/m3u8/v3/sp/k7/xj/en/v1/329fb0fcc43b4014a9b3938a5922f3fb.m3u8?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdWQiOiJwdWJsaWMiLCJleHAiOjE3Njg2NjA1NTgsImlzc3VlciI6ImNvbS5idXR0ZXJmbHkiLCJzdWIiOiJhc2lnbiIsInVzZXJJZCI6NTA2ODc1MH0.-9P6cBM2IkOBfBxWNAOaAdEw0y7U3JSmZGVnjypPArs&timestamp=1766302333&sign=748a715c04d895a93bd38cd384729b537f8ac2a2&nonce=95215a64-4792-4ccf-9932-cdb5cabef4c4
+
+
+直播可用✅
+xhr中可看到请求地址
+https://edge-hls.sacdnssedge.com/hls/172963574/master/172963574_1080p.m3u8
+https://edge-hls.sacdnssedge.com/hls/103710327/master/103710327_480p.m3u8
+https://edge-hls.sacdnssedge.com/hls/230549057/master/230549057_720p.m3u8
+
+https://edge-hls.sacdnssedge.com/hls/205201357/master/205201357_720p.m3u8
+
+
+
+#### bili
+广告太多+播放暂停无法劫持 不适合继续
+xhr劫持 + 自定义hls播放器UI
+
 https://d1kek4wgeaw03m.cloudfront.net/
 https://d3r24dh3fve23e.cloudfront.net/
 
@@ -437,6 +464,21 @@ https://d3r24dh3fve23e.cloudfront.net/api/app/media/h5/m3u8/v3/sp/bv/j9/7c/7x/03
 
 
 https://d1kek4wgeaw03m.cloudfront.net/api/app/media/h5/m3u8/bktappupdata/sp/g4/3o/0x/ie/b30ad64a8549494bbad7fd8706659b89.m3u8?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdWQiOiJwdWJsaWMiLCJleHAiOjE3NjgyMDU2NjIsImlzc3VlciI6ImNvbS5idXR0ZXJmbHkiLCJzdWIiOiJhc2lnbiIsInVzZXJJZCI6NjA0Mjk5MTN9.d1e5jSwLpYXPKFyi2fq8WGmT1dnOiXWeyZ-FuEPeVj8
+
+https://d1kek4wgeaw03m.cloudfront.net/api/app/media/h5/m3u8/v3/av/ts/ys/n0/ps/9da47018c7fd4061866375dd86081514.m3u8?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdWQiOiJwdWJsaWMiLCJleHAiOjE3NjgyMDU2NjIsImlzc3VlciI6ImNvbS5idXR0ZXJmbHkiLCJzdWIiOiJhc2lnbiIsInVzZXJJZCI6NjA0Mjk5MTN9.d1e5jSwLpYXPKFyi2fq8WGmT1dnOiXWeyZ-FuEPeVj8
+
+## 糖心Vlog
+
+https://crnd-d.smuordqj.vip/?_c=i862ebtx
+
+    var key = CryptoJS.enc.Utf8.parse("a330883c5ebe7dcc");
+    var iv = CryptoJS.enc.Utf8.parse("a330883c5ebe7dcc");
+    var options = {
+        mode: CryptoJS.mode.CBC,
+        padding: CryptoJS.pad.Pkcs7,
+        iv: iv
+    }
+    content = CryptoJS.AES.decrypt(content, key, options).toString(CryptoJS.enc.Utf8)
 
 
 ## todo
