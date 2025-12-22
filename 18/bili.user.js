@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         哔哩视频破解VIP视频免费看
 // @namespace    bili_vip_video_free_see
-// @version      1.0.1
+// @version      1.0.2
 // @description  破解哔哩哔哩VIP视频，支持HLS视频播放
 // @author       w2f
 // @match       https://d1kek4wgeaw03m.cloudfront.net/*
@@ -11,8 +11,10 @@
 // @grant        GM_addStyle
 // @connect      *
 // @require      https://cdnjs.cloudflare.com/ajax/libs/hls.js/1.1.5/hls.min.js
-// @require      https://scriptcat.org/lib/4937/1.0.0/FloatingUI.js?sha384-Vb4RItfSzj8THCsNlYzbQx1hHEWtGXLfWI4Qx7k+O7KqSLbFOWfNdzlkwPf+GYzb
+// @require      https://scriptcat.org/lib/4937/^1.0.0/FloatingUI.js#sha256=d776ab56bb50565a43df1932d2c28ce22574a00f33c9663bd5fd687fc64d9607
 // @require      https://scriptcat.org/lib/637/1.4.5/ajaxHooker.js#sha256=EGhGTDeet8zLCPnx8+72H15QYRfpTX4MbhyJ4lJZmyg=
+// @downloadURL https://update.sleazyfork.org/scripts/559817/%E5%93%94%E5%93%A9%E8%A7%86%E9%A2%91%E7%A0%B4%E8%A7%A3VIP%E8%A7%86%E9%A2%91%E5%85%8D%E8%B4%B9%E7%9C%8B.user.js
+// @updateURL https://update.sleazyfork.org/scripts/559817/%E5%93%94%E5%93%A9%E8%A7%86%E9%A2%91%E7%A0%B4%E8%A7%A3VIP%E8%A7%86%E9%A2%91%E5%85%8D%E8%B4%B9%E7%9C%8B.meta.js
 // @run-at       document-start
 // ==/UserScript==
 
@@ -21,11 +23,14 @@
 
     // 自定义配置（覆盖默认图标和点击回调）
     const customConfig = {
-        icons: ['✅', '🎬','❤️', '💬', '⏬'], // 默认图标
+        icons: ['✅', '🎬','🌍', '⏬'], // 默认图标
         onItemClick: (index, icon) => {
             console.log(`自定义回调触发：点击了图标[${icon}]（索引${index}）`);
             if(index == 1){
                 showVideoUI();
+            }
+            if(icon == '🌍'){
+                window.open(window.location.origin + window.real_m3u8_url, '_blank');
             }
             if(icon == '⏬'){
                 downloadM3u8();
@@ -47,10 +52,10 @@
     GM_addStyle(`
         #hlsPlayer {
             position: fixed;
-            top: 40px;
-            left: 0px;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
             max-width: 100vw;
-            max-height: 100vh;
             background: #1a1a1a;
             border-radius: 8px;
             box-shadow: 0 4px 12px rgba(0,0,0,0.3);
@@ -62,8 +67,8 @@
             word-break: break-all;
         }
         #videoElement {
-            max-width: 80vw;
-            max-height: 80vh;
+            max-width: 100vw;
+            max-height: 100vh;
             border-radius: 0 0 8px 8px;
         }
         #hlsToggleBtn {
@@ -99,7 +104,7 @@
 
     // 下载m3u8文件
     function downloadM3u8(url = window.real_m3u8_url) {
-        const titleEl = document.querySelector("div.collect-title") || document.querySelector("#app > div > div:nth-child(1) > div:nth-child(3)");
+        const titleEl = document.querySelector("div.collect-title") || document.querySelector("div.video-title");
         const title= titleEl?.innerText || document.title;
         const downurl = `https://tools.thatwind.com/tool/m3u8downloader#m3u8=${window.location.origin}${url}&referer=${window.location.origin}&filename=${title}`;//cururl;
         window.open(downurl,"_blank");
