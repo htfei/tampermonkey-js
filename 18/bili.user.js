@@ -11,7 +11,7 @@
 // @grant        GM_addStyle
 // @connect      *
 // @require      https://cdnjs.cloudflare.com/ajax/libs/hls.js/1.1.5/hls.min.js
-// @require      https://scriptcat.org/lib/4937/~1.0.0/FloatingUI.js
+// @require      https://scriptcat.org/lib/4937/1.0.0/FloatingUI.js?sha384-Vb4RItfSzj8THCsNlYzbQx1hHEWtGXLfWI4Qx7k+O7KqSLbFOWfNdzlkwPf+GYzb
 // @require      https://scriptcat.org/lib/637/1.4.5/ajaxHooker.js#sha256=EGhGTDeet8zLCPnx8+72H15QYRfpTX4MbhyJ4lJZmyg=
 // @run-at       document-start
 // ==/UserScript==
