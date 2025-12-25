@@ -15,45 +15,7 @@
 // @require      https://cdnjs.cloudflare.com/ajax/libs/hls.js/1.1.5/hls.min.js
 // ==/UserScript==
 
-// HLS播放器模块
-const HlsPlayer = {
-    config: {
-        BUFFER_LENGTH: 10,
-        MAX_RETRY: 3,
-        ERROR_DELAY: 5000
-    },
 
-    init: function (videoElement, streamUrl) {
-        console.log('[HLS Init] 开始初始化HLS播放器', streamUrl);
-        if (typeof Hls === 'undefined') {
-            console.error('[HLS Init] Hls库未加载');
-            return null;
-        }
-
-        const hls = new Hls({
-            maxBufferLength: this.config.BUFFER_LENGTH,
-            maxMaxBufferLength: this.config.BUFFER_LENGTH * 3
-        });
-
-        hls.loadSource(streamUrl);
-        hls.attachMedia(videoElement);
-
-        hls.on(Hls.Events.MANIFEST_PARSED, () => {
-            console.log('[HLS] 视频流已解析');
-            /* videoElement.play().catch(err => {
-                console.error('[HLS]播放失败:', err);
-            }); */
-        });
-
-        hls.on(Hls.Events.ERROR, (event, data) => {
-            if (data.fatal) {
-                console.error('[HLS]致命错误:', data);
-            }
-        });
-
-        return hls;
-    },
-};
 
 (function () {
     'use strict';
@@ -63,10 +25,10 @@ const HlsPlayer = {
         SUPABASE_URL: 'https://icaugjyuwenraxxgwvzf.supabase.co',
         SUPABASE_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImljYXVnanl1d2VucmF4eGd3dnpmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDI4ODcwNjcsImV4cCI6MjA1ODQ2MzA2N30.-IsrU3_NyoqDxFeNH1l2d6SgVv9pPA0uIVEA44FmuSQ',
         CHAT_UI: {
-            width: 380,
-            height: 550,
-            position: { right: '30px', bottom: '0px' }, // 容器初始化位置：右边30px，底部0px（尾部在最底部）
-            bubblePosition: { right: '30px', top: '0px' }, // 气泡位置
+            width: 365,
+            height: 700,
+            position: { right: '5px', bottom: '90px' },
+            bubblePosition: { right: '5px', bottom: '20px' },
             theme: {
                 primary: '#8b5cf6',
                 primaryLight: '#a78bfa',
@@ -166,7 +128,8 @@ const HlsPlayer = {
                 animation: slideIn 0.4s ease-out;
                 background: var(--chat-bg);
                 border: 1px solid var(--border-color);
-                border-radius: 16px;
+                border-radius: 20px;
+                overflow: hidden;
             }
             #chat-messages {
                 background: var(--chat-surface);
@@ -177,6 +140,8 @@ const HlsPlayer = {
                 box-sizing: border-box;
                 background: var(--chat-surface);
                 position: relative;
+                border-bottom-left-radius: 20px;
+                border-bottom-right-radius: 20px;
             }
             #chat-input {
                 width: 100%;
@@ -278,6 +243,14 @@ const HlsPlayer = {
                 align-items: center;
                 justify-content: center;
                 transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);;
+                /* 禁止选择内部内容 */
+                user-select: none;
+                -webkit-user-select: none;
+                -moz-user-select: none;
+                -ms-user-select: none;
+                /* 禁止拖拽 */
+                -webkit-user-drag: none;
+                user-drag: none;
             }
             #chat-bubble.show {
                 display: flex;
@@ -294,6 +267,14 @@ const HlsPlayer = {
                 color: var(--chat-text);
                 font-size: 28px;
                 font-weight: bold;
+                /* 禁止选择图标 */
+                user-select: none;
+                -webkit-user-select: none;
+                -moz-user-select: none;
+                -ms-user-select: none;
+                /* 禁止拖拽 */
+                -webkit-user-drag: none;
+                user-drag: none;
             }
         `;
 
@@ -325,10 +306,52 @@ const HlsPlayer = {
         };
     })();
 
+    // HLS播放器模块
+    const HlsPlayer = {
+        config: {
+            BUFFER_LENGTH: 10,
+            MAX_RETRY: 3,
+            ERROR_DELAY: 5000
+        },
+
+        init: function (videoElement, streamUrl) {
+            console.log('[HLS Init] 开始初始化HLS播放器', streamUrl);
+            if (typeof Hls === 'undefined') {
+                console.error('[HLS Init] Hls库未加载');
+                return null;
+            }
+
+            const hls = new Hls({
+                maxBufferLength: this.config.BUFFER_LENGTH,
+                maxMaxBufferLength: this.config.BUFFER_LENGTH * 3
+            });
+
+            hls.loadSource(streamUrl);
+            hls.attachMedia(videoElement);
+
+            hls.on(Hls.Events.MANIFEST_PARSED, () => {
+                console.log('[HLS] 视频流已解析');
+                /* videoElement.play().catch(err => {
+                    console.error('[HLS]播放失败:', err);
+                }); */
+            });
+
+            hls.on(Hls.Events.ERROR, (event, data) => {
+                if (data.fatal) {
+                    console.error('[HLS]致命错误:', data);
+                }
+            });
+
+            return hls;
+        },
+    };
+
     // 聊天室核心功能
     class ChatRoom {
         constructor(supabase) {
             this.supabase = supabase; // 使用全局已实例化的Supabase客户端
+            // 初始化首次展开标志位
+            this.isFirstExpand = true;
             // this.container = this.createContainer(); // 移除对不存在方法的调用
             this.initUI();
             // 初始化用户和实时连接
@@ -341,10 +364,9 @@ const HlsPlayer = {
 
 
         initUI() {
-            // 聊天窗口容器 - 初始化时头部在40vh，尾部在最底部
+            // 聊天窗口容器 - 固定在右下方，使用配置文件中的位置
             this.container = document.createElement('div');
             this.container.id = 'chat-container';
-            const containerTop = window.innerHeight * 0.4 - CONFIG.CHAT_UI.height; // 40vh高度减去容器高度，使头部在40vh，尾部在底部
             Object.assign(this.container.style, {
                 position: 'fixed',
                 right: CONFIG.CHAT_UI.position.right,
@@ -355,7 +377,7 @@ const HlsPlayer = {
                 borderRadius: '20px',
                 boxShadow: '0 20px 60px var(--shadow-color), 0 0 1px rgba(255,255,255,0.1) inset',
                 zIndex: 9999,
-                display: 'flex',
+                display: 'none', // 初始状态隐藏容器
                 flexDirection: 'column',
                 wordWrap: 'break-word',
                 overflowWrap: 'break-word',
@@ -363,7 +385,7 @@ const HlsPlayer = {
                 transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
             });
 
-            // 聊天窗口头部
+            // 聊天窗口头部 - 调整高度
             this.header = document.createElement('div');
             this.header.id = 'chat-header';
             this.header.innerHTML = `
@@ -372,26 +394,19 @@ const HlsPlayer = {
                     <span id="online-users">0</span> 人在线
                 </div>
             `;
+            // 调整抬头高度，减少padding
+            this.header.style.padding = '10px 24px';
             this.container.appendChild(this.header);
 
-            // 添加最小化按钮
-            this.minimizeButton = document.createElement('button');
-            this.minimizeButton.id = 'chat-minimize-button';
-            this.minimizeButton.innerHTML = '-';
-            this.minimizeButton.addEventListener('click', (e) => {
-                e.stopPropagation();
-                this.toggleMinimize();
-            });
-            this.header.appendChild(this.minimizeButton);
-
-            // 最小化气泡
+            // 最小化气泡 - 固定在右下方，始终显示，使用配置文件中的位置
             this.bubble = document.createElement('div');
             this.bubble.id = 'chat-bubble';
             this.bubble.innerHTML = '<div id="chat-bubble-icon">💬</div>';
-            // 设置气泡初始位置
+            // 设置气泡固定在右下方，初始状态就显示
             Object.assign(this.bubble.style, {
-                right: CONFIG.CHAT_UI.position.right,
-                top: (window.innerHeight * 0.4 - 30) + 'px' // 气泡中心在容器最小化按钮位置（头部40vh）
+                right: CONFIG.CHAT_UI.bubblePosition.right,
+                bottom: CONFIG.CHAT_UI.bubblePosition.bottom,
+                display: 'flex' // 始终显示气泡
             });
             this.bubble.addEventListener('click', (e) => {
                 e.stopPropagation();
@@ -409,9 +424,6 @@ const HlsPlayer = {
 
             this.container.append(this.messageArea, this.inputContainer);
             document.body.appendChild(this.container);
-
-            // 初始化拖动和调整功能
-            this.initDraggable();
         }
 
         createMessageArea() {
@@ -580,7 +592,7 @@ const HlsPlayer = {
                 }).replace(/(\d+)\/(\d+), (\d+:\d+)/, '$2-$3 $4');
 
                 // 用户头像颜色 - 根据用户名生成唯一颜色
-                const userColor = `hsl(${(userName.length * 37 + userName.charCodeAt(0)) % 360}, 70%, 60%)`;
+                const userColor = `hsl(${(userName.charCodeAt(0) * 37 + userName.charCodeAt(1)) % 360}, 70%, 60%)`;
 
                 return `
                     <div style="
@@ -593,7 +605,7 @@ const HlsPlayer = {
                         box-shadow: ${isOwn ?
                             '0 6px 20px rgba(0, 0, 0, 0.5)' :
                             '0 6px 20px rgba(0, 0, 0, 0.5)'};
-                        max-width: 70%;
+                        max-width: 90%;
                         animation: fadeInUp 0.4s ease-out forwards;
                         opacity: 0;
                         transform: translateY(10px);
@@ -670,7 +682,8 @@ const HlsPlayer = {
             // 多媒体内容解析器 - 优化版
             const createMessageContent = (message) => {
                 const content = message.content;
-                const mediaPattern = /(https?:\/\/.*\.(?:png|jpg|gif|mp4|m3u8|webm|mp3))\b/gi;
+                // 修改正则表达式，允许匹配带有参数的URL，直到遇到空格、换行符或结束
+                const mediaPattern = /(https?:\/\/.*?\.(?:png|jpg|gif|mp4|m3u8|webm|mp3)(?:\?[^\s\n]*)?)/gi;
                 const elements = [];
 
                 content.split('\n').forEach(text => {
@@ -785,195 +798,22 @@ const HlsPlayer = {
         }
 
         /**
-         * 切换聊天界面的最小化/最大化状态
+         * 切换聊天界面的显示/隐藏状态
          */
         toggleMinimize() {
-            this.isMinimized = this.container.style.display === 'none';
-            this.isMinimized = !this.isMinimized;
+            const wasHidden = this.container.style.display === 'none';
+            this.isMinimized = !wasHidden;
             const display = this.isMinimized ? 'none' : 'flex';
             this.container.style.display = display;
-            this.bubble.style.display = this.isMinimized ? 'flex' : 'none';
+            // 气泡始终显示，不随容器状态变化
+            this.bubble.style.display = 'flex';
 
-            // 获取容器的高度
-            const containerHeight = this.container.offsetHeight;
-
-            // 精确同步位置，确保最小化按钮与气泡完全重合
-            if (!this.isMinimized) {
-                // 从气泡同步到容器：计算容器位置，使最小化按钮与气泡位置重合
-                const bubbleRight = parseFloat(this.bubble.style.right || CONFIG.CHAT_UI.position.right.replace('px', ''));
-                const bubbleTop = parseFloat(this.bubble.style.top || (window.innerHeight * 0.4 - 30) + 'px');
-
-                // 计算容器位置：使容器的最小化按钮(right:12px, top:12px)与气泡中心完全重合
-                const containerRight = bubbleRight + 30 - 12; // 气泡右边距 + 气泡半径 - 按钮right偏移量
-                const containerTopPosition = bubbleTop + 30 - 12; // 气泡top + 气泡半径 - 按钮top偏移量
-                const containerBottom = window.innerHeight - (containerTopPosition + containerHeight);
-
-                this.container.style.right = containerRight + 'px';
-                this.container.style.bottom = containerBottom + 'px';
-
-                console.log('容器展开：气泡与最小化按钮对齐', { bubbleRight, bubbleTop, containerRight, containerBottom, containerHeight });
-            } else {
-                // 从容器同步到气泡：计算气泡位置，使其与容器最小化按钮精确重合
-                const containerRight = parseFloat(this.container.style.right || CONFIG.CHAT_UI.position.right.replace('px', ''));
-                const containerBottom = parseFloat(this.container.style.bottom || CONFIG.CHAT_UI.position.bottom.replace('px', ''));
-
-                // 计算按钮在页面中的绝对位置
-                const buttonX = containerRight + 12; // 容器right + 按钮right偏移
-                const buttonY = window.innerHeight - containerBottom - containerHeight + 12; // 按钮top位置
-
-                // 气泡位置 = 按钮位置 - 气泡半径
-                const bubbleRight = buttonX - 30; // 按钮X - 气泡半径
-                const bubbleTop = buttonY - 30; // 按钮Y - 气泡半径
-
-                this.bubble.style.right = bubbleRight + 'px';
-                this.bubble.style.top = bubbleTop + 'px';
-
-                console.log('气泡最小化：与按钮位置精确重合', { containerRight, containerBottom, buttonX, buttonY, bubbleRight, bubbleTop, containerHeight });
+            // 只有首次从隐藏状态切换到显示状态时，才自动滚动到最新消息
+            if (wasHidden && this.isFirstExpand) {
+                this.scrollToBottom();
+                // 设置标志位为false，表示已完成首次展开
+                this.isFirstExpand = false;
             }
-        }
-
-        /**
-         * 初始化拖动功能
-         */
-        initDraggable() {
-            // 最小化图标拖动（只允许上下拖动，不允许左右拖动，范围0-100vh）
-            let isDraggingBubble = false;
-            let startY = 0;
-            let startTop = 0;
-
-            this.bubble.addEventListener('mousedown', (e) => {
-                // 只有左键点击且不是点击打开时才允许拖动
-                if (e.button !== 0 || e.target.id === 'chat-bubble-icon') return;
-                e.preventDefault();
-                e.stopPropagation();
-                isDraggingBubble = true;
-                startY = e.clientY;
-                startTop = parseFloat(this.bubble.style.top || CONFIG.CHAT_UI.position.top.replace('px', ''));
-            });
-
-            document.addEventListener('mousemove', (e) => {
-                if (!isDraggingBubble) return;
-                e.preventDefault();
-                // 只计算垂直移动距离
-                const deltaY = e.clientY - startY;
-
-                // 调整上下位置，限制在0到100vh范围内
-                let newTop = startTop + deltaY;
-                newTop = Math.max(0, Math.min(newTop, window.innerHeight - this.bubble.offsetHeight));
-                this.bubble.style.top = newTop + 'px';
-            });
-
-            document.addEventListener('mouseup', () => {
-                isDraggingBubble = false;
-            });
-
-            // 为整个聊天容器添加拖动功能（只允许上下拖动）
-            this.initContainerDraggable();
-
-            // 整个UI的高度调整
-            this.initHeightResize();
-        }
-
-        /**
-         * 初始化整个聊天容器的拖动功能（只允许上下拖动，使用bottom定位）
-         */
-        initContainerDraggable() {
-            let isDraggingContainer = false;
-            let startY = 0;
-            let startBottom = 0;
-
-            this.header.addEventListener('mousedown', (e) => {
-                // 避免与最小化按钮冲突
-                if (e.target.id === 'chat-minimize-button') return;
-                e.preventDefault();
-                e.stopPropagation();
-                isDraggingContainer = true;
-                startY = e.clientY;
-                startBottom = parseFloat(this.container.style.bottom || CONFIG.CHAT_UI.position.bottom.replace('px', ''));
-            });
-
-            document.addEventListener('mousemove', (e) => {
-                if (!isDraggingContainer) return;
-                e.preventDefault();
-                const deltaY = startY - e.clientY;
-
-                // 只调整上下位置，限制在0到100vh范围内
-                let newBottom = startBottom + deltaY;
-                newBottom = Math.max(0, Math.min(newBottom, window.innerHeight - this.container.offsetHeight));
-                this.container.style.bottom = newBottom + 'px';
-            });
-
-            document.addEventListener('mouseup', () => {
-                isDraggingContainer = false;
-            });
-        }
-
-        /**
-         * 初始化高度调整功能（修复：调整时尾部不变，头部变化，符合直觉；调整后同步气泡位置）
-         */
-        initHeightResize() {
-            const resizer = document.createElement('div');
-            Object.assign(resizer.style, {
-                position: 'absolute',
-                top: '0',
-                left: '0',
-                right: '0',
-                height: '8px',
-                cursor: 'ns-resize',
-                zIndex: '10',
-                backgroundColor: 'transparent'
-            });
-            this.container.appendChild(resizer);
-
-            let isResizing = false;
-            let startY = 0;
-            let startHeight = 0;
-            let startBottom = 0;
-
-            resizer.addEventListener('mousedown', (e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                isResizing = true;
-                startY = e.clientY;
-                startHeight = this.container.offsetHeight;
-                startBottom = parseFloat(this.container.style.bottom || CONFIG.CHAT_UI.position.bottom.replace('px', ''));
-            });
-
-            document.addEventListener('mousemove', (e) => {
-                if (!isResizing) return;
-                e.preventDefault();
-                const deltaY = startY - e.clientY; // 计算垂直移动距离
-                const newHeight = Math.max(300, startHeight + deltaY); // 最小高度300px
-                this.container.style.height = newHeight + 'px';
-                // 保持尾部（底部）位置不变，头部位置随高度变化而变化（符合直觉）
-                this.container.style.bottom = startBottom + 'px';
-            });
-
-            document.addEventListener('mouseup', () => {
-                isResizing = false;
-                // 调整高度后同步气泡位置
-                if (!this.isMinimized) {
-                    this.syncBubblePosition();
-                }
-            });
-        }
-
-        /**
-         * 同步气泡与容器最小化按钮的位置
-         */
-        syncBubblePosition() {
-            const containerRight = parseFloat(this.container.style.right || CONFIG.CHAT_UI.position.right.replace('px', ''));
-            const containerBottom = parseFloat(this.container.style.bottom || CONFIG.CHAT_UI.position.bottom.replace('px', ''));
-            const containerHeight = this.container.offsetHeight;
-
-            // 气泡位置 = 容器的最小化按钮位置
-            const bubbleRight = containerRight + 12 - 30; // 容器右边距 + 按钮X偏移(12) - 气泡中心X(30)
-            const bubbleTop = window.innerHeight - containerBottom - containerHeight + 12 - 30; // 计算气泡顶部位置
-
-            this.bubble.style.right = bubbleRight + 'px';
-            this.bubble.style.top = bubbleTop + 'px';
-
-            console.log('气泡位置已同步:', { right: bubbleRight, top: bubbleTop, containerHeight });
         }
 
         async cleanup() {
@@ -1030,4 +870,5 @@ const HlsPlayer = {
             }
         }, 500);
     })();
+
 })();
