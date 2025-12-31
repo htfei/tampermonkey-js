@@ -413,6 +413,15 @@ https://d3df6hjcjf7ng5.cloudfront.net/api/app/media/m3u8ex/v3/av/0q/at/dx/1g/bfb
 
 https://d3df6hjcjf7ng5.cloudfront.net/api/app/media/m3u8ex/v3/av/ku/22/84/mf/a1fb34f34437437b950741589a1bc588.m3u8?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdWQiOiJwdWJsaWMiLCJleHAiOjE3NjgyMDEzMDcsImlzc3VlciI6ImNvbS5idXR0ZXJmbHkiLCJzdWIiOiJhc2lnbiIsInVzZXJJZCI6MTczMzMzNzk3fQ.6Ar-kdckGzsKgahxIJBX7TTBkwmf0BzQjcyfU43FcJE
 
+https://d3df6hjcjf7ng5.cloudfront.net/
+
+代码搜 .m3u8 找到 o.videoInfo.videoUrl , 打断点，打印如下：
+preVideoUrl: "v3/av/28/8k/z2/vt/f6cce8a427ef42e4ac53e9cd7e22e9ed_0001.m3u8"
+videoUrl: "v3/av/28/8k/z2/vt/f6cce8a427ef42e4ac53e9cd7e22e9ed.m3u8"
+
+还有这种不好搞必须破解了，找加解密函数key or 劫持解密函数
+v3/av/54/5u/gd/qe/d28ab24bdc9e4e5bb1b96844af28d0ff.m3u8
+v3/av/2c/f1/c6/ib/0f9dbd8505fa40f1a99af52384454a8a.m3u8
 ### Xvideo/bili ok todo
 
 原理： X_0001.m3u8?token=Y 改成 X.m3u8?token=Y
@@ -421,7 +430,8 @@ https://d3df6hjcjf7ng5.cloudfront.net/api/app/media/m3u8ex/v3/av/ku/22/84/mf/a1f
 https://d34vyrelvmcjzt.cloudfront.net
 
 长视频✅ 
-原理： X_0001.m3u8?token=Y 改成 X.m3u8?token=Y
+方法1： X_0001.m3u8?token=Y 改成 X.m3u8?token=Y
+方法2： localstrage中 longVideoHistoryStore 有preFileName 、videoUrl
 
 短视频✅
 6s后回退到0s并暂停+弹窗
@@ -467,6 +477,8 @@ https://d1kek4wgeaw03m.cloudfront.net/api/app/media/h5/m3u8/bktappupdata/sp/g4/3
 
 https://d1kek4wgeaw03m.cloudfront.net/api/app/media/h5/m3u8/v3/av/ts/ys/n0/ps/9da47018c7fd4061866375dd86081514.m3u8?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdWQiOiJwdWJsaWMiLCJleHAiOjE3NjgyMDU2NjIsImlzc3VlciI6ImNvbS5idXR0ZXJmbHkiLCJzdWIiOiJhc2lnbiIsInVzZXJJZCI6NjA0Mjk5MTN9.d1e5jSwLpYXPKFyi2fq8WGmT1dnOiXWeyZ-FuEPeVj8
 
+
+
 ## 糖心Vlog
 
 https://crnd-d.smuordqj.vip/?_c=i862ebtx
@@ -488,3 +500,39 @@ Swag
 https://ri306.xyz
 19J
 https://19jtv10.xyz
+
+
+## 逆向油猴脚本统一设计流程
+
+### 需求描述
+旧脚本逻辑：
+1. 通过各种方式破解网站，得到 data
+2. 加载data卡片UI
+3. 定时去AD
+缺点：
+旧脚本拿到脚本地址，无法控制二次分发或售卖，且也不清楚是谁二次售卖。
+新脚本需要解决的问题：
+1. 如何防止二次分发或售卖？
+2. 尽量操作简单，无需登录注册。
+3. 现在通过爱发电平台，用户可以通过爱发电平台购买脚本，购买后即可获取脚本地址。能否将爱发电平台的能力和Supabase和脚本串联起来。
+如何设计？
+
+### 方案设计
+0. 用户安装脚本，并在脚本UI中试看1个完整视频后，加载爱发电卡片 （选做）
+1. 用户在爱发电等第三方自动发码平台 购买后 随机获得一个激活码
+2. 用户在脚本中输入激活码，脚本请求Supabase验证（激活码 + 设备标识 + 脚本标识），平台返回验证结果：
+    失败的场景：
+        1. 激活码异常（1.解析失败，无效激活码 2.解析成功，但已过期）
+        2. 激活码对应设备标识已超过3个
+        3. 脚本标识异常（1.解析失败，无效标识 2.解析成功，但与激活码中的信息不匹配） //“⚠️: 你可能是盗版脚本的受害者！”
+    成功的处理：
+        1. 激活码 + 设备标识 + 脚本标识 入库
+3. 激活码验证成功，则继续脚本已有逻辑。
+
+//统计UI逻辑
+1. 加载UI气泡，点击可弹窗/隐藏UI容器；加载UI容器，自动拉去Supabase数据库中的最近10条msg，并渲染为msg卡片
+2. 通过各种方式破解网站，得到msg
+3. 在UI容器中追加一条msg卡片UI
+4. 将msg写入Supabase数据库 （要获取video_id确保唯一性，add/update）
+5. 点击msg卡片点赞点踩，更新Supabase数据库 (update)
+6. 定时去AD

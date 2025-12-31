@@ -598,13 +598,13 @@
                     <div style="
                         padding: 16px 20px;
                         background: ${isOwn ?
-                            'linear-gradient(135deg, var(--chat-surface), var(--chat-surface-light))' :
-                            'linear-gradient(135deg, var(--chat-surface), var(--chat-surface-light))'};
+                        'linear-gradient(135deg, var(--chat-surface), var(--chat-surface-light))' :
+                        'linear-gradient(135deg, var(--chat-surface), var(--chat-surface-light))'};
                         border-radius: ${isOwn ? '20px 20px 8px 20px' : '20px 20px 20px 8px'};
                         color: ${isOwn ? 'var(--chat-text)' : 'var(--chat-text)'};
                         box-shadow: ${isOwn ?
-                            '0 6px 20px rgba(0, 0, 0, 0.5)' :
-                            '0 6px 20px rgba(0, 0, 0, 0.5)'};
+                        '0 6px 20px rgba(0, 0, 0, 0.5)' :
+                        '0 6px 20px rgba(0, 0, 0, 0.5)'};
                         max-width: 90%;
                         animation: fadeInUp 0.4s ease-out forwards;
                         opacity: 0;
@@ -620,8 +620,8 @@
                             width: 60px;
                             height: 60px;
                             background: ${isOwn ?
-                                'radial-gradient(circle, rgba(255,255,255,0.15), transparent)' :
-                                'radial-gradient(circle, rgba(139, 92, 246, 0.1), transparent)'};
+                        'radial-gradient(circle, rgba(255,255,255,0.15), transparent)' :
+                        'radial-gradient(circle, rgba(139, 92, 246, 0.1), transparent)'};
                             border-radius: 50%;
                             transform: translate(${isOwn ? '20px' : '-20px'}, -20px);
                         "></div>
