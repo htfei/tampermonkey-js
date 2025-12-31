@@ -12,9 +12,9 @@
 // @license      MIT
 // @connect      supabase.co
 // @require      https://unpkg.com/@supabase/supabase-js@2.49.3/dist/umd/supabase.js
-// @require      file:///c:/GitProject/tampermonkey-js/supabase-client/supabaseClientLibrary.js
 // @require      https://cdnjs.cloudflare.com/ajax/libs/hls.js/1.1.5/hls.min.js
-// @require      file:///c:/GitProject/tampermonkey-js/supabase-client/chatRoomLibrary.js
+// @require      https://scriptcat.org/lib/5007/1.0.0/supabaseClientLibrary.js#sha256=6c8d52294e43c5f69f05b666f387328a540951d2d7adb80de68fa793fba567dd
+// @require      https://scriptcat.org/lib/5008/1.0.0/chatRoomLibrary.js#sha256=bb9051b859303bec9d390d184ec8989f3f2728b2dd067205f358ff48cd1201fc
 // ==/UserScript==
 
 /**
@@ -28,7 +28,7 @@
 
     // 初始化UI
     const chatRoom = await ChatRoomLibrary.initUI();
-    chatRoom.setTitle('Supabase Chat');
+    chatRoom.setTitle('在线匿名网页聊天室');
     
     // 初始化
     const user_id = await SbCLi.init();
