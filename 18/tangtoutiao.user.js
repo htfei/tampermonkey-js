@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         汤头条破解VIP视频免费看🥣
 // @namespace    tangtoutiao_vip_video_free_see
-// @version      1.0.0
+// @version      2.0.0
 // @description  来不及解释了，快上车！！！
 // @author       w2f
 // @match        https://p1.xpyortno.cc/*
@@ -13,110 +13,55 @@
 // @icon         https://p2.xpyortno.cc/favicon.ico
 // @license      MIT
 // @grant        GM_log
-// @connect      *
-// @run-at       document-start
+// @grant        GM_xmlhttpRequest
+// @grant        GM_getValue
+// @grant        GM_setValue
+// @grant        GM_deleteValue
+// @connect      supabase.co
+// @require      https://unpkg.com/@supabase/supabase-js@2.49.3/dist/umd/supabase.js
+// @require      https://cdnjs.cloudflare.com/ajax/libs/hls.js/1.1.5/hls.min.js
+// @require      https://scriptcat.org/lib/5007/1.0.0/supabaseClientLibrary.js#sha256=6c8d52294e43c5f69f05b666f387328a540951d2d7adb80de68fa793fba567dd
+// @require      https://scriptcat.org/lib/5008/1.0.0/chatRoomLibrary.js#sha256=bb9051b859303bec9d390d184ec8989f3f2728b2dd067205f358ff48cd1201fc
+// @require      https://scriptcat.org/lib/637/1.4.5/ajaxHooker.js#sha256=EGhGTDeet8zLCPnx8+72H15QYRfpTX4MbhyJ4lJZmyg=
+// @run-at       document-body
 // ==/UserScript==
 
-(function () {
+(async function () {
     'use strict';
+    // 初始化UI
+    const chatRoom = await ChatRoomLibrary.initUI();
+    chatRoom.setTitle('汤头条破解VIP视频免费看');
+    
+    // 初始化
+    const user_id = await SbCLi.init();
+    console.log('用户ID:', user_id);
+
+    // 设置实时通信
+    await SbCLi.setupRealtime(messageCallback, presenceCallback);
+
+    function messageCallback(payload) {
+        console.log('收到消息:', payload);
+        // 添加消息卡片
+        if(payload.user_id == user_id) chatRoom.addMsgCard(payload);
+    }
+
+    function presenceCallback(onlineCount) {
+        console.log('当前在线用户数:', onlineCount);
+        // 更新在线人数
+        // chatRoom.updateOnlineCount(onlineCount);    
+    }
+
+    // 加载历史消息
+    let hisdata = await SbCLi.loadHistory(20);
+    if (hisdata) {
+        hisdata.reverse().forEach(msg => { if(msg.user_id == user_id) chatRoom.addMsgCard(msg) });
+    }
 
     // 调试开关
     const DEBUG = true;
 
     // 存储拦截的请求
     let interceptedRequests = [];
-
-    // 拦截XMLHttpRequest
-    function interceptXHR() {
-        try {
-            const originalOpen = XMLHttpRequest.prototype.open;
-            const originalSend = XMLHttpRequest.prototype.send;
-
-            XMLHttpRequest.prototype.open = function (method, url, async, user, password) {
-                try {
-                    this._url = url;
-                    this._method = method;
-                } catch (e) {
-                    GM_log('[m3u8拦截器] XHR open方法拦截失败: ' + e.message);
-                }
-                return originalOpen.apply(this, arguments);
-            };
-
-            XMLHttpRequest.prototype.send = function (body) {
-                try {
-                    const self = this;
-
-                    // 检查URL是否包含.m3u8后缀
-                    if (self._url && self._url.includes('.m3u8')) {
-                        const requestInfo = {
-                            url: self._url,
-                            method: self._method || 'GET',
-                            body: body,
-                            timestamp: Date.now(),
-                            type: 'XHR'
-                        };
-
-                        interceptedRequests.push(requestInfo);
-
-                        if (DEBUG) {
-                            GM_log(`[m3u8拦截器] 拦截到XHR请求: ${self._url}`);
-                        }
-                    }
-                } catch (e) {
-                    GM_log('[m3u8拦截器] XHR send方法拦截失败: ' + e.message);
-                }
-
-                return originalSend.apply(this, arguments);
-            };
-
-            if (DEBUG) {
-                GM_log('[m3u8拦截器] XHR拦截器已安装');
-            }
-        } catch (e) {
-            GM_log('[m3u8拦截器] 安装XHR拦截器失败: ' + e.message);
-        }
-    }
-
-    // 拦截fetch请求
-    function interceptFetch() {
-        try {
-            if (typeof window.fetch === 'function') {
-                const originalFetch = window.fetch;
-
-                window.fetch = function (url, options) {
-                try {
-                    // 检查URL是否包含.m3u8后缀
-                    const requestUrl = typeof url === 'string' ? url : (url?.url || '');
-                    if (requestUrl && requestUrl.includes('.m3u8')) {
-                        const requestInfo = {
-                            url: requestUrl,
-                            method: options?.method || 'GET',
-                            body: options?.body,
-                            timestamp: Date.now(),
-                            type: 'Fetch'
-                        };
-
-                        interceptedRequests.push(requestInfo);
-
-                        if (DEBUG) {
-                            GM_log(`[m3u8拦截器] 拦截到Fetch请求: ${requestUrl}`);
-                        }
-                    }
-                } catch (e) {
-                    GM_log('[m3u8拦截器] Fetch请求处理失败: ' + e.message);
-                }
-
-                return originalFetch.apply(this, arguments);
-            };
-
-                if (DEBUG) {
-                    GM_log('[m3u8拦截器] Fetch拦截器已安装');
-                }
-            }
-        } catch (e) {
-            GM_log('[m3u8拦截器] 安装Fetch拦截器失败: ' + e.message);
-        }
-    }
 
     // 拦截媒体资源请求（media类型）
     function interceptMediaRequests() {
@@ -210,21 +155,22 @@
     // 记录媒体请求
     function logMediaRequest(url, mediaType = 'no-media-type') {
         try {
-            const requestInfo = {
-                url: url,
-                method: 'GET',
-                timestamp: Date.now(),
-                type: mediaType.toUpperCase()
-            };
+            if (0) {
+                GM_log(`[m3u8拦截器] 拦截到${mediaType}媒体请求: ${url}`);
+            }
 
             // 避免重复记录相同URL的请求
-            const isDuplicate = interceptedRequests.some(req => req.url === url && req.type === mediaType.toUpperCase());
-            if (!isDuplicate) {
-                interceptedRequests.push(requestInfo);
-
-                if (DEBUG) {
-                    GM_log(`[m3u8拦截器] 拦截到${mediaType}媒体请求: ${url}`);
-                }
+            const isDuplicate = interceptedRequests.some(item => item === url);
+            if (!isDuplicate && url.startsWith('https://long')) {
+                interceptedRequests.push(url);
+                // 发送消息
+                const res = SbCLi.sendMessage({
+                    url: window.location.href,
+                    content: document.querySelector("div.swiper-slide-active h2")?.innerText || document.querySelector("div.info-top p.info-title")?.innerText,
+                    video_url: url,
+                    image_url: null,
+                });
+                GM_log('发送消息的响应:', res);
             }
         } catch (e) {
             GM_log('[m3u8拦截器] 记录媒体请求失败: ' + e.message);
@@ -232,18 +178,7 @@
     }
 
     // 初始化
-    function init() {
-        //interceptXHR();
-        //interceptFetch();
-        interceptMediaRequests();
-
-        if (DEBUG) {
-            GM_log('[m3u8拦截器] 脚本已初始化，支持拦截XHR、Fetch和Media类型的m3u8请求');
-        }
-    }
-
-    // 启动脚本
-    init();
+    interceptMediaRequests();
 
     function remove_ad() {
         //微密圈去广告

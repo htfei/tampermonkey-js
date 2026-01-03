@@ -282,8 +282,8 @@ https://media.javtrailers.com/hlsvideo/freepv/s/son/sone00720/sone00720mmb.m3u8
 
 ```
 
+## 10play改成long
 
-## 91app ok
 
 ### 如何在app下载页找到对应的web地址?
 
@@ -325,7 +325,7 @@ https://webo6.ykhwpsjl.cc/index.php/index/config?tpl=B&url=xxx
   "store_url": ""
 }
 
-
+### 91app ok
 ```js
 91app   https://w6.vtknladz.xyz/
 汤头条   https://5797.zqzxctc.org/
@@ -341,6 +341,7 @@ https://long.nndez.cn/AAA/BBB/BBB.m3u8?auth_key=CCC&via_m=nineone
 举例：
 https://10play.nndez.cn/watch9/080c4e7723ddb43c0118c7b9d6c4b606/080c4e7723ddb43c0118c7b9d6c4b606.m3u8?auth_key=1748778765-0-0-9f8301fee48d59c433ccc45a64c96180&via_m=nineone
 ```
+
 ### 海角cc/暗网禁区/91暗网 ok flutter
 flutter 
 无法去AD
@@ -358,10 +359,6 @@ https://p3.pvltmnl.xyz/
 
 91暗网
 https://p4.zjsrxfj.cc/
-
-https://10play.iycsmq.cn/static/e3fa2760d16039d338512cb3f01d79fd/e3fa2760d16039d338512cb3f01d79fd.m3u8?auth_key=1765618518-0-0-c0b6903ab123af887cfca43cc0a87c99&via_m=mbjd
-
-https://10play.iycsmq.cn/videos5/f9dbba59e73830a2622e91ab93bcd38d/f9dbba59e73830a2622e91ab93bcd38d.m3u8?auth_key=1765618927-0-0-2a173ec1b45c43c7973ceb627192c615&via_m=mbjd
 
 ### 17岁、16岁 ok todo flutter
 17
@@ -422,11 +419,11 @@ videoUrl: "v3/av/28/8k/z2/vt/f6cce8a427ef42e4ac53e9cd7e22e9ed.m3u8"
 还有这种不好搞必须破解了，找加解密函数key or 劫持解密函数
 v3/av/54/5u/gd/qe/d28ab24bdc9e4e5bb1b96844af28d0ff.m3u8
 v3/av/2c/f1/c6/ib/0f9dbd8505fa40f1a99af52384454a8a.m3u8
-### Xvideo/bili ok todo
 
-原理： X_0001.m3u8?token=Y 改成 X.m3u8?token=Y
+## X_0001.m3u8?token=Y
+改成 X.m3u8?token=Y
 
-#### Xvideo 📺+🎬+🌍=✅
+### Xvideo 📺+🎬+🌍=✅
 https://d34vyrelvmcjzt.cloudfront.net
 
 长视频✅ 
@@ -437,46 +434,19 @@ https://d34vyrelvmcjzt.cloudfront.net
 6s后回退到0s并暂停+弹窗
 覆写currentTime的set函数(bug:会导致进度条失效) + 去除弹窗 + 破解提示 + 新标签页打开
 
-https://d34vyrelvmcjzt.cloudfront.net/api/app/media/h5/m3u8/v3/sp/f0/te/s5/tp/7a262bcbb270420e990f2be259b755e8.m3u8?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdWQiOiJwdWJsaWMiLCJleHAiOjE3Njg2NjA1NTgsImlzc3VlciI6ImNvbS5idXR0ZXJmbHkiLCJzdWIiOiJhc2lnbiIsInVzZXJJZCI6NTA2ODc1MH0.-9P6cBM2IkOBfBxWNAOaAdEw0y7U3JSmZGVnjypPArs&timestamp=1766302248&sign=ba992b98da4652ae758ee762bbdfda68f83e06bd&nonce=d520be37-d832-4142-b2d8-5d5f35fe0140
-
-https://d34vyrelvmcjzt.cloudfront.net/api/app/media/h5/m3u8/v3/sp/dx/lv/0w/91/ca081741f0214bc08cec35d4e7631d36.m3u8?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdWQiOiJwdWJsaWMiLCJleHAiOjE3Njg2NjA1NTgsImlzc3VlciI6ImNvbS5idXR0ZXJmbHkiLCJzdWIiOiJhc2lnbiIsInVzZXJJZCI6NTA2ODc1MH0.-9P6cBM2IkOBfBxWNAOaAdEw0y7U3JSmZGVnjypPArs&timestamp=1766302269&sign=a308d5a9911c101d55e8a149d433f2a1298a4499&nonce=73458d31-299f-4b7c-8707-0b5a920ad935
-
-https://d34vyrelvmcjzt.cloudfront.net/api/app/media/h5/m3u8/v3/sp/k7/xj/en/v1/329fb0fcc43b4014a9b3938a5922f3fb.m3u8?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdWQiOiJwdWJsaWMiLCJleHAiOjE3Njg2NjA1NTgsImlzc3VlciI6ImNvbS5idXR0ZXJmbHkiLCJzdWIiOiJhc2lnbiIsInVzZXJJZCI6NTA2ODc1MH0.-9P6cBM2IkOBfBxWNAOaAdEw0y7U3JSmZGVnjypPArs&timestamp=1766302333&sign=748a715c04d895a93bd38cd384729b537f8ac2a2&nonce=95215a64-4792-4ccf-9932-cdb5cabef4c4
-
-
 直播可用✅
 xhr中可看到请求地址
 https://edge-hls.sacdnssedge.com/hls/172963574/master/172963574_1080p.m3u8
 https://edge-hls.sacdnssedge.com/hls/103710327/master/103710327_480p.m3u8
 https://edge-hls.sacdnssedge.com/hls/230549057/master/230549057_720p.m3u8
 
-https://edge-hls.sacdnssedge.com/hls/205201357/master/205201357_720p.m3u8
 
-
-
-#### bili
+### bili
 广告太多+播放暂停无法劫持 不适合继续
 xhr劫持 + 自定义hls播放器UI
 
 https://d1kek4wgeaw03m.cloudfront.net/
 https://d3r24dh3fve23e.cloudfront.net/
-
-
-https://d1kek4wgeaw03m.cloudfront.net/play/longVideo/397115
-https://d3r24dh3fve23e.cloudfront.net/SubPage/longViodePlay/?id=16244
-
-https://d3r24dh3fve23e.cloudfront.net/api/app/media/h5/m3u8/v2/sp/xs/0f/l4/r3/acd39a46e33348388ee3e2de20e5732e.m3u8?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdWQiOiJwdWJsaWMiLCJleHAiOjE3NjgyMDQ2NjIsImlzc3VlciI6ImNvbS5idXR0ZXJmbHkiLCJzdWIiOiJhc2lnbiIsInVzZXJJZCI6NTk1NDIxOH0.vCTaBELtKTWp-7RWsgc9IbXSZxSHS8fQD5WtMqzfk7w&timestamp=1765612664&sign=96e3b5ab8801c3c5f1d0082ed6cdcac693cb0f89&nonce=4d35d9cc-dbe1-49fc-aad8-fd21b6d6e68a
-
-https://d3r24dh3fve23e.cloudfront.net/api/app/media/h5/m3u8/v3/av/gq/qx/c5/sp/7c2b7dbf1bc2431ba655ed7acf21b264_0001.m3u8?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdWQiOiJwdWJsaWMiLCJleHAiOjE3NjgyMDQ2NjIsImlzc3VlciI6ImNvbS5idXR0ZXJmbHkiLCJzdWIiOiJhc2lnbiIsInVzZXJJZCI6NTk1NDIxOH0.vCTaBELtKTWp-7RWsgc9IbXSZxSHS8fQD5WtMqzfk7w&timestamp=1765612756&sign=cb220a49cbff363cd8626f296a556e7862a88bc3&nonce=4f4342f3-a5f5-4f52-8ee0-fc3d8f7ae77d
-
-
-https://d3r24dh3fve23e.cloudfront.net/api/app/media/h5/m3u8/v3/sp/bv/j9/7c/7x/031f4bfeaaba46d98859395f7ebafbc0.m3u8?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdWQiOiJwdWJsaWMiLCJleHAiOjE3NjgyMDQ2NjIsImlzc3VlciI6ImNvbS5idXR0ZXJmbHkiLCJzdWIiOiJhc2lnbiIsInVzZXJJZCI6NTk1NDIxOH0.vCTaBELtKTWp-7RWsgc9IbXSZxSHS8fQD5WtMqzfk7w&timestamp=1765613055&sign=5f4c6953493f5a5a73df19d9a1d80ad7b2875428&nonce=91187fca-c596-4e7e-9e98-5d67eb7e8d75
-
-
-https://d1kek4wgeaw03m.cloudfront.net/api/app/media/h5/m3u8/bktappupdata/sp/g4/3o/0x/ie/b30ad64a8549494bbad7fd8706659b89.m3u8?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdWQiOiJwdWJsaWMiLCJleHAiOjE3NjgyMDU2NjIsImlzc3VlciI6ImNvbS5idXR0ZXJmbHkiLCJzdWIiOiJhc2lnbiIsInVzZXJJZCI6NjA0Mjk5MTN9.d1e5jSwLpYXPKFyi2fq8WGmT1dnOiXWeyZ-FuEPeVj8
-
-https://d1kek4wgeaw03m.cloudfront.net/api/app/media/h5/m3u8/v3/av/ts/ys/n0/ps/9da47018c7fd4061866375dd86081514.m3u8?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdWQiOiJwdWJsaWMiLCJleHAiOjE3NjgyMDU2NjIsImlzc3VlciI6ImNvbS5idXR0ZXJmbHkiLCJzdWIiOiJhc2lnbiIsInVzZXJJZCI6NjA0Mjk5MTN9.d1e5jSwLpYXPKFyi2fq8WGmT1dnOiXWeyZ-FuEPeVj8
-
 
 
 ## 糖心Vlog

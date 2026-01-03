@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Xvideo破解VIP视频免费看
 // @namespace    xvideo_vip_video_free_see
-// @version      2.0.1
+// @version      2.0.2
 // @description  来不及解释了，快上车！！！
 // @author       w2f
 // @match        https://d34vyrelvmcjzt.cloudfront.net/*
@@ -19,7 +19,7 @@
 // @require      https://scriptcat.org/lib/5007/1.0.0/supabaseClientLibrary.js#sha256=6c8d52294e43c5f69f05b666f387328a540951d2d7adb80de68fa793fba567dd
 // @require      https://scriptcat.org/lib/5008/1.0.0/chatRoomLibrary.js#sha256=bb9051b859303bec9d390d184ec8989f3f2728b2dd067205f358ff48cd1201fc
 // @require      https://scriptcat.org/lib/637/1.4.5/ajaxHooker.js#sha256=EGhGTDeet8zLCPnx8+72H15QYRfpTX4MbhyJ4lJZmyg=
-// @run-at       document-start
+// @run-at       document-body
 // ==/UserScript==
 
 (async function () {
