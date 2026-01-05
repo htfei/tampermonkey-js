@@ -338,8 +338,6 @@ https://10play.nndez.cn/AAA/BBB/BBB.m3u8?auth_key=CCC&via_m=nineone
 破解：
 https://long.nndez.cn/AAA/BBB/BBB.m3u8?auth_key=CCC&via_m=nineone
 
-举例：
-https://10play.nndez.cn/watch9/080c4e7723ddb43c0118c7b9d6c4b606/080c4e7723ddb43c0118c7b9d6c4b606.m3u8?auth_key=1748778765-0-0-9f8301fee48d59c433ccc45a64c96180&via_m=nineone
 ```
 
 ### 海角cc/暗网禁区/91暗网 ok flutter
@@ -399,26 +397,15 @@ https://cl624.ol8snb2kx.xyz/api/m3u8/h5/decode?path=sp/fc/wa/om/k4/dc671158f9ec4
 https://cl624.ol8snb2kx.xyz/api/m3u8/h5/decode?path=sp/jb/iz/op/wy/c9f09639f1f34d758c91047f755a3613.m3u8
 
 
-
-### 麻豆视频 todo aes解密
+## 劫持json
+### 麻豆视频
 https://d3df6hjcjf7ng5.cloudfront.net
-
-有free vip 金币
-vip可预览 ，可破
-
-https://d3df6hjcjf7ng5.cloudfront.net/api/app/media/m3u8ex/v3/av/0q/at/dx/1g/bfb60d75b7f74b72b34e655b860bb4ca.m3u8?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdWQiOiJwdWJsaWMiLCJleHAiOjE3NjgyMDEzMDcsImlzc3VlciI6ImNvbS5idXR0ZXJmbHkiLCJzdWIiOiJhc2lnbiIsInVzZXJJZCI6MTczMzMzNzk3fQ.6Ar-kdckGzsKgahxIJBX7TTBkwmf0BzQjcyfU43FcJE
-
-https://d3df6hjcjf7ng5.cloudfront.net/api/app/media/m3u8ex/v3/av/ku/22/84/mf/a1fb34f34437437b950741589a1bc588.m3u8?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdWQiOiJwdWJsaWMiLCJleHAiOjE3NjgyMDEzMDcsImlzc3VlciI6ImNvbS5idXR0ZXJmbHkiLCJzdWIiOiJhc2lnbiIsInVzZXJJZCI6MTczMzMzNzk3fQ.6Ar-kdckGzsKgahxIJBX7TTBkwmf0BzQjcyfU43FcJE
-
-https://d3df6hjcjf7ng5.cloudfront.net/
+https://d3df6hjcjf7ng5.cloudfront.net/api/app/media/m3u8ex/AAA.m3u8?token=BBB
 
 代码搜 .m3u8 找到 o.videoInfo.videoUrl , 打断点，打印如下：
 preVideoUrl: "v3/av/28/8k/z2/vt/f6cce8a427ef42e4ac53e9cd7e22e9ed_0001.m3u8"
 videoUrl: "v3/av/28/8k/z2/vt/f6cce8a427ef42e4ac53e9cd7e22e9ed.m3u8"
 
-还有这种不好搞必须破解了，找加解密函数key or 劫持解密函数
-v3/av/54/5u/gd/qe/d28ab24bdc9e4e5bb1b96844af28d0ff.m3u8
-v3/av/2c/f1/c6/ib/0f9dbd8505fa40f1a99af52384454a8a.m3u8
 
 ## X_0001.m3u8?token=Y
 改成 X.m3u8?token=Y
@@ -440,7 +427,7 @@ https://edge-hls.sacdnssedge.com/hls/172963574/master/172963574_1080p.m3u8
 https://edge-hls.sacdnssedge.com/hls/103710327/master/103710327_480p.m3u8
 https://edge-hls.sacdnssedge.com/hls/230549057/master/230549057_720p.m3u8
 
-
+https://edge-hls.sacdnssedge.com/hls/230671224/master/230671224_720p.m3u8
 ### bili
 广告太多+播放暂停无法劫持 不适合继续
 xhr劫持 + 自定义hls播放器UI
