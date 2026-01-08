@@ -1,10 +1,11 @@
 // ==UserScript==
 // @name         Xvideo破解VIP视频免费看
 // @namespace    xvideo_vip_video_free_see
-// @version      2.0.2
+// @version      2.0.3
 // @description  来不及解释了，快上车！！！
 // @author       w2f
 // @match        https://d34vyrelvmcjzt.cloudfront.net/*
+// @match        https://d1ibyof3mbdf0n.cloudfront.net/*
 // @include      /^http(s)?:\/\/p\w+\.cloudfront\.(com|net|cc)/
 // @icon         https://d34vyrelvmcjzt.cloudfront.net/logo.png
 // @license      MIT
@@ -20,6 +21,8 @@
 // @require      https://scriptcat.org/lib/5008/1.0.0/chatRoomLibrary.js#sha256=bb9051b859303bec9d390d184ec8989f3f2728b2dd067205f358ff48cd1201fc
 // @require      https://scriptcat.org/lib/637/1.4.5/ajaxHooker.js#sha256=EGhGTDeet8zLCPnx8+72H15QYRfpTX4MbhyJ4lJZmyg=
 // @run-at       document-body
+// @downloadURL https://update.sleazyfork.org/scripts/559717/Xvideo%E7%A0%B4%E8%A7%A3VIP%E8%A7%86%E9%A2%91%E5%85%8D%E8%B4%B9%E7%9C%8B.user.js
+// @updateURL https://update.sleazyfork.org/scripts/559717/Xvideo%E7%A0%B4%E8%A7%A3VIP%E8%A7%86%E9%A2%91%E5%85%8D%E8%B4%B9%E7%9C%8B.meta.js
 // ==/UserScript==
 
 (async function () {
@@ -105,7 +108,7 @@
             // 发送消息
             const res = SbCLi.sendMessage({
                 url: window.location.href,
-                content: document.querySelector("div.video-title")?.innerText,
+                content: document.querySelector("div.video-title")?.innerText || document.querySelector("div.collect-title h5")?.innerText,
                 video_url: location.origin +window.real_m3u8_url,
                 image_url: null,
             });
