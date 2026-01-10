@@ -23,8 +23,8 @@ const ChatRoomLibrary = (function () {
 
     // 默认UI配置
     const DEFAULT_UI_CONFIG = {
-        width: 365,
-        height: 700,
+        width: '360px',
+        height: '80vh',
         position: { right: '5px', bottom: '90px' },
         bubblePosition: { right: '5px', bottom: '20px' },
         theme: {
@@ -112,6 +112,7 @@ const ChatRoomLibrary = (function () {
         document.head.appendChild(style);
     }
 
+
     /**
      * 初始化HLS播放器
      * @param {HTMLVideoElement} videoElement - 视频元素
@@ -135,6 +136,8 @@ const ChatRoomLibrary = (function () {
 
         hls.on(Hls.Events.MANIFEST_PARSED, () => {
             console.log('[HLS] 视频流已解析');
+            //播放
+            videoElement?.play();
         });
 
         hls.on(Hls.Events.ERROR, (event, data) => {
@@ -155,12 +158,12 @@ const ChatRoomLibrary = (function () {
         const content = message.content || '';
         const mediaPattern = /(https?:\/\/.*?\.(?:png|jpg|gif|mp4|m3u8|webm|mp3)(?:\?[^\s\n]*)?)/gi;
         const elements = [];
-        if(message.image_url) elements.push(`<div style="margin: 10px 0; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);">
-            <img src="${message.image_url}?ts=${Date.now()}" referrerpolicy="no-referrer-when-downgrade" style="max-width: 100%; height: auto; display: block;" loading="lazy">
-        </div>`);
-        if(message.video_url) elements.push(`<div style="margin: 10px 0; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);">
-            <video controls style="max-width: 100%; height: auto; display: block;" id="${message.id}-video" src="${message.video_url}"></video>
-        </div>`);
+        if(message.video_url) {
+            const videoId = `${message.id}-video`;
+            elements.push(`<div style="margin: 10px 0; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);">
+                <video controls style="max-width: 100%; height: auto; display: block;" id="${videoId}" poster="${message.image_url}" src="${message.video_url}" data-hls-src="${message.video_url}"></video>
+            </div>`);
+        }
 
         content.split('\n').forEach(text => {
             let remaining = text;
@@ -312,6 +315,8 @@ const ChatRoomLibrary = (function () {
             this.isFirstExpand = true;
             // 视频状态管理
             this.currentVideo = null; // 当前播放的视频元素
+            // 调整大小状态管理
+            this.resizeFrameId = null; // requestAnimationFrame ID
         }
 
         /**
@@ -325,18 +330,20 @@ const ChatRoomLibrary = (function () {
                 position: 'fixed',
                 right: this.config.CHAT_UI.position.right,
                 bottom: this.config.CHAT_UI.position.bottom,
-                width: `${this.config.CHAT_UI.width}px`,
-                height: `${this.config.CHAT_UI.height}px`,
+                width: `${this.config.CHAT_UI.width}`,
+                height: `${this.config.CHAT_UI.height}`,
+                maxHeight: '95vh',
                 backgroundColor: 'var(--chat-bg)',
                 borderRadius: '20px',
                 boxShadow: '0 20px 60px var(--shadow-color), 0 0 1px rgba(255,255,255,0.1) inset',
-                zIndex: 9999,
+                zIndex: 999998,
                 display: 'none',
                 flexDirection: 'column',
                 wordWrap: 'break-word',
                 overflowWrap: 'break-word',
                 boxSizing: 'border-box',
-                transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
+                transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                resize: 'none'
             });
 
             // 聊天窗口头部
@@ -350,7 +357,12 @@ const ChatRoomLibrary = (function () {
                 </div>
             `;
             this.header.style.padding = '10px 24px';
+            this.header.style.cursor = 'grab'; // 设置初始光标样式为 grab，提示用户可以拖拽
             this.container.appendChild(this.header);
+            
+            // 初始化容器拖拽和调整大小功能
+            this.initContainerDrag();
+            this.initContainerResize();
 
             // 最小化气泡
             this.bubble = document.createElement('div');
@@ -359,12 +371,19 @@ const ChatRoomLibrary = (function () {
             Object.assign(this.bubble.style, {
                 right: this.config.CHAT_UI.bubblePosition.right,
                 bottom: this.config.CHAT_UI.bubblePosition.bottom,
-                display: 'flex'
+                display: 'flex',
+                zIndex: '999999' // 提高z-index确保显示在最外层
             });
+            
+            // 添加点击事件
             this.bubble.addEventListener('click', (e) => {
                 e.stopPropagation();
                 this.toggleMinimize();
             });
+            
+            // 添加拖拽功能
+            this.makeBubbleDraggable();
+            
             document.body.appendChild(this.bubble);
 
             // 创建消息区域
@@ -531,6 +550,354 @@ const ChatRoomLibrary = (function () {
             const titleElement = document.getElementById('chat-title');
             if (titleElement) {
                 titleElement.textContent = title;
+            }
+        }
+        
+        /**
+         * 使气泡可拖拽
+         */
+        makeBubbleDraggable() {
+            this.isDragging = false;
+            this.isDragAction = false;
+            this.startX = 0;
+            this.startY = 0;
+            this.initialLeft = 0;
+            this.initialTop = 0;
+            
+            // 绑定事件
+            this.bubble.addEventListener('mousedown', (e) => this.startDrag(e));
+            this.bubble.addEventListener('touchstart', (e) => this.startDrag(e.touches[0]));
+            
+            document.addEventListener('mousemove', (e) => this.drag(e));
+            document.addEventListener('touchmove', (e) => this.drag(e.touches[0]));
+            
+            document.addEventListener('mouseup', (e) => this.stopDrag(e));
+            document.addEventListener('touchend', (e) => this.stopDrag(e));
+            
+            // 防止拖拽时触发点击事件
+            this.bubble.addEventListener('click', (e) => {
+                if (this.isDragAction) {
+                    this.isDragAction = false;
+                    e.stopPropagation();
+                    e.preventDefault();
+                    return false;
+                }
+            });
+        }
+        
+        /**
+         * 开始拖动
+         * @param {MouseEvent|Touch} e - 鼠标或触摸事件
+         */
+        startDrag(e) {
+            // 只有在气泡可见时才能拖拽
+            if (this.bubble.style.display === 'none') return;
+            
+            // 阻止默认行为和冒泡
+            e.preventDefault();
+            e.stopPropagation();
+            
+            this.isDragging = true;
+            this.startX = e.clientX;
+            this.startY = e.clientY;
+            
+            // 获取初始位置
+            const computedStyle = window.getComputedStyle(this.bubble);
+            this.initialLeft = parseInt(computedStyle.left) || 0;
+            this.initialTop = parseInt(computedStyle.top) || 0;
+            
+            // 改变光标样式
+            this.bubble.style.cursor = 'grabbing';
+            // 添加拖拽时的视觉效果
+            this.bubble.style.transform = 'scale(1.05)';
+            this.bubble.style.transition = 'transform 0.1s ease';
+        }
+        
+        /**
+         * 拖动过程
+         * @param {MouseEvent|Touch} e - 鼠标或触摸事件
+         */
+        drag(e) {
+            if (!this.isDragging) return;
+            
+            // 计算位移
+            const dx = e.clientX - this.startX;
+            const dy = e.clientY - this.startY;
+            
+            // 计算新位置
+            let newLeft = this.initialLeft + dx;
+            let newTop = this.initialTop + dy;
+            
+            // 限制在可视区域内
+            const windowWidth = window.innerWidth;
+            const windowHeight = window.innerHeight;
+            const bubbleWidth = this.bubble.offsetWidth;
+            const bubbleHeight = this.bubble.offsetHeight;
+            
+            newLeft = Math.max(0, Math.min(newLeft, windowWidth - bubbleWidth));
+            newTop = Math.max(0, Math.min(newTop, windowHeight - bubbleHeight));
+            
+            // 更新位置
+            this.bubble.style.left = `${newLeft}px`;
+            this.bubble.style.top = `${newTop}px`;
+            // 清除原来的right和bottom样式
+            this.bubble.style.right = 'auto';
+            this.bubble.style.bottom = 'auto';
+        }
+        
+        /**
+         * 结束拖动
+         * @param {MouseEvent|Touch} e - 鼠标或触摸事件
+         */
+        stopDrag(e) {
+            if (this.isDragging) {
+                // 计算拖拽距离
+                const dx = Math.abs(e.clientX - this.startX);
+                const dy = Math.abs(e.clientY - this.startY);
+                // 判断是否为拖拽操作
+                this.isDragAction = dx > 5 || dy > 5;
+                
+                // 恢复样式
+                this.isDragging = false;
+                this.bubble.style.cursor = 'pointer';
+                this.bubble.style.zIndex = '999999'; // 保持最高层级
+                this.bubble.style.transform = 'scale(1)';
+                this.bubble.style.transition = 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
+            }
+        }
+        
+        /**
+         * 初始化容器拖拽功能
+         */
+        initContainerDrag() {
+            this.container.isDragging = false;
+            this.container.isDragAction = false;
+            this.container.startX = 0;
+            this.container.startY = 0;
+            this.container.initialLeft = 0;
+            this.container.initialTop = 0;
+            this.container.dragHandle = this.header;
+            
+            // 绑定事件
+            this.container.dragHandle.addEventListener('mousedown', (e) => this.startContainerDrag(e));
+            this.container.dragHandle.addEventListener('touchstart', (e) => this.startContainerDrag(e.touches[0]));
+            
+            document.addEventListener('mousemove', (e) => this.dragContainer(e));
+            document.addEventListener('touchmove', (e) => this.dragContainer(e.touches[0]));
+            
+            document.addEventListener('mouseup', (e) => this.stopContainerDrag(e));
+            document.addEventListener('touchend', (e) => this.stopContainerDrag(e));
+            
+            // 防止拖拽时触发点击事件
+            this.container.dragHandle.addEventListener('click', (e) => {
+                if (this.container.isDragAction) {
+                    this.container.isDragAction = false;
+                    e.stopPropagation();
+                    e.preventDefault();
+                    return false;
+                }
+            });
+        }
+        
+        /**
+         * 开始容器拖动
+         * @param {MouseEvent|Touch} e - 鼠标或触摸事件
+         */
+        startContainerDrag(e) {
+            // 只有在容器可见时才能拖拽
+            if (this.container.style.display === 'none') return;
+            
+            // 阻止默认行为和冒泡
+            e.preventDefault();
+            e.stopPropagation();
+            
+            this.container.isDragging = true;
+            this.container.startX = e.clientX;
+            this.container.startY = e.clientY;
+            
+            // 获取初始位置
+            const computedStyle = window.getComputedStyle(this.container);
+            this.container.initialLeft = parseInt(computedStyle.left) || 0;
+            this.container.initialTop = parseInt(computedStyle.top) || 0;
+            
+            // 改变光标样式
+            this.container.dragHandle.style.cursor = 'grabbing';
+            // 提高z-index，确保拖拽时在最上层
+            this.container.style.zIndex = '999999';
+            // 添加拖拽时的视觉效果
+            this.container.style.transform = 'scale(1.01)';
+            this.container.style.transition = 'transform 0.1s ease';
+        }
+        
+        /**
+         * 拖动容器
+         * @param {MouseEvent|Touch} e - 鼠标或触摸事件
+         */
+        dragContainer(e) {
+            if (!this.container.isDragging) return;
+            
+            // 计算位移
+            const dx = e.clientX - this.container.startX;
+            const dy = e.clientY - this.container.startY;
+            
+            // 计算新位置
+            let newLeft = this.container.initialLeft + dx;
+            let newTop = this.container.initialTop + dy;
+            
+            // 限制在可视区域内
+            const windowWidth = window.innerWidth;
+            const windowHeight = window.innerHeight;
+            const containerWidth = this.container.offsetWidth;
+            const containerHeight = this.container.offsetHeight;
+            
+            newLeft = Math.max(0, Math.min(newLeft, windowWidth - containerWidth));
+            newTop = Math.max(0, Math.min(newTop, windowHeight - containerHeight));
+            
+            // 更新位置
+            this.container.style.left = `${newLeft}px`;
+            this.container.style.top = `${newTop}px`;
+            // 清除原来的right和bottom样式
+            this.container.style.right = 'auto';
+            this.container.style.bottom = 'auto';
+        }
+        
+        /**
+         * 结束容器拖动
+         * @param {MouseEvent|Touch} e - 鼠标或触摸事件
+         */
+        stopContainerDrag(e) {
+            if (this.container.isDragging) {
+                // 计算拖拽距离
+                const dx = Math.abs(e.clientX - this.container.startX);
+                const dy = Math.abs(e.clientY - this.container.startY);
+                // 判断是否为拖拽操作
+                this.container.isDragAction = dx > 5 || dy > 5;
+                
+                // 恢复样式
+                this.container.isDragging = false;
+                this.container.dragHandle.style.cursor = 'grab';
+                this.container.style.zIndex = '999998';
+                // 恢复视觉效果
+                this.container.style.transform = 'scale(1)';
+                this.container.style.transition = 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
+            }
+        }
+        
+        /**
+         * 初始化容器调整大小功能
+         */
+        initContainerResize() {
+            this.container.isResizing = false;
+            this.container.resizeStartX = 0;
+            this.container.resizeStartY = 0;
+            this.container.initialWidth = 0;
+            this.container.initialHeight = 0;
+            
+            // 创建调整大小的手柄
+            this.resizeHandle = document.createElement('div');
+            this.resizeHandle.style.position = 'absolute';
+            this.resizeHandle.style.bottom = '5px';
+            this.resizeHandle.style.right = '5px';
+            this.resizeHandle.style.width = '15px';
+            this.resizeHandle.style.height = '15px';
+            this.resizeHandle.style.backgroundColor = 'var(--primary-color)';
+            this.resizeHandle.style.borderRadius = '50%';
+            this.resizeHandle.style.cursor = 'nwse-resize';
+            this.resizeHandle.style.zIndex = '1';
+            this.resizeHandle.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.3)';
+            this.resizeHandle.style.transition = 'background-color 0.2s ease';
+            
+            // 添加悬停效果
+            this.resizeHandle.addEventListener('mouseenter', () => {
+                this.resizeHandle.style.backgroundColor = 'var(--primary-light)';
+            });
+            
+            this.resizeHandle.addEventListener('mouseleave', () => {
+                this.resizeHandle.style.backgroundColor = 'var(--primary-color)';
+            });
+            
+            this.container.appendChild(this.resizeHandle);
+            
+            // 绑定事件
+            this.resizeHandle.addEventListener('mousedown', (e) => this.startContainerResize(e));
+            this.resizeHandle.addEventListener('touchstart', (e) => this.startContainerResize(e.touches[0]));
+            
+            document.addEventListener('mousemove', (e) => this.resizeContainer(e));
+            document.addEventListener('touchmove', (e) => this.resizeContainer(e.touches[0]));
+            
+            document.addEventListener('mouseup', () => this.stopContainerResize());
+            document.addEventListener('touchend', () => this.stopContainerResize());
+        }
+        
+        /**
+         * 开始容器调整大小
+         * @param {MouseEvent|Touch} e - 鼠标或触摸事件
+         */
+        startContainerResize(e) {
+            // 只有在容器可见时才能调整大小
+            if (this.container.style.display === 'none') return;
+            
+            // 阻止默认行为和冒泡
+            e.preventDefault();
+            e.stopPropagation();
+            
+            this.container.isResizing = true;
+            this.container.resizeStartX = e.clientX;
+            this.container.resizeStartY = e.clientY;
+            
+            // 获取初始尺寸
+            this.container.initialWidth = this.container.offsetWidth;
+            this.container.initialHeight = this.container.offsetHeight;
+            
+            // 提高z-index，确保调整大小时在最上层
+            this.container.style.zIndex = '999999';
+            
+            // 添加调整大小时的视觉效果
+            this.resizeHandle.style.transform = 'scale(1.2)';
+            this.resizeHandle.style.transition = 'transform 0.1s ease';
+        }
+        
+        /**
+         * 调整容器大小
+         * @param {MouseEvent|Touch} e - 鼠标或触摸事件
+         */
+        resizeContainer(e) {
+            if (!this.container.isResizing) return;
+            
+            // 直接计算和更新尺寸，避免使用 requestAnimationFrame 可能导致的延迟
+            // 计算位移
+            const dx = e.clientX - this.container.resizeStartX;
+            const dy = e.clientY - this.container.resizeStartY;
+            
+            // 计算新尺寸
+            let newWidth = this.container.initialWidth + dx;
+            let newHeight = this.container.initialHeight + dy;
+            
+            // 限制最小和最大尺寸
+            const minWidth = 300;
+            const minHeight = 400;
+            const maxWidth = window.innerWidth * 0.8;
+            const maxHeight = window.innerHeight * 0.95;
+            
+            newWidth = Math.max(minWidth, Math.min(newWidth, maxWidth));
+            newHeight = Math.max(minHeight, Math.min(newHeight, maxHeight));
+            
+            // 直接更新尺寸，避免 requestAnimationFrame 可能导致的延迟
+            this.container.style.width = `${newWidth}px`;
+            this.container.style.height = `${newHeight}px`;
+        }
+        
+        /**
+         * 结束容器调整大小
+         */
+        stopContainerResize() {
+            if (this.container.isResizing) {
+                this.container.isResizing = false;
+                this.container.style.zIndex = '999998';
+                
+                // 恢复调整大小手柄的视觉效果
+                this.resizeHandle.style.transform = 'scale(1)';
+                this.resizeHandle.style.transition = 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
             }
         }
     }

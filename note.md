@@ -1,92 +1,6 @@
 # web逆向分析笔记
 2025年9月20日
 
-## 91mba视频✅ 
-https://www.91.mba/
-
-免费：
-https://www.91.mba/video/VT_N2xun4y6O
-post: https://v2.cdn199.com/sevenVideos/VT_N2xun4y6O
- "r": "U2Fs...”
-
-找解密代码，打断点
-var u = t.worker.decrypt(o);
-m3u8s: u.m3u8s
-"https://tm.xiaoxx.com/cUpRcRmASx729l1viK8nTA==,1758367959/6879da14d7c55c866b4ac6c2/index.m3u8"
-
-同理收费：
-"https://tm.xiaoxx.com/ehR3F0yMqxkohf8pGFWIAw==,1758367787/68a1673c6d49c639bca57c23/index.m3u8"
-
-故破解方法有2：
-1.扣代码，自己破解
-2.加劫持函数，获取破解结果
-
-## missav✅free
-https://missav.ws/cn/sone-782-chinese-subtitle
-
-https://surrit.com/e29b32e0-6b7b-4433-b74f-e59a88040bec/playlist.m3u8
-https://surrit.com/e29b32e0-6b7b-4433-b74f-e59a88040bec/720p/video.m3u8
-https://surrit.com/e29b32e0-6b7b-4433-b74f-e59a88040bec/360p/video.m3u8
-https://surrit.com/e29b32e0-6b7b-4433-b74f-e59a88040bec/480p/video.m3u8
-==> e29b32e0-6b7b-4433-b74f-e59a88040bec
-
-### 方法一：图片地址关联法✅
-https://nineyu.com/e29b32e0-6b7b-4433-b74f-e59a88040bec/seek/_0.jpg
-https://nineyu.com/e29b32e0-6b7b-4433-b74f-e59a88040bec/seek/_95.jpg
-
-### 方法二：m3u8搜索法✅
-eval(function(p,a,c,k,e,d){e=function(c){return c.toString(36)};if(!''.replace(/^/,String)){while(c--){d[c.toString(a)]=k[c]||c.toString(a)}k=[function(e){return d[e]}];e=function(){return'\\w+'};c=1};while(c--){if(k[c]){p=p.replace(new RegExp('\\b'+e(c)+'\\b','g'),k[c])}}return p}('e=\'8://7.6/5-4-3-2-1/d.0\';c=\'8://7.6/5-4-3-2-1/a/9.0\';b=\'8://7.6/5-4-3-2-1/a/9.0\';',15,15,'m3u8|e59a88040bec|b74f|4433|6b7b|e29b32e0|com|surrit|https|video|720p|source1280|source842|playlist|source'.split('|'),0,{}))
-输出结果：'https://surrit.com/e29b32e0-6b7b-4433-b74f-e59a88040bec/720p/video.m3u8'
-
-
-https://fourhoi.com/sone-605-chinese-subtitle/preview.mp4
-https://fourhoi.com/sone-782/preview.mp4
-
-2025年8月30日
-
-## luoliwo ✅
-https://91uu95.xyz/
-333x.cc
-18uu.cc
-
-试看
-https://pp.91uu95.xyz:2200/20220221/PsqFng6P/1.jpg
-https://91uu95.xyz/index.php/vod/play/id/9438/sid/1/nid/1.html
-https://pp.91uu95.xyz:2200/20220221/PsqFng6P/index.m3u8
-
-https://pp.91uu95.xyz:2200/20250312/vu8WpB0g/1.jpg
-https://91uu95.xyz/index.php/vod/play/id/9437/sid/1/nid/1.html
-https://pp.91uu95.xyz:2200/20250312/vu8WpB0g/index.m3u8
-
-破解：
-直接根据图片猜测
-
-
-##  红杏视频  ❌
-
-2025年7月19日
-有几个免费视频，其他全部VIP且无试看
-
-```json5
-web:
-http://www.hxxxaa.com/
-
-free1:
-http://www.hxxxaa.com/vod/play/id/277812/sid/1/nid/1.html
-https://player.hgplayer00.com/20240731/dQJ3m1pd/index.m3u8
-
-free2:
-https://seseav.top/vod/play/id/185058/sid/1/nid/1.html
-/////[🔍关键词扫描器] 发现 1 条含 .m3u8 的内容：
-https://player.huanguaplay.com/20231122/6kLZ2pZ1/index.m3u8
-////////$searchKey函数已注入！$searchKey('_isVue')
-
-https://senlinzy.com 发现CMS资源站✅
-window['MacPlayer']['PlayUrl']
-'https://player.huanguaplay.com/20231122/6kLZ2pZ1/index.m3u8'
-
-https://v6.slv525627.com/20250829/Hp1OmY9j/index.m3u8
-```
 
 ##  海角社区 ✅
 
@@ -457,6 +371,84 @@ Swag
 https://ri306.xyz
 19J
 https://19jtv10.xyz
+
+## 91mba视频✅ 
+https://www.91.mba/
+
+免费：
+https://www.91.mba/video/VT_N2xun4y6O
+post: https://v2.cdn199.com/sevenVideos/VT_N2xun4y6O
+ "r": "U2Fs...”
+
+找解密代码，打断点
+var u = t.worker.decrypt(o);
+m3u8s: u.m3u8s
+"https://tm.xiaoxx.com/cUpRcRmASx729l1viK8nTA==,1758367959/6879da14d7c55c866b4ac6c2/index.m3u8"
+
+同理收费：
+"https://tm.xiaoxx.com/ehR3F0yMqxkohf8pGFWIAw==,1758367787/68a1673c6d49c639bca57c23/index.m3u8"
+
+故破解方法有2：
+1.扣代码，自己破解
+2.加劫持函数，获取破解结果
+
+## missav✅free
+https://missav.ws/cn/sone-782-chinese-subtitle
+
+https://surrit.com/e29b32e0-6b7b-4433-b74f-e59a88040bec/playlist.m3u8
+https://surrit.com/e29b32e0-6b7b-4433-b74f-e59a88040bec/720p/video.m3u8
+https://surrit.com/e29b32e0-6b7b-4433-b74f-e59a88040bec/360p/video.m3u8
+https://surrit.com/e29b32e0-6b7b-4433-b74f-e59a88040bec/480p/video.m3u8
+==> e29b32e0-6b7b-4433-b74f-e59a88040bec
+
+### 方法一：图片地址关联法✅
+https://nineyu.com/e29b32e0-6b7b-4433-b74f-e59a88040bec/seek/_0.jpg
+https://nineyu.com/e29b32e0-6b7b-4433-b74f-e59a88040bec/seek/_95.jpg
+
+### 方法二：m3u8搜索法✅
+eval(function(p,a,c,k,e,d){e=function(c){return c.toString(36)};if(!''.replace(/^/,String)){while(c--){d[c.toString(a)]=k[c]||c.toString(a)}k=[function(e){return d[e]}];e=function(){return'\\w+'};c=1};while(c--){if(k[c]){p=p.replace(new RegExp('\\b'+e(c)+'\\b','g'),k[c])}}return p}('e=\'8://7.6/5-4-3-2-1/d.0\';c=\'8://7.6/5-4-3-2-1/a/9.0\';b=\'8://7.6/5-4-3-2-1/a/9.0\';',15,15,'m3u8|e59a88040bec|b74f|4433|6b7b|e29b32e0|com|surrit|https|video|720p|source1280|source842|playlist|source'.split('|'),0,{}))
+输出结果：'https://surrit.com/e29b32e0-6b7b-4433-b74f-e59a88040bec/720p/video.m3u8'
+
+
+https://fourhoi.com/sone-605-chinese-subtitle/preview.mp4
+https://fourhoi.com/sone-782/preview.mp4
+
+2025年8月30日
+
+
+
+## 直接根据图片猜测
+
+### luoliwo ✅
+https://91uu95.xyz/
+https://pp.91uu95.xyz:2200/20250312/vu8WpB0g/1.jpg
+https://pp.91uu95.xyz:2200/20250312/vu8WpB0g/index.m3u8
+
+##  红杏视频  ❌
+
+2025年7月19日
+有几个免费视频，其他全部VIP且无试看
+
+```json5
+web:
+http://www.hxxxaa.com/
+
+free1:
+http://www.hxxxaa.com/vod/play/id/277812/sid/1/nid/1.html
+https://player.hgplayer00.com/20240731/dQJ3m1pd/index.m3u8
+
+free2:
+https://seseav.top/vod/play/id/185058/sid/1/nid/1.html
+/////[🔍关键词扫描器] 发现 1 条含 .m3u8 的内容：
+https://player.huanguaplay.com/20231122/6kLZ2pZ1/index.m3u8
+////////$searchKey函数已注入！$searchKey('_isVue')
+
+https://senlinzy.com 发现CMS资源站✅
+window['MacPlayer']['PlayUrl']
+'https://player.huanguaplay.com/20231122/6kLZ2pZ1/index.m3u8'
+
+https://v6.slv525627.com/20250829/Hp1OmY9j/index.m3u8
+```
 
 
 ## 逆向油猴脚本统一设计流程
