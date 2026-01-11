@@ -56,11 +56,11 @@ const SbCLi = (function() {
             // 获取匿名会话 ✅
             let gm_userId = await GM_getValue('user_id');// 使用 GM_getValue 实现跨域一致性 
             const { data: anonData, error: anonError } = await client.auth.getSession();
-            console.log('===获取匿名用户成功===', gm_userId, anonData, anonError);
+            GM_log('===获取匿名用户成功===', anonData, gm_userId, anonError);
             userId = anonData.session?.user?.id; //生效的ID
             if(userId){
                 if (gm_userId != userId) {
-                    console.log('===Session与GM存储的用户ID不一致===', userId, gm_userId);
+                    GM_log('===Session与GM存储的用户ID不一致===', userId, gm_userId);
                     GM_setValue('user_id', userId);
                 }
                 return;
@@ -88,7 +88,7 @@ const SbCLi = (function() {
                 }
             });
             
-            console.log('===注册匿名用户===', data, error);
+            GM_log('===注册匿名用户===', data, error);
             if (error) throw error;
             
             userId = data.session.user.id;
@@ -152,19 +152,35 @@ const SbCLi = (function() {
     /**
      * 加载消息历史
      * @param {number} limit - 加载消息数量
+     * @param {string} user_id - 用户ID，默认加载当前用户的消息，传入'all'加载所有用户的消息
      * @returns {Array} 消息历史数组
      */
-    async function loadHistory(limit = 20) {
+    async function loadHistory(limit = 20, user_id = userId) {
         if (!supabaseClient) {
             throw new Error('Supabase 客户端未初始化');
         }
         
         try {
-            const { data, error } = await supabaseClient
-                .from('video_bookmarks')
-                .select('*')
-                .order('created_at', { ascending: false })
-                .limit(limit);
+            let baseQuery;
+            
+            // 根据user_id参数决定查询范围
+            if (user_id === 'all') {
+                baseQuery = supabaseClient
+                    .from('video_bookmarks')
+                    .select('*')
+                    .order('created_at', { ascending: false })
+                    .limit(limit);
+            } else {
+                baseQuery = supabaseClient
+                    .from('video_bookmarks')
+                    .select('*')
+                    .eq('user_id', user_id)
+                    .order('created_at', { ascending: false })
+                    .limit(limit);
+            }
+            
+            // 执行查询
+            const { data, error } = await baseQuery;
             
             if (error) throw error;
             return data || [];
@@ -192,7 +208,7 @@ const SbCLi = (function() {
         try {
             const { data, error } = await supabaseClient
                 .from('video_bookmarks')
-                .insert({
+                .upsert({
                     "user_id": userId,
                     "url": msginfo.url || location.href,
                     "content": msginfo.content || document.title,
