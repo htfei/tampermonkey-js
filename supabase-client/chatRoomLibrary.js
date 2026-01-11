@@ -24,9 +24,9 @@ const ChatRoomLibrary = (function () {
     // 默认UI配置
     const DEFAULT_UI_CONFIG = {
         width: '360px',
-        height: '80vh',
-        position: { right: '5px', bottom: '90px' },
-        bubblePosition: { right: '5px', bottom: '20px' },
+        height: '75vh',
+        position: { right: '5px', bottom: '200px' },
+        bubblePosition: { right: '5px', bottom: '50px' },
         theme: {
             primary: '#8b5cf6',
             primaryLight: '#a78bfa',
@@ -158,12 +158,6 @@ const ChatRoomLibrary = (function () {
         const content = message.content || '';
         const mediaPattern = /(https?:\/\/.*?\.(?:png|jpg|gif|mp4|m3u8|webm|mp3)(?:\?[^\s\n]*)?)/gi;
         const elements = [];
-        if(message.video_url) {
-            const videoId = `${message.id}-video`;
-            elements.push(`<div style=" overflow: hidden; box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);">
-                <video controls style="max-width: 100%; height: auto; display: block;" id="${videoId}" poster="${message.image_url}" src="${message.video_url}" data-hls-src="${message.video_url}"></video>
-            </div>`);
-        }
 
         content.split('\n').forEach(text => {
             let remaining = text;
@@ -197,6 +191,19 @@ const ChatRoomLibrary = (function () {
             }
             if (remaining) elements.push(`<div style="margin-bottom: 8px;">${remaining}</div>`);
         });
+
+        if(message.video_url) {
+            const videoId = `${message.id}-video`;
+            const downurl = `https://tools.thatwind.com/tool/m3u8downloader#m3u8=${message.video_url}&referer=${message.url}&filename=${message.content}`;
+            elements.push(`<div style=" overflow: hidden; box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);">
+                <video controls style="max-width: 100%; height: auto; display: block;" id="${videoId}" poster="${message.image_url}" src="${message.video_url}" data-hls-src="${message.video_url}"></video>
+                <div style="display: flex; gap: 8px; padding: 8px; background: rgba(0, 0, 0, 0.1);">
+                    <a href="${message.video_url}" target="_blank" rel="noopener noreferrer" style="flex: 1; padding: 6px 12px; background: rgba(245, 94, 94, 0.8); color: white; text-decoration: none; border-radius: 4px; text-align: center; font-size: 12px; transition: background 0.2s ease;">📺新页打开</a>
+                    <a href="${downurl}" target="_blank" style="flex: 1; padding: 6px 12px; background: rgba(234, 194, 20, 0.8); color: white; text-decoration: none; border-radius: 4px; text-align: center; font-size: 12px; transition: background 0.2s ease;">⏬视频下载</a>
+                    <a href="${message.url}" target="_blank" rel="noopener noreferrer" style="flex: 1; padding: 6px 12px; background: rgba(19, 89, 229, 0.79); color: white; text-decoration: none; border-radius: 4px; text-align: center; font-size: 12px; transition: background 0.2s ease;">🌍原始网址</a>
+                </div>
+            </div>`);
+        }
 
         return elements.join('');
     }
@@ -835,8 +842,8 @@ const ChatRoomLibrary = (function () {
             this.resizeHandle.style.position = 'absolute';
             this.resizeHandle.style.bottom = '5px';
             this.resizeHandle.style.right = '5px';
-            this.resizeHandle.style.width = '25px'; // 增大尺寸，方便触摸
-            this.resizeHandle.style.height = '25px'; // 增大尺寸，方便触摸
+            this.resizeHandle.style.width = '15px'; // 增大尺寸，方便触摸
+            this.resizeHandle.style.height = '15px'; // 增大尺寸，方便触摸
             this.resizeHandle.style.backgroundColor = 'var(--primary-color)';
             this.resizeHandle.style.borderRadius = '50%';
             this.resizeHandle.style.cursor = 'nwse-resize';
@@ -916,10 +923,10 @@ const ChatRoomLibrary = (function () {
             let newHeight = this.container.initialHeight + dy;
             
             // 限制最小和最大尺寸
-            const minWidth = 300;
+            const minWidth = 360;
             const minHeight = 400;
-            const maxWidth = window.innerWidth * 0.8;
-            const maxHeight = window.innerHeight * 0.95;
+            const maxWidth = window.innerWidth * 1;
+            const maxHeight = window.innerHeight * 1;
             
             newWidth = Math.max(minWidth, Math.min(newWidth, maxWidth));
             newHeight = Math.max(minHeight, Math.min(newHeight, maxHeight));
