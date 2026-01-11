@@ -160,7 +160,7 @@ const ChatRoomLibrary = (function () {
         const elements = [];
         if(message.video_url) {
             const videoId = `${message.id}-video`;
-            elements.push(`<div style="margin: 10px 0; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);">
+            elements.push(`<div style=" overflow: hidden; box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);">
                 <video controls style="max-width: 100%; height: auto; display: block;" id="${videoId}" poster="${message.image_url}" src="${message.video_url}" data-hls-src="${message.video_url}"></video>
             </div>`);
         }
@@ -176,19 +176,19 @@ const ChatRoomLibrary = (function () {
 
                 let mediaTag = null;
                 if (url.match(/\.(png|jpg|gif)$/i)) {
-                    mediaTag = `<div style="margin: 10px 0; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2); transition: transform 0.2s ease;">
+                    mediaTag = `<div style=" overflow: hidden; box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2); transition: transform 0.2s ease;">
                         <img src="${url}?ts=${Date.now()}" referrerpolicy="no-referrer-when-downgrade" style="max-width: 100%; height: auto; display: block;" loading="lazy">
                     </div>`;
                 } else if (url.match(/\.(mp3)$/i)) {
-                    mediaTag = `<div style="margin: 10px 0;">
-                        <audio controls style="width: 100%; background: rgba(0, 0, 0, 0.05); border-radius: 12px; padding: 8px; border: none;" src="${url}"></audio>
+                    mediaTag = `<div style="">
+                        <audio controls style="width: 100%; background: rgba(0, 0, 0, 0.05); padding: 8px; border: none;" src="${url}"></audio>
                     </div>`;
                 } else if (url.match(/\.(mp4|webm)$/i)) {
-                    mediaTag = `<div style="margin: 10px 0; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);">
+                    mediaTag = `<div style=" overflow: hidden; box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);">
                         <video controls style="max-width: 100%; height: auto; display: block;" id="${media_id}" src="${url}"></video>
                     </div>`;
                 } else if (url.match(/\.(m3u8)$/i)) {
-                    mediaTag = `<div style="margin: 10px 0; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);">
+                    mediaTag = `<div style=" overflow: hidden; box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);">
                         <video controls style="max-width: 100%; height: auto; display: block;" id="${media_id}" data-hls-src="${url}" data-hls-observer="pending"></video>
                     </div>`;
                 }
@@ -225,12 +225,12 @@ const ChatRoomLibrary = (function () {
 
         return `
             <div style="
-                padding: 12px 16px;
+                padding: 9px 0 0 0;
                 background: ${isOwn ? 'linear-gradient(135deg, var(--chat-surface), var(--chat-surface-light))' : 'linear-gradient(135deg, var(--chat-surface), var(--chat-surface-light))'};
                 border-radius: ${isOwn ? '20px 20px 8px 20px' : '20px 20px 20px 8px'};
                 color: ${isOwn ? 'var(--chat-text)' : 'var(--chat-text)'};
                 box-shadow: ${isOwn ? '0 6px 20px rgba(0, 0, 0, 0.5)' : '0 6px 20px rgba(0, 0, 0, 0.5)'};
-                max-width: 98%;
+                max-width: 100%;
                 animation: fadeInUp 0.4s ease-out forwards;
                 opacity: 0;
                 transform: translateY(10px);
@@ -367,19 +367,33 @@ const ChatRoomLibrary = (function () {
             // 最小化气泡
             this.bubble = document.createElement('div');
             this.bubble.id = 'chat-bubble';
-            this.bubble.innerHTML = '<div id="chat-bubble-icon">💬</div>';
-            Object.assign(this.bubble.style, {
-                right: this.config.CHAT_UI.bubblePosition.right,
-                bottom: this.config.CHAT_UI.bubblePosition.bottom,
-                display: 'flex',
-                zIndex: '999999' // 提高z-index确保显示在最外层
-            });
             
-            // 添加点击事件
-            this.bubble.addEventListener('click', (e) => {
+            // 创建点击区域
+            const bubbleContent = document.createElement('div');
+            bubbleContent.id = 'chat-bubble-icon';
+            bubbleContent.textContent = '💬';
+            bubbleContent.style.width = '100%';
+            bubbleContent.style.height = '100%';
+            bubbleContent.style.display = 'flex';
+            bubbleContent.style.alignItems = 'center';
+            bubbleContent.style.justifyContent = 'center';
+            bubbleContent.style.cursor = 'pointer';
+            
+            // 添加点击事件到内容区域
+            bubbleContent.addEventListener('click', (e) => {
                 e.stopPropagation();
                 this.toggleMinimize();
             });
+            
+            this.bubble.appendChild(bubbleContent);
+            
+            Object.assign(this.bubble.style, {
+                right: this.config.CHAT_UI.bubblePosition.right,
+                bottom: this.config.CHAT_UI.bubblePosition.bottom,
+                zIndex: '999999' // 提高z-index确保显示在最外层
+            });
+            // 添加show类确保气泡显示
+            this.bubble.classList.add('show');
             
             // 添加拖拽功能
             this.makeBubbleDraggable();
@@ -390,7 +404,7 @@ const ChatRoomLibrary = (function () {
             this.messageArea = document.createElement('div');
             Object.assign(this.messageArea.style, {
                 flex: 1,
-                padding: '16px 12px',
+                padding: '16px 6px', // 减小左右内边距，为视频留出更多宽度
                 overflowY: 'auto',
                 color: 'var(--chat-text)',
                 display: 'flex',
@@ -413,10 +427,18 @@ const ChatRoomLibrary = (function () {
          * 切换最小化状态
          */
         toggleMinimize() {
-            const wasHidden = this.container.style.display === 'none';
-            this.isMinimized = !wasHidden;
-            const display = this.isMinimized ? 'none' : 'flex';
-            this.container.style.display = display;
+            // 计算当前状态
+            const wasHidden = this.container.style.display === 'none' || this.container.style.display === '';
+            
+            // 直接切换容器的显示状态
+            if (wasHidden) {
+                this.container.style.display = 'flex';
+                this.isMinimized = false;
+            } else {
+                this.container.style.display = 'none';
+                this.isMinimized = true;
+            }
+            // 气泡始终显示
             this.bubble.style.display = 'flex';
 
             // 只有首次从隐藏状态切换到显示状态时，才自动滚动到最新消息
@@ -566,23 +588,32 @@ const ChatRoomLibrary = (function () {
             
             // 绑定事件
             this.bubble.addEventListener('mousedown', (e) => this.startDrag(e));
-            this.bubble.addEventListener('touchstart', (e) => this.startDrag(e.touches[0]));
+            this.bubble.addEventListener('touchstart', (e) => {
+                // 不要在这里调用preventDefault()，以免阻止点击事件
+                this.startDrag(e.touches[0]);
+            });
             
             document.addEventListener('mousemove', (e) => this.drag(e));
-            document.addEventListener('touchmove', (e) => this.drag(e.touches[0]));
+            document.addEventListener('touchmove', (e) => {
+                // 只在拖拽过程中调用preventDefault()，防止页面滚动
+                if (this.isDragging) {
+                    e.preventDefault();
+                }
+                this.drag(e.touches[0]);
+            }, { passive: false });
             
             document.addEventListener('mouseup', (e) => this.stopDrag(e));
-            document.addEventListener('touchend', (e) => this.stopDrag(e));
-            
-            // 防止拖拽时触发点击事件
-            this.bubble.addEventListener('click', (e) => {
-                if (this.isDragAction) {
-                    this.isDragAction = false;
-                    e.stopPropagation();
-                    e.preventDefault();
-                    return false;
+            document.addEventListener('touchend', (e) => {
+                const touch = e.changedTouches[0];
+                if (touch) {
+                    this.stopDrag(touch);
+                } else {
+                    this.stopDrag(e);
                 }
             });
+            
+            // 移除点击事件监听器，因为点击事件处理已移到气泡内容区域
+            // 只保留拖拽相关的事件处理
         }
         
         /**
@@ -593,18 +624,14 @@ const ChatRoomLibrary = (function () {
             // 只有在气泡可见时才能拖拽
             if (this.bubble.style.display === 'none') return;
             
-            // 阻止默认行为和冒泡
-            e.preventDefault();
-            e.stopPropagation();
-            
             this.isDragging = true;
             this.startX = e.clientX;
             this.startY = e.clientY;
             
             // 获取初始位置
-            const computedStyle = window.getComputedStyle(this.bubble);
-            this.initialLeft = parseInt(computedStyle.left) || 0;
-            this.initialTop = parseInt(computedStyle.top) || 0;
+            const rect = this.bubble.getBoundingClientRect();
+            this.initialLeft = rect.left;
+            this.initialTop = rect.top;
             
             // 改变光标样式
             this.bubble.style.cursor = 'grabbing';
@@ -678,12 +705,12 @@ const ChatRoomLibrary = (function () {
             this.container.initialTop = 0;
             this.container.dragHandle = this.header;
             
-            // 绑定事件
+            // 绑定事件 - 参考悬浮UI库的实现
             this.container.dragHandle.addEventListener('mousedown', (e) => this.startContainerDrag(e));
-            this.container.dragHandle.addEventListener('touchstart', (e) => this.startContainerDrag(e.touches[0]));
+            this.container.dragHandle.addEventListener('touchstart', (e) => this.startContainerDrag(e), { passive: false });
             
             document.addEventListener('mousemove', (e) => this.dragContainer(e));
-            document.addEventListener('touchmove', (e) => this.dragContainer(e.touches[0]));
+            document.addEventListener('touchmove', (e) => this.dragContainer(e), { passive: false });
             
             document.addEventListener('mouseup', (e) => this.stopContainerDrag(e));
             document.addEventListener('touchend', (e) => this.stopContainerDrag(e));
@@ -707,23 +734,27 @@ const ChatRoomLibrary = (function () {
             // 只有在容器可见时才能拖拽
             if (this.container.style.display === 'none') return;
             
+            // 处理触摸事件对象
+            const event = e.touches ? e.touches[0] : e;
+            
             // 阻止默认行为和冒泡
             e.preventDefault();
             e.stopPropagation();
             
             this.container.isDragging = true;
-            this.container.startX = e.clientX;
-            this.container.startY = e.clientY;
+            this.container.startX = event.clientX;
+            this.container.startY = event.clientY;
             
             // 获取初始位置
-            const computedStyle = window.getComputedStyle(this.container);
-            this.container.initialLeft = parseInt(computedStyle.left) || 0;
-            this.container.initialTop = parseInt(computedStyle.top) || 0;
+            const rect = this.container.getBoundingClientRect();
+            this.container.initialLeft = rect.left;
+            this.container.initialTop = rect.top;
             
             // 改变光标样式
             this.container.dragHandle.style.cursor = 'grabbing';
             // 提高z-index，确保拖拽时在最上层
             this.container.style.zIndex = '999999';
+            
             // 添加拖拽时的视觉效果
             this.container.style.transform = 'scale(1.01)';
             this.container.style.transition = 'transform 0.1s ease';
@@ -736,9 +767,12 @@ const ChatRoomLibrary = (function () {
         dragContainer(e) {
             if (!this.container.isDragging) return;
             
+            // 处理触摸事件对象
+            const event = e.touches ? e.touches[0] : e;
+            
             // 计算位移
-            const dx = e.clientX - this.container.startX;
-            const dy = e.clientY - this.container.startY;
+            const dx = event.clientX - this.container.startX;
+            const dy = event.clientY - this.container.startY;
             
             // 计算新位置
             let newLeft = this.container.initialLeft + dx;
@@ -767,9 +801,12 @@ const ChatRoomLibrary = (function () {
          */
         stopContainerDrag(e) {
             if (this.container.isDragging) {
+                // 处理触摸事件对象
+                const event = e.changedTouches ? e.changedTouches[0] : e;
+                
                 // 计算拖拽距离
-                const dx = Math.abs(e.clientX - this.container.startX);
-                const dy = Math.abs(e.clientY - this.container.startY);
+                const dx = Math.abs(event.clientX - this.container.startX);
+                const dy = Math.abs(event.clientY - this.container.startY);
                 // 判断是否为拖拽操作
                 this.container.isDragAction = dx > 5 || dy > 5;
                 
@@ -798,14 +835,14 @@ const ChatRoomLibrary = (function () {
             this.resizeHandle.style.position = 'absolute';
             this.resizeHandle.style.bottom = '5px';
             this.resizeHandle.style.right = '5px';
-            this.resizeHandle.style.width = '15px';
-            this.resizeHandle.style.height = '15px';
+            this.resizeHandle.style.width = '25px'; // 增大尺寸，方便触摸
+            this.resizeHandle.style.height = '25px'; // 增大尺寸，方便触摸
             this.resizeHandle.style.backgroundColor = 'var(--primary-color)';
             this.resizeHandle.style.borderRadius = '50%';
             this.resizeHandle.style.cursor = 'nwse-resize';
             this.resizeHandle.style.zIndex = '1';
             this.resizeHandle.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.3)';
-            this.resizeHandle.style.transition = 'background-color 0.2s ease';
+            this.resizeHandle.style.transition = 'background-color 0.2s ease, transform 0.2s ease';
             
             // 添加悬停效果
             this.resizeHandle.addEventListener('mouseenter', () => {
@@ -818,12 +855,12 @@ const ChatRoomLibrary = (function () {
             
             this.container.appendChild(this.resizeHandle);
             
-            // 绑定事件
+            // 绑定事件 - 参考悬浮UI库的实现
             this.resizeHandle.addEventListener('mousedown', (e) => this.startContainerResize(e));
-            this.resizeHandle.addEventListener('touchstart', (e) => this.startContainerResize(e.touches[0]));
+            this.resizeHandle.addEventListener('touchstart', (e) => this.startContainerResize(e), { passive: false });
             
             document.addEventListener('mousemove', (e) => this.resizeContainer(e));
-            document.addEventListener('touchmove', (e) => this.resizeContainer(e.touches[0]));
+            document.addEventListener('touchmove', (e) => this.resizeContainer(e), { passive: false });
             
             document.addEventListener('mouseup', () => this.stopContainerResize());
             document.addEventListener('touchend', () => this.stopContainerResize());
@@ -837,13 +874,16 @@ const ChatRoomLibrary = (function () {
             // 只有在容器可见时才能调整大小
             if (this.container.style.display === 'none') return;
             
+            // 处理触摸事件对象
+            const event = e.touches ? e.touches[0] : e;
+            
             // 阻止默认行为和冒泡
             e.preventDefault();
             e.stopPropagation();
             
             this.container.isResizing = true;
-            this.container.resizeStartX = e.clientX;
-            this.container.resizeStartY = e.clientY;
+            this.container.resizeStartX = event.clientX;
+            this.container.resizeStartY = event.clientY;
             
             // 获取初始尺寸
             this.container.initialWidth = this.container.offsetWidth;
@@ -864,10 +904,12 @@ const ChatRoomLibrary = (function () {
         resizeContainer(e) {
             if (!this.container.isResizing) return;
             
-            // 直接计算和更新尺寸，避免使用 requestAnimationFrame 可能导致的延迟
+            // 处理触摸事件对象
+            const event = e.touches ? e.touches[0] : e;
+            
             // 计算位移
-            const dx = e.clientX - this.container.resizeStartX;
-            const dy = e.clientY - this.container.resizeStartY;
+            const dx = event.clientX - this.container.resizeStartX;
+            const dy = event.clientY - this.container.resizeStartY;
             
             // 计算新尺寸
             let newWidth = this.container.initialWidth + dx;
@@ -882,7 +924,7 @@ const ChatRoomLibrary = (function () {
             newWidth = Math.max(minWidth, Math.min(newWidth, maxWidth));
             newHeight = Math.max(minHeight, Math.min(newHeight, maxHeight));
             
-            // 直接更新尺寸，避免 requestAnimationFrame 可能导致的延迟
+            // 直接更新尺寸
             this.container.style.width = `${newWidth}px`;
             this.container.style.height = `${newHeight}px`;
         }
