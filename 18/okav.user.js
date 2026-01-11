@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        okav破解VIP视频免费看
 // @namespace    okav
-// @version      1.0.0
+// @version      1.0.1
 // @description  来不及解释了，快上车！！！
 // @author       w2f
 // @match        https://okav.2egkga7a.icu/
@@ -21,7 +21,7 @@
 // @require      https://unpkg.com/@supabase/supabase-js@2.49.3/dist/umd/supabase.js
 // @require      https://cdnjs.cloudflare.com/ajax/libs/hls.js/1.1.5/hls.min.js
 // @require      https://scriptcat.org/lib/5007/1.0.0/supabaseClientLibrary.js#sha256=6c8d52294e43c5f69f05b666f387328a540951d2d7adb80de68fa793fba567dd
-// @require      https://scriptcat.org/lib/5008/1.0.0/chatRoomLibrary.js#sha256=bb9051b859303bec9d390d184ec8989f3f2728b2dd067205f358ff48cd1201fc
+// @require      https://scriptcat.org/lib/5008/1.0.1/chatRoomLibrary.js#sha384=q3gl5E8UnOB6EevZgI7KI1TUu5lkBVijKu2b7rZgxXmY0dlze8XKr2oFZOK/9nQ1
 // @run-at       document-body
 // ==/UserScript==
 
