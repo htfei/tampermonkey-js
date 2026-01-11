@@ -378,7 +378,7 @@ const ChatRoomLibrary = (function () {
             // 创建点击区域
             const bubbleContent = document.createElement('div');
             bubbleContent.id = 'chat-bubble-icon';
-            bubbleContent.textContent = '💬';
+            bubbleContent.textContent = '📺';
             bubbleContent.style.width = '100%';
             bubbleContent.style.height = '100%';
             bubbleContent.style.display = 'flex';
