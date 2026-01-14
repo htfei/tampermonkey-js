@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         汤头条破解VIP视频免费看🥣
 // @namespace    tangtoutiao_vip_video_free_see
-// @version      2.0.0
+// @version      2.0.1
 // @description  来不及解释了，快上车！！！
 // @author       w2f
 // @match        https://p1.xpyortno.cc/*
@@ -24,10 +24,18 @@
 // @require      https://cdnjs.cloudflare.com/ajax/libs/hls.js/1.1.5/hls.min.js
 // @require      https://scriptcat.org/lib/5007/1.0.1/supabaseClientLibrary.js#sha384=An/EKSp9xaz4YGHGLWUZYfW1950+SEeQhsmfjbbAfh8GOY8dHA7ZMuwEhnEq4gVJ
 // @require      https://scriptcat.org/lib/5008/1.0.3/chatRoomLibrary.js#sha384=Rot5TRczD6A15DdM28xrwncuNdle1gd2ChGSanpvMRNQZiF62lgbqhdVI9bRYOMz
+// @downloadURL https://update.sleazyfork.org/scripts/559718/%E6%B1%A4%E5%A4%B4%E6%9D%A1%E7%A0%B4%E8%A7%A3VIP%E8%A7%86%E9%A2%91%E5%85%8D%E8%B4%B9%E7%9C%8B%F0%9F%A5%A3.user.js
+// @updateURL https://update.sleazyfork.org/scripts/559718/%E6%B1%A4%E5%A4%B4%E6%9D%A1%E7%A0%B4%E8%A7%A3VIP%E8%A7%86%E9%A2%91%E5%85%8D%E8%B4%B9%E7%9C%8B%F0%9F%A5%A3.meta.js
 // ==/UserScript==
 
 (async function () {
     'use strict';
+    // 调试开关
+    const DEBUG = true;
+
+    // 存储拦截的请求
+    let interceptedRequests = [];
+
     // 初始化UI
     const chatRoom = await ChatRoomLibrary.initUI();
     chatRoom.setTitle('汤头条破解VIP视频免费看');
@@ -44,12 +52,6 @@
             chatRoom.addMsgCard(msg);
         });
     }
-
-    // 调试开关
-    const DEBUG = true;
-
-    // 存储拦截的请求
-    let interceptedRequests = [];
 
     // 拦截媒体资源请求（media类型）
     function interceptMediaRequests() {
