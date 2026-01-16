@@ -43,8 +43,25 @@ const ChatRoomLibrary = (function () {
         }
     };
 
-    // 内部状态管理
-    let chatRoomInstance = null;
+    // 聊天室状态管理
+    let chatRoomConfig = null;
+    let container = null;
+    let bubble = null;
+    let messageArea = null;
+    let inputContainer = null;
+    let header = null;
+    let isFirstExpand = true;
+    let isMinimized = false;
+    let currentVideo = null;
+    let resizeFrameId = null;
+    
+    // 气泡拖拽状态
+    let isDragging = false;
+    let isDragAction = false;
+    let startX = 0;
+    let startY = 0;
+    let initialLeft = 0;
+    let initialTop = 0;
 
     /**
      * 注入样式
@@ -314,936 +331,874 @@ const ChatRoomLibrary = (function () {
     }
 
     /**
-     * 聊天室核心类
+     * 初始化聊天室UI
+     * @param {string} user_id - 用户ID
+     * @param {Object} config - 配置参数
+     * @returns {Object} 聊天室实例
      */
-    class ChatRoom {
-        /**
-         * 构造函数
-         * @param {Object} config - 配置参数
-         */
-        constructor(config) {
-            this.config = config;
-            this.isFirstExpand = true;
-            // 视频状态管理
-            this.currentVideo = null; // 当前播放的视频元素
-            // 调整大小状态管理
-            this.resizeFrameId = null; // requestAnimationFrame ID
-        }
+    function initUI(user_id, config = {}) {
+        userId = user_id;
+        // 合并配置
+        chatRoomConfig = {
+            ...config,
+            CHAT_UI: {
+                ...DEFAULT_UI_CONFIG,
+                ...config.CHAT_UI
+            }
+        };
 
-        /**
-         * 初始化UI
-         */
-        initUI() {
-            // 聊天窗口容器
-            this.container = document.createElement('div');
-            this.container.id = 'chat-container';
-            Object.assign(this.container.style, {
-                position: 'fixed',
-                right: this.config.CHAT_UI.position.right,
-                bottom: this.config.CHAT_UI.position.bottom,
-                width: `${this.config.CHAT_UI.width}`,
-                height: `${this.config.CHAT_UI.height}`,
-                maxHeight: '95vh',
-                backgroundColor: 'var(--chat-bg)',
-                borderRadius: '20px',
-                boxShadow: '0 20px 60px var(--shadow-color), 0 0 1px rgba(255,255,255,0.1) inset',
-                zIndex: 999998,
-                display: 'none',
-                flexDirection: 'column',
-                wordWrap: 'break-word',
-                overflowWrap: 'break-word',
-                boxSizing: 'border-box',
-                transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                resize: 'none'
-            });
+        // 注入样式
+        injectStyles(chatRoomConfig.CHAT_UI);
 
-            // 聊天窗口头部
-            this.header = document.createElement('div');
-            this.header.id = 'chat-header';
-            this.header.innerHTML = `
-                <div class="online-count">
-                    <span id="chat-title"></span>
-                    <span class="online-dot"></span>
-                    <span id="online-users"></span> 
-                </div>
-            `;
-            this.header.style.padding = '10px 24px';
-            this.header.style.cursor = 'grab'; // 设置初始光标样式为 grab，提示用户可以拖拽
-            this.container.appendChild(this.header);
-            
-            // 初始化容器拖拽和调整大小功能
-            this.initContainerDrag();
-            this.initContainerResize();
+        // 聊天窗口容器
+        container = document.createElement('div');
+        container.id = 'chat-container';
+        Object.assign(container.style, {
+            position: 'fixed',
+            right: chatRoomConfig.CHAT_UI.position.right,
+            bottom: chatRoomConfig.CHAT_UI.position.bottom,
+            width: `${chatRoomConfig.CHAT_UI.width}`,
+            height: `${chatRoomConfig.CHAT_UI.height}`,
+            maxHeight: '95vh',
+            backgroundColor: 'var(--chat-bg)',
+            borderRadius: '20px',
+            boxShadow: '0 20px 60px var(--shadow-color), 0 0 1px rgba(255,255,255,0.1) inset',
+            zIndex: 999998,
+            display: 'none',
+            flexDirection: 'column',
+            wordWrap: 'break-word',
+            overflowWrap: 'break-word',
+            boxSizing: 'border-box',
+            transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+            resize: 'none'
+        });
 
-            // 最小化气泡
-            this.bubble = document.createElement('div');
-            this.bubble.id = 'chat-bubble';
-            
-            // 创建点击区域
-            const bubbleContent = document.createElement('div');
-            bubbleContent.id = 'chat-bubble-icon';
-            bubbleContent.textContent = '📺';
-            bubbleContent.style.width = '100%';
-            bubbleContent.style.height = '100%';
-            bubbleContent.style.display = 'flex';
-            bubbleContent.style.alignItems = 'center';
-            bubbleContent.style.justifyContent = 'center';
-            bubbleContent.style.cursor = 'pointer';
-            
-            // 添加点击事件到内容区域
-            bubbleContent.addEventListener('click', (e) => {
-                e.stopPropagation();
-                this.toggleMinimize();
-            });
-            
-            this.bubble.appendChild(bubbleContent);
-            
-            Object.assign(this.bubble.style, {
-                right: this.config.CHAT_UI.bubblePosition.right,
-                bottom: this.config.CHAT_UI.bubblePosition.bottom,
-                zIndex: '999999' // 提高z-index确保显示在最外层
-            });
-            // 添加show类确保气泡显示
-            this.bubble.classList.add('show');
-            
-            // 添加拖拽功能
-            this.makeBubbleDraggable();
-            
-            document.body.appendChild(this.bubble);
+        // 聊天窗口头部
+        header = document.createElement('div');
+        header.id = 'chat-header';
+        header.innerHTML = `
+            <div class="online-count">
+                <span id="chat-title"></span>
+                <span class="online-dot"></span>
+                <span id="online-users"></span> 
+            </div>
+        `;
+        header.style.padding = '10px 24px';
+        header.style.cursor = 'grab'; // 设置初始光标样式为 grab，提示用户可以拖拽
+        container.appendChild(header);
+        
+        // 初始化容器拖拽功能
+        initContainerDrag();
 
-            // 创建消息区域
-            this.messageArea = document.createElement('div');
-            Object.assign(this.messageArea.style, {
-                flex: 1,
-                padding: '16px 6px', // 减小左右内边距，为视频留出更多宽度
-                overflowY: 'auto',
-                color: 'var(--chat-text)',
-                display: 'flex',
-                flexDirection: 'column',
-                gap: '12px'
-            });
-            this.messageArea.id = 'chat-messages';
+        // 最小化气泡
+        bubble = document.createElement('div');
+        bubble.id = 'chat-bubble';
+        
+        // 创建点击区域
+        const bubbleContent = document.createElement('div');
+        bubbleContent.id = 'chat-bubble-icon';
+        bubbleContent.textContent = '📺';
+        bubbleContent.style.width = '100%';
+        bubbleContent.style.height = '100%';
+        bubbleContent.style.display = 'flex';
+        bubbleContent.style.alignItems = 'center';
+        bubbleContent.style.justifyContent = 'center';
+        bubbleContent.style.cursor = 'pointer';
+        
+        // 添加点击事件到内容区域
+        bubbleContent.addEventListener('click', (e) => {
+            e.stopPropagation();
+            toggleMinimize();
+        });
+        
+        bubble.appendChild(bubbleContent);
+        
+        Object.assign(bubble.style, {
+            right: chatRoomConfig.CHAT_UI.bubblePosition.right,
+            bottom: chatRoomConfig.CHAT_UI.bubblePosition.bottom,
+            zIndex: '999999' // 提高z-index确保显示在最外层
+        });
+        // 添加show类确保气泡显示
+        bubble.classList.add('show');
+        
+        // 添加拖拽功能
+        makeBubbleDraggable();
+        
+        document.body.appendChild(bubble);
 
-            // 创建菜单按钮
-            this.inputContainer = document.createElement('div');
-            this.inputContainer.id = 'input-container';
-            this.inputContainer.style.padding = '12px';
-            this.inputContainer.style.borderTop = '1px solid var(--border-color)';
-            this.inputContainer.style.boxSizing = 'border-box';
-            this.inputContainer.style.background = 'var(--chat-surface)';
-            this.inputContainer.style.position = 'relative';
-            this.inputContainer.style.borderBottomLeftRadius = '20px';
-            this.inputContainer.style.borderBottomRightRadius = '20px';
-            
-            // 创建菜单按钮元素
-            const menuButton = document.createElement('button');
-            menuButton.textContent = '📋菜单';
-            menuButton.style.width = '100%';
-            menuButton.style.padding = '10px';
+        // 创建消息区域
+        messageArea = document.createElement('div');
+        Object.assign(messageArea.style, {
+            flex: 1,
+            padding: '16px 6px', // 减小左右内边距，为视频留出更多宽度
+            overflowY: 'auto',
+            color: 'var(--chat-text)',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '12px'
+        });
+        messageArea.id = 'chat-messages';
+
+        // 创建菜单按钮
+        inputContainer = document.createElement('div');
+        inputContainer.id = 'input-container';
+        inputContainer.style.padding = '12px';
+        inputContainer.style.borderTop = '1px solid var(--border-color)';
+        inputContainer.style.boxSizing = 'border-box';
+        inputContainer.style.background = 'var(--chat-surface)';
+        inputContainer.style.position = 'relative';
+        inputContainer.style.borderBottomLeftRadius = '20px';
+        inputContainer.style.borderBottomRightRadius = '20px';
+        
+        // 创建菜单按钮元素
+        const menuButton = document.createElement('button');
+        menuButton.textContent = '📋菜单';
+        menuButton.style.width = '100%';
+        menuButton.style.padding = '10px';
+        menuButton.style.background = 'var(--chat-surface-light)';
+        menuButton.style.color = 'var(--chat-text)';
+        menuButton.style.border = '1px solid var(--border-color)';
+        menuButton.style.borderRadius = '12px';
+        menuButton.style.fontSize = '14px';
+        menuButton.style.cursor = 'pointer';
+        menuButton.style.transition = 'all 0.2s ease';
+        menuButton.style.userSelect = 'none';
+        
+        // 添加悬停效果
+        menuButton.addEventListener('mouseenter', () => {
+            menuButton.style.background = 'var(--border-color)';
+            menuButton.style.transform = 'scale(1.02)';
+        });
+        
+        menuButton.addEventListener('mouseleave', () => {
             menuButton.style.background = 'var(--chat-surface-light)';
-            menuButton.style.color = 'var(--chat-text)';
-            menuButton.style.border = '1px solid var(--border-color)';
-            menuButton.style.borderRadius = '12px';
-            menuButton.style.fontSize = '14px';
-            menuButton.style.cursor = 'pointer';
-            menuButton.style.transition = 'all 0.2s ease';
-            menuButton.style.userSelect = 'none';
-            
-            // 添加悬停效果
-            menuButton.addEventListener('mouseenter', () => {
-                menuButton.style.background = 'var(--border-color)';
-                menuButton.style.transform = 'scale(1.02)';
-            });
-            
-            menuButton.addEventListener('mouseleave', () => {
-                menuButton.style.background = 'var(--chat-surface-light)';
-                menuButton.style.transform = 'scale(1)';
-            });
-            
-            // 创建菜单卡片
-            const menuCard = document.createElement('div');
-            menuCard.id = 'menu-card';
-            menuCard.style.position = 'absolute';
-            menuCard.style.bottom = '100%';
-            menuCard.style.left = '0';
-            menuCard.style.width = '100%';
-            menuCard.style.background = 'var(--chat-surface)';
-            menuCard.style.border = '1px solid var(--border-color)';
-            menuCard.style.borderRadius = '12px 12px 0 0';
-            menuCard.style.boxShadow = '0 -4px 16px rgba(0, 0, 0, 0.3)';
-            menuCard.style.zIndex = '1000000';
+            menuButton.style.transform = 'scale(1)';
+        });
+        
+        // 创建菜单卡片
+        const menuCard = document.createElement('div');
+        menuCard.id = 'menu-card';
+        menuCard.style.position = 'absolute';
+        menuCard.style.bottom = '100%';
+        menuCard.style.left = '0';
+        menuCard.style.width = '100%';
+        menuCard.style.background = 'var(--chat-surface)';
+        menuCard.style.border = '1px solid var(--border-color)';
+        menuCard.style.borderRadius = '12px 12px 0 0';
+        menuCard.style.boxShadow = '0 -4px 16px rgba(0, 0, 0, 0.3)';
+        menuCard.style.zIndex = '1000000';
+        menuCard.style.display = 'none';
+        menuCard.style.animation = 'slideIn 0.3s ease-out';
+        menuCard.style.padding = '12px';
+        menuCard.style.boxSizing = 'border-box';
+        
+        // 添加菜单按钮组
+        const menuButtonsContainer = document.createElement('div');
+        menuButtonsContainer.style.display = 'flex';
+        menuButtonsContainer.style.flexDirection = 'column';
+        menuButtonsContainer.style.gap = '8px';
+        
+        // 创建浏览历史按钮
+        const historyButton = document.createElement('button');
+        historyButton.textContent = '📜浏览历史';
+        historyButton.style.padding = '10px';
+        historyButton.style.background = 'var(--chat-surface)';
+        historyButton.style.color = 'var(--chat-text)';
+        historyButton.style.border = '1px solid var(--border-color)';
+        historyButton.style.borderRadius = '8px';
+        historyButton.style.fontSize = '14px';
+        historyButton.style.cursor = 'pointer';
+        historyButton.style.transition = 'all 0.2s ease';
+        historyButton.style.userSelect = 'none';
+        
+        // 添加点击事件（示例：可根据实际需求修改）
+        historyButton.addEventListener('click', async () => {
+            console.log('浏览历史按钮被点击');
+            let hisdata = await SbCLi.loadHistory(10);
+            if (hisdata) {
+                // 清空消息区域
+                messageArea.innerHTML = '';
+                hisdata.reverse().forEach(msg => { addMsgCard(msg) });
+            }
+            // 关闭菜单
             menuCard.style.display = 'none';
-            menuCard.style.animation = 'slideIn 0.3s ease-out';
-            menuCard.style.padding = '12px';
-            menuCard.style.boxSizing = 'border-box';
+        });
+        
+        // 创建Top10按钮
+        const top10Button = document.createElement('button');
+        top10Button.textContent = '🐳top10';
+        top10Button.style.padding = '10px';
+        top10Button.style.background = 'var(--chat-surface)';
+        top10Button.style.color = 'var(--chat-text)';
+        top10Button.style.border = '1px solid var(--border-color)';
+        top10Button.style.borderRadius = '8px';
+        top10Button.style.fontSize = '14px';
+        top10Button.style.cursor = 'pointer';
+        top10Button.style.transition = 'all 0.2s ease';
+        top10Button.style.userSelect = 'none';
+        
+        // 添加点击事件（示例：可根据实际需求修改）
+        top10Button.addEventListener('click', async () => {
+            console.log('Top10按钮被点击');
+            let hisdata = await SbCLi.loadHistory(10,"my_likes");
+            if (hisdata) {
+                // 清空消息区域
+                messageArea.innerHTML = '';
+                hisdata.reverse().forEach(msg => { addMsgCard(msg) });
+            }
+            // 关闭菜单
+            menuCard.style.display = 'none';
+        });
+        
+        // 创建我的信息按钮
+        const myInfoButton = document.createElement('button');
+        myInfoButton.textContent = '👤我的信息';
+        myInfoButton.style.padding = '10px';
+        myInfoButton.style.background = 'var(--chat-surface)';
+        myInfoButton.style.color = 'var(--chat-text)';
+        myInfoButton.style.border = '1px solid var(--border-color)';
+        myInfoButton.style.borderRadius = '8px';
+        myInfoButton.style.fontSize = '14px';
+        myInfoButton.style.cursor = 'pointer';
+        myInfoButton.style.transition = 'all 0.2s ease';
+        myInfoButton.style.userSelect = 'none';
+        
+        // 添加点击事件
+        myInfoButton.addEventListener('click', () => {
+            console.log('我的信息按钮被点击');
             
-            // 添加菜单按钮组
-            const menuButtonsContainer = document.createElement('div');
-            menuButtonsContainer.style.display = 'flex';
-            menuButtonsContainer.style.flexDirection = 'column';
-            menuButtonsContainer.style.gap = '8px';
+            // 关闭菜单
+            menuCard.style.display = 'none';
             
-            // 创建浏览历史按钮
-            const historyButton = document.createElement('button');
-            historyButton.textContent = '📜浏览历史';
-            historyButton.style.padding = '10px';
-            historyButton.style.background = 'var(--chat-surface)';
-            historyButton.style.color = 'var(--chat-text)';
-            historyButton.style.border = '1px solid var(--border-color)';
-            historyButton.style.borderRadius = '8px';
-            historyButton.style.fontSize = '14px';
-            historyButton.style.cursor = 'pointer';
-            historyButton.style.transition = 'all 0.2s ease';
-            historyButton.style.userSelect = 'none';
-            
-            // 添加点击事件（示例：可根据实际需求修改）
-            historyButton.addEventListener('click', async () => {
-                console.log('浏览历史按钮被点击');
-                let hisdata = await SbCLi.loadHistory(10);
-                if (hisdata) {
-                    // 清空消息区域
-                    this.messageArea.innerHTML = '';
-                    hisdata.reverse().forEach(msg => { chatRoomInstance.addMsgCard(msg) });
-                }
-                // 关闭菜单
-                menuCard.style.display = 'none';
-            });
-            
-            // 创建Top10按钮
-            const top10Button = document.createElement('button');
-            top10Button.textContent = '🐳top10';
-            top10Button.style.padding = '10px';
-            top10Button.style.background = 'var(--chat-surface)';
-            top10Button.style.color = 'var(--chat-text)';
-            top10Button.style.border = '1px solid var(--border-color)';
-            top10Button.style.borderRadius = '8px';
-            top10Button.style.fontSize = '14px';
-            top10Button.style.cursor = 'pointer';
-            top10Button.style.transition = 'all 0.2s ease';
-            top10Button.style.userSelect = 'none';
-            
-            // 添加点击事件（示例：可根据实际需求修改）
-            top10Button.addEventListener('click', async () => {
-                console.log('Top10按钮被点击');
-                let hisdata = await SbCLi.loadHistory(10,"my_likes");
-                if (hisdata) {
-                    // 清空消息区域
-                    this.messageArea.innerHTML = '';
-                    hisdata.reverse().forEach(msg => { chatRoomInstance.addMsgCard(msg) });
-                }
-                // 关闭菜单
-                menuCard.style.display = 'none';
-            });
-            
-            // 创建我的信息按钮
-            const myInfoButton = document.createElement('button');
-            myInfoButton.textContent = '👤我的信息';
-            myInfoButton.style.padding = '10px';
-            myInfoButton.style.background = 'var(--chat-surface)';
-            myInfoButton.style.color = 'var(--chat-text)';
-            myInfoButton.style.border = '1px solid var(--border-color)';
-            myInfoButton.style.borderRadius = '8px';
-            myInfoButton.style.fontSize = '14px';
-            myInfoButton.style.cursor = 'pointer';
-            myInfoButton.style.transition = 'all 0.2s ease';
-            myInfoButton.style.userSelect = 'none';
-            
-            // 添加点击事件
-            myInfoButton.addEventListener('click', () => {
-                console.log('我的信息按钮被点击');
-                
-                // 关闭菜单
-                menuCard.style.display = 'none';
-                
-                // 创建并显示我的信息卡片
-                this.showMyInfoCard();
-            });
-            
-            // 将按钮添加到容器
-            menuButtonsContainer.appendChild(historyButton);
-            menuButtonsContainer.appendChild(top10Button);
-            menuButtonsContainer.appendChild(myInfoButton);
-            
-            // 将按钮容器添加到菜单卡片
-            menuCard.appendChild(menuButtonsContainer);
-            
-            // 菜单按钮点击事件
-            menuButton.addEventListener('click', () => {
-                // 切换菜单显示状态
-                if (menuCard.style.display === 'none' || menuCard.style.display === '') {
-                    menuCard.style.display = 'block';
-                } else {
-                    menuCard.style.display = 'none';
-                }
-            });
-            
-            // 将按钮和菜单卡片添加到输入容器
-            this.inputContainer.appendChild(menuButton);
-            this.inputContainer.appendChild(menuCard);
-            
-            // 点击外部关闭菜单
-            document.addEventListener('click', (e) => {
-                if (!this.inputContainer.contains(e.target)) {
-                    menuCard.style.display = 'none';
-                }
-            });
-
-            this.container.append(this.messageArea, this.inputContainer);
-            document.body.appendChild(this.container);
-
-            // UI初始化后自动打开容器并加载我的信息
-            this.toggleMinimize();
-            this.showMyInfoCard();
-
-            return this;
-        }
-
-        /**
-         * 切换最小化状态
-         */
-        toggleMinimize() {
-            // 计算当前状态
-            const wasHidden = this.container.style.display === 'none' || this.container.style.display === '';
-            
-            // 直接切换容器的显示状态
-            if (wasHidden) {
-                this.container.style.display = 'flex';
-                this.isMinimized = false;
+            // 创建并显示我的信息卡片
+            showMyInfoCard();
+        });
+        
+        // 将按钮添加到容器
+        menuButtonsContainer.appendChild(historyButton);
+        menuButtonsContainer.appendChild(top10Button);
+        menuButtonsContainer.appendChild(myInfoButton);
+        
+        // 将按钮容器添加到菜单卡片
+        menuCard.appendChild(menuButtonsContainer);
+        
+        // 菜单按钮点击事件
+        menuButton.addEventListener('click', () => {
+            // 切换菜单显示状态
+            if (menuCard.style.display === 'none' || menuCard.style.display === '') {
+                menuCard.style.display = 'block';
             } else {
-                this.container.style.display = 'none';
-                this.isMinimized = true;
+                menuCard.style.display = 'none';
             }
-            // 气泡始终显示
-            this.bubble.style.display = 'flex';
+        });
+        
+        // 将按钮和菜单卡片添加到输入容器
+        inputContainer.appendChild(menuButton);
+        inputContainer.appendChild(menuCard);
+        
+        // 点击外部关闭菜单
+        document.addEventListener('click', (e) => {
+            if (!inputContainer.contains(e.target)) {
+                menuCard.style.display = 'none';
+            }
+        });
 
-            // 只有首次从隐藏状态切换到显示状态时，才自动滚动到最新消息
-            if (wasHidden && this.isFirstExpand) {
-                this.scrollToBottom();
-                this.isFirstExpand = false;
-            }
+        container.append(messageArea, inputContainer);
+        document.body.appendChild(container);
 
-            // 视频状态处理
-            if (this.isMinimized) {
-                // 最小化时，暂停当前播放的视频
-                if (this.currentVideo) {
-                    this.currentVideo.pause();
-                }
-            }
-            else {
-                // 最大化时，恢复之前的视频播放状态
-                if (this.currentVideo) {
-                    this.currentVideo.play().catch(err => console.error('恢复视频播放失败:', err));
-                }
-            }
+        // UI初始化后自动打开容器并加载我的信息
+        toggleMinimize();
+        showMyInfoCard();
+
+
+        return {
+            container,
+            bubble,
+            messageArea,
+            toggleMinimize,
+            addMsgCard,
+            updateOnlineCount,
+            setTitle
+        };
+    }
+
+    /**
+     * 切换最小化状态
+     */
+    function toggleMinimize() {
+        // 计算当前状态
+        const wasHidden = container.style.display === 'none' || container.style.display === '';
+        
+        // 直接切换容器的显示状态
+        if (wasHidden) {
+            container.style.display = 'flex';
+            isMinimized = false;
+        } else {
+            container.style.display = 'none';
+            isMinimized = true;
+        }
+        // 气泡始终显示
+        bubble.style.display = 'flex';
+
+        // 只有首次从隐藏状态切换到显示状态时，才自动滚动到最新消息
+        if (wasHidden && isFirstExpand) {
+            scrollToBottom();
+            isFirstExpand = false;
         }
 
-        /**
-         * 添加消息卡片到聊天界面
-         * @param {Object} message - 消息对象
-         * @param {boolean} isOwn - 是否为自己发送的消息
-         */
-        addMsgCard(message, isOwn = false) {
-            if (!message) {
-                console.error('消息对象不能为空');
-                return;
-            }
-
-            // 确保消息有必要的属性
-            message = {
-                id: message.id || Date.now(),
-                user_id: message.user_id || userId,
-                content: message.content || document.title,
-                created_at: message.created_at || new Date().toISOString(),
-                likes: message.likes || 0,
-                like_list: message.like_list || [],
-                ...message
-            };
-
-            const msgElement = document.createElement('div');
-            Object.assign(msgElement.style, {
-                display: 'flex',
-                width: '100%',
-                margin: '12px 0',
-                justifyContent: isOwn ? 'flex-end' : 'flex-start'
-            });
-
-            // 消息渲染
-            try {
-                const bubbleHTML = renderMessageBubble(message, isOwn);
-                if (typeof bubbleHTML === 'string' && bubbleHTML.length > 0) {
-                    msgElement.innerHTML = bubbleHTML;
-                } else {
-                    console.error('消息渲染异常:', { message, isOwn });
-                    msgElement.innerHTML = `<div style="color: var(--chat-text); padding: 10px; background: var(--chat-surface); border-radius: 8px;">消息渲染失败</div>`;
-                }
-            } catch (e) {
-                console.error('消息加载失败:', e);
-                msgElement.innerHTML = `<div style="color: var(--chat-text); padding: 10px; background: var(--chat-surface); border-radius: 8px;">消息加载失败</div>`;
-            }
-
-            this.messageArea.appendChild(msgElement);
-
-            // 初始化视频事件监听
-            const setupVideoEventListeners = (video) => {
-                // 监听视频播放事件
-                video.addEventListener('play', () => {
-                    // 暂停其他所有视频
-                    document.querySelectorAll('video').forEach(otherVideo => {
-                        if (otherVideo !== video && !otherVideo.paused) {
-                            otherVideo.pause();
-                        }
-                    });
-                    // 更新当前视频状态
-                    this.currentVideo = video;
-                });
-
-                // 监听视频结束事件
-                video.addEventListener('ended', () => {
-                    if (this.currentVideo === video) {
-                        this.currentVideo = null;
-                    }
-                });
-            };
-
-            // 初始化HLS视频
-            msgElement.querySelectorAll('video[data-hls-src]').forEach(video => {
-                const hlsSrc = video.dataset.hlsSrc;
-                initHlsPlayer(video, hlsSrc);
-                setupVideoEventListeners(video);
-            });
-
-            // 初始化普通视频
-            msgElement.querySelectorAll('video:not([data-hls-src])').forEach(video => {
-                setupVideoEventListeners(video);
-            });
-
-            // 为力赞按钮添加事件监听器
-            msgElement.querySelectorAll('.favorite-btn').forEach(btn => {
-                btn.addEventListener('click', () => {
-                    message.likes += 1;
-                    btn.textContent = `🐳+${message.likes}`;
-                    if (!message.like_list.includes(userId)) {
-                        message.like_list.push(userId);
-                    }
-                    // 检查SbCLi是否可用
-                    if (typeof SbCLi !== 'undefined') {
-                        // 发送力赞消息
-                        SbCLi.sendMessage(message);
-                    } else {
-                        alert('力赞功能需要先初始化Supabase客户端');
-                    }
-                });
-            });
-
-            this.scrollToBottom();
-        }
-
-        /**
-         * 滚动到底部
-         */
-        scrollToBottom() {
-            this.messageArea.scrollTo({
-                top: this.messageArea.scrollHeight,
-                behavior: 'smooth'
-            });
-        }
-
-        /**
-         * 更新在线人数
-         * @param {number} count - 在线人数
-         */
-        updateOnlineCount(count) {
-            const counter = document.getElementById('online-users');
-            if (counter) {
-                counter.textContent = count > 1 ? `${count} 人在线` : '';
-                counter.style.fontWeight = count > 0 ? '600' : '400';
+        // 视频状态处理
+        if (isMinimized) {
+            // 最小化时，暂停当前播放的视频
+            if (currentVideo) {
+                currentVideo.pause();
             }
         }
-
-        /*
-         * 设置聊天室标题
-         */
-        setTitle(title) {
-            const titleElement = document.getElementById('chat-title');
-            if (titleElement) {
-                titleElement.textContent = title;
-            }
-        }
-        
-        /**
-         * 显示我的信息卡片
-         */
-        showMyInfoCard() {
-            // 清空消息区域
-            this.messageArea.innerHTML = '';
-            
-            // 获取用户信息
-            const regTime = new Date().toLocaleString('zh-CN');
-            
-            // 创建信息卡片
-            const infoCard = document.createElement('div');
-            infoCard.style.padding = '16px';
-            infoCard.style.background = 'var(--chat-surface)';
-            infoCard.style.borderRadius = '12px';
-            infoCard.style.boxShadow = '0 4px 16px rgba(0, 0, 0, 0.2)';
-            infoCard.style.margin = '20px auto';
-            infoCard.style.maxWidth = '90%';
-            infoCard.style.textAlign = 'center';
-            infoCard.style.animation = 'fadeInUp 0.4s ease-out forwards';
-            infoCard.style.opacity = '0';
-            infoCard.style.transform = 'translateY(10px)';
-            
-            // 创建卡片内容
-            infoCard.innerHTML = `
-                <h3 style="color: var(--chat-text); margin-bottom: 16px; font-size: 18px;">👤 我的信息</h3>
-                <div style="margin-bottom: 12px; padding: 10px; background: var(--chat-surface-light); border-radius: 8px;">
-                    <p style="color: var(--chat-text-secondary); font-size: 14px; margin: 0;">匿名用户ID</p>
-                    <p style="color: var(--chat-text); font-size: 16px; margin: 4px 0 0 0; word-break: break-all;">${userId}</p>
-                </div>
-                <div style="margin-bottom: 12px; padding: 10px; background: var(--chat-surface-light); border-radius: 8px;">
-                    <p style="color: var(--chat-text-secondary); font-size: 14px; margin: 0;">注册时间</p>
-                    <p style="color: var(--chat-text); font-size: 16px; margin: 4px 0 0 0;">${regTime}</p>
-                </div>
-                <div style="margin-top: 20px; color: var(--chat-text-secondary); font-size: 12px;">
-                    <p>💡 提示：这是您的匿名用户信息</p>
-                </div>
-            `;
-            
-            // 添加到消息区域
-            this.messageArea.appendChild(infoCard);
-        }
-        
-        /**
-         * 使气泡可拖拽
-         */
-        makeBubbleDraggable() {
-            this.isDragging = false;
-            this.isDragAction = false;
-            this.startX = 0;
-            this.startY = 0;
-            this.initialLeft = 0;
-            this.initialTop = 0;
-            
-            // 绑定事件
-            this.bubble.addEventListener('mousedown', (e) => this.startDrag(e));
-            this.bubble.addEventListener('touchstart', (e) => {
-                // 不要在这里调用preventDefault()，以免阻止点击事件
-                this.startDrag(e.touches[0]);
-            });
-            
-            document.addEventListener('mousemove', (e) => this.drag(e));
-            document.addEventListener('touchmove', (e) => {
-                // 只在拖拽过程中调用preventDefault()，防止页面滚动
-                if (this.isDragging) {
-                    e.preventDefault();
-                }
-                this.drag(e.touches[0]);
-            }, { passive: false });
-            
-            document.addEventListener('mouseup', (e) => this.stopDrag(e));
-            document.addEventListener('touchend', (e) => {
-                const touch = e.changedTouches[0];
-                if (touch) {
-                    this.stopDrag(touch);
-                } else {
-                    this.stopDrag(e);
-                }
-            });
-            
-            // 移除点击事件监听器，因为点击事件处理已移到气泡内容区域
-            // 只保留拖拽相关的事件处理
-        }
-        
-        /**
-         * 开始拖动
-         * @param {MouseEvent|Touch} e - 鼠标或触摸事件
-         */
-        startDrag(e) {
-            // 只有在气泡可见时才能拖拽
-            if (this.bubble.style.display === 'none') return;
-            
-            this.isDragging = true;
-            this.startX = e.clientX;
-            this.startY = e.clientY;
-            
-            // 获取初始位置
-            const rect = this.bubble.getBoundingClientRect();
-            this.initialLeft = rect.left;
-            this.initialTop = rect.top;
-            
-            // 改变光标样式
-            this.bubble.style.cursor = 'grabbing';
-            // 添加拖拽时的视觉效果
-            this.bubble.style.transform = 'scale(1.05)';
-            this.bubble.style.transition = 'transform 0.1s ease';
-        }
-        
-        /**
-         * 拖动过程
-         * @param {MouseEvent|Touch} e - 鼠标或触摸事件
-         */
-        drag(e) {
-            if (!this.isDragging) return;
-            
-            // 计算位移
-            const dx = e.clientX - this.startX;
-            const dy = e.clientY - this.startY;
-            
-            // 计算新位置
-            let newLeft = this.initialLeft + dx;
-            let newTop = this.initialTop + dy;
-            
-            // 限制在可视区域内
-            const windowWidth = window.innerWidth;
-            const windowHeight = window.innerHeight;
-            const bubbleWidth = this.bubble.offsetWidth;
-            const bubbleHeight = this.bubble.offsetHeight;
-            
-            newLeft = Math.max(0, Math.min(newLeft, windowWidth - bubbleWidth));
-            newTop = Math.max(0, Math.min(newTop, windowHeight - bubbleHeight));
-            
-            // 更新位置
-            this.bubble.style.left = `${newLeft}px`;
-            this.bubble.style.top = `${newTop}px`;
-            // 清除原来的right和bottom样式
-            this.bubble.style.right = 'auto';
-            this.bubble.style.bottom = 'auto';
-        }
-        
-        /**
-         * 结束拖动
-         * @param {MouseEvent|Touch} e - 鼠标或触摸事件
-         */
-        stopDrag(e) {
-            if (this.isDragging) {
-                // 计算拖拽距离
-                const dx = Math.abs(e.clientX - this.startX);
-                const dy = Math.abs(e.clientY - this.startY);
-                // 判断是否为拖拽操作
-                this.isDragAction = dx > 5 || dy > 5;
-                
-                // 恢复样式
-                this.isDragging = false;
-                this.bubble.style.cursor = 'pointer';
-                this.bubble.style.zIndex = '999999'; // 保持最高层级
-                this.bubble.style.transform = 'scale(1)';
-                this.bubble.style.transition = 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
-            }
-        }
-        
-        /**
-         * 初始化容器拖拽功能
-         */
-        initContainerDrag() {
-            this.container.isDragging = false;
-            this.container.isDragAction = false;
-            this.container.startX = 0;
-            this.container.startY = 0;
-            this.container.initialLeft = 0;
-            this.container.initialTop = 0;
-            this.container.dragHandle = this.header;
-            
-            // 绑定事件 - 参考悬浮UI库的实现
-            this.container.dragHandle.addEventListener('mousedown', (e) => this.startContainerDrag(e));
-            this.container.dragHandle.addEventListener('touchstart', (e) => this.startContainerDrag(e), { passive: false });
-            
-            document.addEventListener('mousemove', (e) => this.dragContainer(e));
-            document.addEventListener('touchmove', (e) => this.dragContainer(e), { passive: false });
-            
-            document.addEventListener('mouseup', (e) => this.stopContainerDrag(e));
-            document.addEventListener('touchend', (e) => this.stopContainerDrag(e));
-            
-            // 防止拖拽时触发点击事件
-            this.container.dragHandle.addEventListener('click', (e) => {
-                if (this.container.isDragAction) {
-                    this.container.isDragAction = false;
-                    e.stopPropagation();
-                    e.preventDefault();
-                    return false;
-                }
-            });
-        }
-        
-        /**
-         * 开始容器拖动
-         * @param {MouseEvent|Touch} e - 鼠标或触摸事件
-         */
-        startContainerDrag(e) {
-            // 只有在容器可见时才能拖拽
-            if (this.container.style.display === 'none') return;
-            
-            // 处理触摸事件对象
-            const event = e.touches ? e.touches[0] : e;
-            
-            // 阻止默认行为和冒泡
-            e.preventDefault();
-            e.stopPropagation();
-            
-            this.container.isDragging = true;
-            this.container.startX = event.clientX;
-            this.container.startY = event.clientY;
-            
-            // 获取初始位置
-            const rect = this.container.getBoundingClientRect();
-            this.container.initialLeft = rect.left;
-            this.container.initialTop = rect.top;
-            
-            // 改变光标样式
-            this.container.dragHandle.style.cursor = 'grabbing';
-            // 提高z-index，确保拖拽时在最上层
-            this.container.style.zIndex = '999999';
-            
-            // 添加拖拽时的视觉效果
-            this.container.style.transform = 'scale(1.01)';
-            this.container.style.transition = 'transform 0.1s ease';
-        }
-        
-        /**
-         * 拖动容器
-         * @param {MouseEvent|Touch} e - 鼠标或触摸事件
-         */
-        dragContainer(e) {
-            if (!this.container.isDragging) return;
-            
-            // 处理触摸事件对象
-            const event = e.touches ? e.touches[0] : e;
-            
-            // 计算位移
-            const dx = event.clientX - this.container.startX;
-            const dy = event.clientY - this.container.startY;
-            
-            // 计算新位置
-            let newLeft = this.container.initialLeft + dx;
-            let newTop = this.container.initialTop + dy;
-            
-            // 限制在可视区域内
-            const windowWidth = window.innerWidth;
-            const windowHeight = window.innerHeight;
-            const containerWidth = this.container.offsetWidth;
-            const containerHeight = this.container.offsetHeight;
-            
-            newLeft = Math.max(0, Math.min(newLeft, windowWidth - containerWidth));
-            newTop = Math.max(0, Math.min(newTop, windowHeight - containerHeight));
-            
-            // 更新位置
-            this.container.style.left = `${newLeft}px`;
-            this.container.style.top = `${newTop}px`;
-            // 清除原来的right和bottom样式
-            this.container.style.right = 'auto';
-            this.container.style.bottom = 'auto';
-        }
-        
-        /**
-         * 结束容器拖动
-         * @param {MouseEvent|Touch} e - 鼠标或触摸事件
-         */
-        stopContainerDrag(e) {
-            if (this.container.isDragging) {
-                // 处理触摸事件对象
-                const event = e.changedTouches ? e.changedTouches[0] : e;
-                
-                // 计算拖拽距离
-                const dx = Math.abs(event.clientX - this.container.startX);
-                const dy = Math.abs(event.clientY - this.container.startY);
-                // 判断是否为拖拽操作
-                this.container.isDragAction = dx > 5 || dy > 5;
-                
-                // 恢复样式
-                this.container.isDragging = false;
-                this.container.dragHandle.style.cursor = 'grab';
-                this.container.style.zIndex = '999998';
-                // 恢复视觉效果
-                this.container.style.transform = 'scale(1)';
-                this.container.style.transition = 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
-            }
-        }
-        
-        /**
-         * 初始化容器调整大小功能
-         */
-        initContainerResize() {
-            this.container.isResizing = false;
-            this.container.resizeStartX = 0;
-            this.container.resizeStartY = 0;
-            this.container.initialWidth = 0;
-            this.container.initialHeight = 0;
-            
-            // 创建调整大小的手柄
-            this.resizeHandle = document.createElement('div');
-            this.resizeHandle.style.position = 'absolute';
-            this.resizeHandle.style.bottom = '5px';
-            this.resizeHandle.style.right = '5px';
-            this.resizeHandle.style.width = '15px'; // 增大尺寸，方便触摸
-            this.resizeHandle.style.height = '15px'; // 增大尺寸，方便触摸
-            this.resizeHandle.style.backgroundColor = 'var(--primary-color)';
-            this.resizeHandle.style.borderRadius = '50%';
-            this.resizeHandle.style.cursor = 'nwse-resize';
-            this.resizeHandle.style.zIndex = '1';
-            this.resizeHandle.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.3)';
-            this.resizeHandle.style.transition = 'background-color 0.2s ease, transform 0.2s ease';
-            
-            // 添加悬停效果
-            this.resizeHandle.addEventListener('mouseenter', () => {
-                this.resizeHandle.style.backgroundColor = 'var(--primary-light)';
-            });
-            
-            this.resizeHandle.addEventListener('mouseleave', () => {
-                this.resizeHandle.style.backgroundColor = 'var(--primary-color)';
-            });
-            
-            this.container.appendChild(this.resizeHandle);
-            
-            // 绑定事件 - 参考悬浮UI库的实现
-            this.resizeHandle.addEventListener('mousedown', (e) => this.startContainerResize(e));
-            this.resizeHandle.addEventListener('touchstart', (e) => this.startContainerResize(e), { passive: false });
-            
-            document.addEventListener('mousemove', (e) => this.resizeContainer(e));
-            document.addEventListener('touchmove', (e) => this.resizeContainer(e), { passive: false });
-            
-            document.addEventListener('mouseup', () => this.stopContainerResize());
-            document.addEventListener('touchend', () => this.stopContainerResize());
-        }
-        
-        /**
-         * 开始容器调整大小
-         * @param {MouseEvent|Touch} e - 鼠标或触摸事件
-         */
-        startContainerResize(e) {
-            // 只有在容器可见时才能调整大小
-            if (this.container.style.display === 'none') return;
-            
-            // 处理触摸事件对象
-            const event = e.touches ? e.touches[0] : e;
-            
-            // 阻止默认行为和冒泡
-            e.preventDefault();
-            e.stopPropagation();
-            
-            this.container.isResizing = true;
-            this.container.resizeStartX = event.clientX;
-            this.container.resizeStartY = event.clientY;
-            
-            // 获取初始尺寸
-            this.container.initialWidth = this.container.offsetWidth;
-            this.container.initialHeight = this.container.offsetHeight;
-            
-            // 提高z-index，确保调整大小时在最上层
-            this.container.style.zIndex = '999999';
-            
-            // 添加调整大小时的视觉效果
-            this.resizeHandle.style.transform = 'scale(1.2)';
-            this.resizeHandle.style.transition = 'transform 0.1s ease';
-        }
-        
-        /**
-         * 调整容器大小
-         * @param {MouseEvent|Touch} e - 鼠标或触摸事件
-         */
-        resizeContainer(e) {
-            if (!this.container.isResizing) return;
-            
-            // 处理触摸事件对象
-            const event = e.touches ? e.touches[0] : e;
-            
-            // 计算位移
-            const dx = event.clientX - this.container.resizeStartX;
-            const dy = event.clientY - this.container.resizeStartY;
-            
-            // 计算新尺寸
-            let newWidth = this.container.initialWidth + dx;
-            let newHeight = this.container.initialHeight + dy;
-            
-            // 限制最小和最大尺寸
-            const minWidth = 360;
-            const minHeight = 400;
-            const maxWidth = window.innerWidth * 1;
-            const maxHeight = window.innerHeight * 1;
-            
-            newWidth = Math.max(minWidth, Math.min(newWidth, maxWidth));
-            newHeight = Math.max(minHeight, Math.min(newHeight, maxHeight));
-            
-            // 直接更新尺寸
-            this.container.style.width = `${newWidth}px`;
-            this.container.style.height = `${newHeight}px`;
-        }
-        
-        /**
-         * 结束容器调整大小
-         */
-        stopContainerResize() {
-            if (this.container.isResizing) {
-                this.container.isResizing = false;
-                this.container.style.zIndex = '999998';
-                
-                // 恢复调整大小手柄的视觉效果
-                this.resizeHandle.style.transform = 'scale(1)';
-                this.resizeHandle.style.transition = 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
+        else {
+            // 最大化时，恢复之前的视频播放状态
+            if (currentVideo) {
+                currentVideo.play().catch(err => console.error('恢复视频播放失败:', err));
             }
         }
     }
 
     /**
-     * 库的公共API
+     * 添加消息卡片到聊天界面
+     * @param {Object} message - 消息对象
+     * @param {boolean} isOwn - 是否为自己发送的消息，可选，默认为false
+     */
+    function addMsgCard(message, isOwn = false) {
+        if (!messageArea) {
+            console.error('聊天室UI未初始化，请先调用 initUI()');
+            return;
+        }
+
+        if (!message) {
+            console.error('消息对象不能为空');
+            return;
+        }
+
+        // 确保消息有必要的属性
+        message = {
+            id: message.id || Date.now(),
+            user_id: message.user_id || userId,
+            content: message.content || document.title,
+            created_at: message.created_at || new Date().toISOString(),
+            likes: message.likes || 0,
+            like_list: message.like_list || [],
+            ...message
+        };
+
+        const msgElement = document.createElement('div');
+        Object.assign(msgElement.style, {
+            display: 'flex',
+            width: '100%',
+            margin: '12px 0',
+            justifyContent: isOwn ? 'flex-end' : 'flex-start'
+        });
+
+        // 消息渲染
+        try {
+            const bubbleHTML = renderMessageBubble(message, isOwn);
+            if (typeof bubbleHTML === 'string' && bubbleHTML.length > 0) {
+                msgElement.innerHTML = bubbleHTML;
+            } else {
+                console.error('消息渲染异常:', { message, isOwn });
+                msgElement.innerHTML = `<div style="color: var(--chat-text); padding: 10px; background: var(--chat-surface); border-radius: 8px;">消息渲染失败</div>`;
+            }
+        } catch (e) {
+            console.error('消息加载失败:', e);
+            msgElement.innerHTML = `<div style="color: var(--chat-text); padding: 10px; background: var(--chat-surface); border-radius: 8px;">消息加载失败</div>`;
+        }
+
+        messageArea.appendChild(msgElement);
+
+        // 初始化视频事件监听
+        const setupVideoEventListeners = (video) => {
+            // 监听视频播放事件
+            video.addEventListener('play', () => {
+                // 暂停其他所有视频
+                document.querySelectorAll('video').forEach(otherVideo => {
+                    if (otherVideo !== video && !otherVideo.paused) {
+                        otherVideo.pause();
+                    }
+                });
+                // 更新当前视频状态
+                currentVideo = video;
+            });
+
+            // 监听视频结束事件
+            video.addEventListener('ended', () => {
+                if (currentVideo === video) {
+                    currentVideo = null;
+                }
+            });
+        };
+
+        // 初始化HLS视频
+        msgElement.querySelectorAll('video[data-hls-src]').forEach(video => {
+            const hlsSrc = video.dataset.hlsSrc;
+            initHlsPlayer(video, hlsSrc);
+            setupVideoEventListeners(video);
+        });
+
+        // 初始化普通视频
+        msgElement.querySelectorAll('video:not([data-hls-src])').forEach(video => {
+            setupVideoEventListeners(video);
+        });
+
+        // 为力赞按钮添加事件监听器
+        msgElement.querySelectorAll('.favorite-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                message.likes += 1;
+                btn.textContent = `🐳+${message.likes}`;
+                if (!message.like_list.includes(userId)) {
+                    message.like_list.push(userId);
+                }
+                // 检查SbCLi是否可用
+                if (typeof SbCLi !== 'undefined') {
+                    // 发送力赞消息
+                    SbCLi.sendMessage(message);
+                } else {
+                    alert('力赞功能需要先初始化Supabase客户端');
+                }
+            });
+        });
+
+        scrollToBottom();
+    }
+
+    /**
+     * 滚动到底部
+     */
+    function scrollToBottom() {
+        if (messageArea) {
+            messageArea.scrollTo({
+                top: messageArea.scrollHeight,
+                behavior: 'smooth'
+            });
+        }
+    }
+
+    /**
+     * 更新在线人数
+     * @param {number} count - 在线人数
+     */
+    function updateOnlineCount(count) {
+        const counter = document.getElementById('online-users');
+        if (counter) {
+            counter.textContent = count > 1 ? `${count} 人在线` : '';
+            counter.style.fontWeight = count > 0 ? '600' : '400';
+        }
+    }
+
+    /**
+     * 设置聊天室标题
+     * @param {string} title - 聊天室标题
+     */
+    function setTitle(title) {
+        const titleElement = document.getElementById('chat-title');
+        if (titleElement) {
+            titleElement.textContent = title;
+        }
+    }
+    
+    /**
+     * 显示我的信息卡片
+     */
+    function showMyInfoCard() {
+        if (!messageArea) {
+            console.error('聊天室UI未初始化，请先调用 initUI()');
+            return;
+        }
+        
+        // 清空消息区域
+        messageArea.innerHTML = '';
+        
+        // 获取用户信息
+        const regTime = new Date().toLocaleString('zh-CN');
+        
+        // 检查激活状态
+        const isActive = SbCLi?.checkActivationStatus() || false;
+        const activationCode = SbCLi?.getStoredActivationCode() || '';
+        
+        // 创建信息卡片
+        const infoCard = document.createElement('div');
+        infoCard.style.padding = '16px';
+        infoCard.style.background = 'var(--chat-surface)';
+        infoCard.style.borderRadius = '12px';
+        infoCard.style.boxShadow = '0 4px 16px rgba(0, 0, 0, 0.2)';
+        infoCard.style.margin = '20px auto';
+        infoCard.style.maxWidth = '90%';
+        infoCard.style.textAlign = 'center';
+        infoCard.style.animation = 'fadeInUp 0.4s ease-out forwards';
+        infoCard.style.opacity = '0';
+        infoCard.style.transform = 'translateY(10px)';
+        
+        // 激活状态HTML
+        const activationStatusHtml = `
+            <div style="margin-bottom: 12px; padding: 10px; background: var(--chat-surface-light); border-radius: 8px;">
+                <p style="color: var(--chat-text-secondary); font-size: 14px; margin: 0;">激活状态</p>
+                <p style="color: ${isActive ? '#52c41a' : '#ff4d4f'}; font-size: 16px; margin: 4px 0 0 0;">
+                    ${isActive ? '✅ 已激活' : '❌ 未激活'}
+                </p>
+            </div>
+        `;
+        
+        // 激活码HTML（仅当已激活时显示）
+        const activationCodeHtml = isActive ? `
+            <div style="margin-bottom: 12px; padding: 10px; background: var(--chat-surface-light); border-radius: 8px;">
+                <p style="color: var(--chat-text-secondary); font-size: 14px; margin: 0;">激活码</p>
+                <p style="color: var(--chat-text); font-size: 16px; margin: 4px 0 0 0; word-break: break-all;">${activationCode}</p>
+            </div>
+        ` : '';
+        
+        // 激活输入框HTML（仅当未激活时显示）
+        const activationInputHtml = !isActive ? `
+            <div style="margin-bottom: 12px; padding: 10px; background: var(--chat-surface-light); border-radius: 8px;">
+                <p style="color: var(--chat-text-secondary); font-size: 14px; margin: 0 0 8px 0;">输入激活码</p>
+                <div style="display: flex; gap: 8px;">
+                    <input type="text" id="activation-input" placeholder="请输入激活码" 
+                           style="flex: 1; padding: 8px; background: var(--chat-bg); color: var(--chat-text); 
+                                  border: 1px solid var(--border-color); border-radius: 4px; font-size: 14px;">
+                    <button id="activation-submit" 
+                            style="padding: 8px 16px; background: linear-gradient(135deg, #1890ff 0%, #096dd9 100%); 
+                                   color: white; border: none; border-radius: 4px; font-size: 14px; 
+                                   cursor: pointer; transition: all 0.2s ease;">激活</button>
+                </div>
+                <div id="activation-message" style="color: #ff4d4f; font-size: 12px; margin-top: 8px;"></div>
+            </div>
+        ` : '';
+        
+        // 创建卡片内容
+        infoCard.innerHTML = `
+            <h3 style="color: var(--chat-text); margin-bottom: 16px; font-size: 18px;">👤 我的信息</h3>
+            <div style="margin-bottom: 12px; padding: 10px; background: var(--chat-surface-light); border-radius: 8px;">
+                <p style="color: var(--chat-text-secondary); font-size: 14px; margin: 0;">匿名ID</p>
+                <p style="color: var(--chat-text); font-size: 16px; margin: 4px 0 0 0; word-break: break-all;">${userId}</p>
+            </div>
+            <div style="margin-bottom: 12px; padding: 10px; background: var(--chat-surface-light); border-radius: 8px;">
+                <p style="color: var(--chat-text-secondary); font-size: 14px; margin: 0;">创建时间</p>
+                <p style="color: var(--chat-text); font-size: 16px; margin: 4px 0 0 0;">${regTime}</p>
+            </div>
+            ${activationStatusHtml}
+            ${activationCodeHtml}
+            ${activationInputHtml}
+            <div style="margin-top: 20px; color: var(--chat-text-secondary); font-size: 12px;">
+                <p>💡 提示：这是您的匿名信息</p>
+            </div>
+        `;
+        
+        // 添加到消息区域
+        messageArea.appendChild(infoCard);
+        
+        // 绑定激活按钮事件（仅当未激活时）
+        if (!isActive) {
+            const input = infoCard.querySelector('#activation-input');
+            const button = infoCard.querySelector('#activation-submit');
+            const message = infoCard.querySelector('#activation-message');
+            
+            if (input && button && message) {
+                // 处理激活
+                const handleActivation = async () => {
+                    const code = input.value.trim();
+                    if (!code) {
+                        message.textContent = '请输入激活码';
+                        return;
+                    }
+                    
+                    // 禁用按钮，显示加载状态
+                    button.disabled = true;
+                    button.textContent = '激活中...';
+                    button.style.opacity = '0.7';
+                    message.textContent = '';
+                    
+                    try {
+                        // 调用激活验证
+                        const result = await SbCLi.verifyActivation(code);
+                        
+                        if (result.success) {
+                            // 激活成功
+                            message.textContent = result.message;
+                            message.style.color = '#52c41a';
+                            SbCLi.setActivationStatus(true, code);
+                            
+                            // 刷新页面
+                            setTimeout(() => {
+                                showMyInfoCard();
+                            }, 1500);
+                        } else {
+                            // 激活失败
+                            message.textContent = result.message;
+                            message.style.color = '#ff4d4f';
+                            button.disabled = false;
+                            button.textContent = '激活';
+                            button.style.opacity = '1';
+                        }
+                    } catch (error) {
+                        // 异常处理
+                        message.textContent = error.message || '激活失败，请稍后重试';
+                        message.style.color = '#ff4d4f';
+                        button.disabled = false;
+                        button.textContent = '激活';
+                        button.style.opacity = '1';
+                    }
+                };
+                
+                // 绑定按钮点击事件
+                button.addEventListener('click', handleActivation);
+                
+                // 绑定回车事件
+                input.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') {
+                        handleActivation();
+                    }
+                });
+            }
+        }
+    }
+    
+    /**
+     * 使气泡可拖拽
+     */
+    function makeBubbleDraggable() {
+        // 绑定事件
+        bubble.addEventListener('mousedown', (e) => startDrag(e));
+        bubble.addEventListener('touchstart', (e) => {
+            // 不要在这里调用preventDefault()，以免阻止点击事件
+            startDrag(e.touches[0]);
+        });
+        
+        document.addEventListener('mousemove', (e) => drag(e));
+        document.addEventListener('touchmove', (e) => {
+            // 只在拖拽过程中调用preventDefault()，防止页面滚动
+            if (isDragging) {
+                e.preventDefault();
+            }
+            drag(e.touches[0]);
+        }, { passive: false });
+        
+        document.addEventListener('mouseup', (e) => stopDrag(e));
+        document.addEventListener('touchend', (e) => {
+            const touch = e.changedTouches[0];
+            if (touch) {
+                stopDrag(touch);
+            } else {
+                stopDrag(e);
+            }
+        });
+    }
+    
+    /**
+     * 开始拖动
+     * @param {MouseEvent|Touch} e - 鼠标或触摸事件
+     */
+    function startDrag(e) {
+        // 只有在气泡可见时才能拖拽
+        if (bubble.style.display === 'none') return;
+        
+        isDragging = true;
+        startX = e.clientX;
+        startY = e.clientY;
+        
+        // 获取初始位置
+        const rect = bubble.getBoundingClientRect();
+        initialLeft = rect.left;
+        initialTop = rect.top;
+        
+        // 改变光标样式
+        bubble.style.cursor = 'grabbing';
+        // 添加拖拽时的视觉效果
+        bubble.style.transform = 'scale(1.05)';
+        bubble.style.transition = 'transform 0.1s ease';
+    }
+    
+    /**
+     * 拖动过程
+     * @param {MouseEvent|Touch} e - 鼠标或触摸事件
+     */
+    function drag(e) {
+        if (!isDragging) return;
+        
+        // 计算位移
+        const dx = e.clientX - startX;
+        const dy = e.clientY - startY;
+        
+        // 计算新位置
+        let newLeft = initialLeft + dx;
+        let newTop = initialTop + dy;
+        
+        // 限制在可视区域内
+        const windowWidth = window.innerWidth;
+        const windowHeight = window.innerHeight;
+        const bubbleWidth = bubble.offsetWidth;
+        const bubbleHeight = bubble.offsetHeight;
+        
+        newLeft = Math.max(0, Math.min(newLeft, windowWidth - bubbleWidth));
+        newTop = Math.max(0, Math.min(newTop, windowHeight - bubbleHeight));
+        
+        // 更新位置
+        bubble.style.left = `${newLeft}px`;
+        bubble.style.top = `${newTop}px`;
+        // 清除原来的right和bottom样式
+        bubble.style.right = 'auto';
+        bubble.style.bottom = 'auto';
+    }
+    
+    /**
+     * 结束拖动
+     * @param {MouseEvent|Touch} e - 鼠标或触摸事件
+     */
+    function stopDrag(e) {
+        if (isDragging) {
+            // 计算拖拽距离
+            const dx = Math.abs(e.clientX - startX);
+            const dy = Math.abs(e.clientY - startY);
+            // 判断是否为拖拽操作
+            isDragAction = dx > 5 || dy > 5;
+            
+            // 恢复样式
+            isDragging = false;
+            bubble.style.cursor = 'pointer';
+            bubble.style.zIndex = '999999'; // 保持最高层级
+            bubble.style.transform = 'scale(1)';
+            bubble.style.transition = 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
+        }
+    }
+    
+    /**
+     * 初始化容器拖拽功能
+     */
+    function initContainerDrag() {
+        container.isDragging = false;
+        container.isDragAction = false;
+        container.startX = 0;
+        container.startY = 0;
+        container.initialLeft = 0;
+        container.initialTop = 0;
+        container.dragHandle = header;
+        
+        // 绑定事件 - 参考悬浮UI库的实现
+        container.dragHandle.addEventListener('mousedown', (e) => startContainerDrag(e));
+        container.dragHandle.addEventListener('touchstart', (e) => startContainerDrag(e), { passive: false });
+        
+        document.addEventListener('mousemove', (e) => dragContainer(e));
+        document.addEventListener('touchmove', (e) => dragContainer(e), { passive: false });
+        
+        document.addEventListener('mouseup', (e) => stopContainerDrag(e));
+        document.addEventListener('touchend', (e) => stopContainerDrag(e));
+        
+        // 防止拖拽时触发点击事件
+        container.dragHandle.addEventListener('click', (e) => {
+            if (container.isDragAction) {
+                container.isDragAction = false;
+                e.stopPropagation();
+                e.preventDefault();
+                return false;
+            }
+        });
+    }
+    
+    /**
+     * 开始容器拖动
+     * @param {MouseEvent|Touch} e - 鼠标或触摸事件
+     */
+    function startContainerDrag(e) {
+        // 只有在容器可见时才能拖拽
+        if (container.style.display === 'none') return;
+        
+        // 处理触摸事件对象
+        const event = e.touches ? e.touches[0] : e;
+        
+        // 阻止默认行为和冒泡
+        e.preventDefault();
+        e.stopPropagation();
+        
+        container.isDragging = true;
+        container.startX = event.clientX;
+        container.startY = event.clientY;
+        
+        // 获取初始位置
+        const rect = container.getBoundingClientRect();
+        container.initialLeft = rect.left;
+        container.initialTop = rect.top;
+        
+        // 改变光标样式
+        container.dragHandle.style.cursor = 'grabbing';
+        // 提高z-index，确保拖拽时在最上层
+        container.style.zIndex = '999999';
+        
+        // 添加拖拽时的视觉效果
+        container.style.transform = 'scale(1.01)';
+        container.style.transition = 'transform 0.1s ease';
+    }
+    
+    /**
+     * 拖动容器
+     * @param {MouseEvent|Touch} e - 鼠标或触摸事件
+     */
+    function dragContainer(e) {
+        if (!container.isDragging) return;
+        
+        // 处理触摸事件对象
+        const event = e.touches ? e.touches[0] : e;
+        
+        // 计算位移
+        const dx = event.clientX - container.startX;
+        const dy = event.clientY - container.startY;
+        
+        // 计算新位置
+        let newLeft = container.initialLeft + dx;
+        let newTop = container.initialTop + dy;
+        
+        // 限制在可视区域内
+        const windowWidth = window.innerWidth;
+        const windowHeight = window.innerHeight;
+        const containerWidth = container.offsetWidth;
+        const containerHeight = container.offsetHeight;
+        
+        newLeft = Math.max(0, Math.min(newLeft, windowWidth - containerWidth));
+        newTop = Math.max(0, Math.min(newTop, windowHeight - containerHeight));
+        
+        // 更新位置
+        container.style.left = `${newLeft}px`;
+        container.style.top = `${newTop}px`;
+        // 清除原来的right和bottom样式
+        container.style.right = 'auto';
+        container.style.bottom = 'auto';
+    }
+    
+    /**
+     * 结束容器拖动
+     * @param {MouseEvent|Touch} e - 鼠标或触摸事件
+     */
+    function stopContainerDrag(e) {
+        if (container.isDragging) {
+            // 计算拖拽距离
+            const event = e.touches ? e.changedTouches[0] : e;
+            const dx = Math.abs(event.clientX - container.startX);
+            const dy = Math.abs(event.clientY - container.startY);
+            // 判断是否为拖拽操作
+            container.isDragAction = dx > 5 || dy > 5;
+            
+            // 恢复样式
+            container.isDragging = false;
+            container.dragHandle.style.cursor = 'grab';
+            container.style.zIndex = '999998'; // 恢复原来的z-index
+            container.style.transform = 'scale(1)';
+            container.style.transition = 'transform 0.1s ease';
+        }
+    }
+    
+
+
+    /**
+     * 库的公共 API
      */
     return {
         VERSION,
-        /**
-         * 初始化聊天室UI
-         * @returns {ChatRoom} 聊天室实例
-         */
-        initUI(localuserId) {
-            // 存储用户ID
-            userId = localuserId;
-
-            // 使用默认配置
-            const config = {
-                CHAT_UI: DEFAULT_UI_CONFIG
-            };
-
-            // 注入样式
-            injectStyles(config.CHAT_UI);
-
-            // 创建并初始化聊天室实例
-            chatRoomInstance = new ChatRoom(config);
-            return chatRoomInstance.initUI();
-        },
-
-        /**
-         * 添加消息卡片到聊天界面
-         * @param {Object} message - 消息对象
-         * @param {boolean} isOwn - 是否为自己发送的消息，可选，默认为false
-         */
-        addMsgCard(message, isOwn = false) {
-            if (!chatRoomInstance) {
-                console.error('聊天室UI未初始化，请先调用 initUI()');
-                return;
-            }
-            chatRoomInstance.addMsgCard(message, isOwn);
-        },
-
-        /**
-         * 更新在线人数
-         * @param {number} count - 在线人数
-         */
-        updateOnlineCount(count) {
-            if (!chatRoomInstance) {
-                console.error('聊天室UI未初始化，请先调用 initUI()');
-                return;
-            }
-            chatRoomInstance.updateOnlineCount(count);
-        },
-
-        /**
-         * 设置聊天室标题
-         * @param {string} title - 聊天室标题
-         */
-        setTitle(title) {
-            if (!chatRoomInstance) {
-                console.error('聊天室UI未初始化，请先调用 initUI()');
-                return;
-            }
-            chatRoomInstance.setTitle(title);   
-        }
+        initUI,
+        addMsgCard,
+        updateOnlineCount,
+        setTitle
     };
-
 })();

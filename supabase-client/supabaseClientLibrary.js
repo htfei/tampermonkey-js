@@ -20,13 +20,19 @@ const SbCLi = (function() {
     // 默认配置
     const DEFAULT_CONFIG = {
         SUPABASE_URL: 'https://icaugjyuwenraxxgwvzf.supabase.co',
-        SUPABASE_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImljYXVnanl1d2VucmF4eGd3dnpmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDI4ODcwNjcsImV4cCI6MjA1ODQ2MzA2N30.-IsrU3_NyoqDxFeNH1l2d6SgVv9pPA0uIVEA44FmuSQ'
+        SUPABASE_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImljYXVnanl1d2VucmF4eGd3dnpmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDI4ODcwNjcsImV4cCI6MjA1ODQ2MzA2N30.-IsrU3_NyoqDxFeNH1l2d6SgVv9pPA0uIVEA44FmuSQ',
+        // 激活码相关配置
+        ACTIVATION: {
+            SCRIPT_ID: 'afdian-activation-demo',//todo
+            VERIFY_ENDPOINT: 'https://icaugjyuwenraxxgwvzf.supabase.co/functions/v1/verify-activation'
+        }
     };
     
     // 内部状态管理
     let supabaseClient = null;
     let userId = null;
     let messageChannel = null;
+    let activationStatus = null;
     
     /**
      * 初始化 Supabase 客户端
@@ -231,6 +237,123 @@ const SbCLi = (function() {
     }
     
     /**
+     * 设备管理功能
+     */
+    
+    /**
+     * 生成设备唯一标识
+     * @returns {string} 设备ID
+     */
+    function generateDeviceId() {
+        // 使用crypto.randomUUID生成唯一ID
+        if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+            return crypto.randomUUID();
+        }
+        // 兼容旧浏览器
+        return 'uuid-' + Date.now() + '-' + Math.random().toString(36).substring(2, 15);
+    }
+    
+    /**
+     * 获取设备唯一标识
+     * @returns {string} 设备ID
+     */
+    function getDeviceId() {
+        let deviceId = GM_getValue('device_id');
+        if (!deviceId) {
+            // 生成新的设备ID
+            deviceId = generateDeviceId();
+            GM_setValue('device_id', deviceId);
+        }
+        return deviceId;
+    }
+    
+    /**
+     * 激活码验证和状态管理功能
+     */
+    
+    /**
+     * 验证激活码
+     * @param {string} code - 激活码
+     * @returns {Promise<{success: boolean, message: string, data?: any}>} 验证结果
+     */
+    async function verifyActivation(code) {
+        try {
+            const deviceId = getDeviceId();
+            
+            // 使用GM_xmlhttpRequest直接调用云函数，避免CORS问题
+            return new Promise((resolve, reject) => {
+                GM_xmlhttpRequest({
+                    method: 'POST',
+                    url: DEFAULT_CONFIG.ACTIVATION.VERIFY_ENDPOINT,
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${DEFAULT_CONFIG.SUPABASE_KEY}`
+                    },
+                    data: JSON.stringify({
+                        code,
+                        device_id: deviceId,
+                        script_id: DEFAULT_CONFIG.ACTIVATION.SCRIPT_ID,
+                        user_id: userId
+                    }),
+                    onload: function(response) {
+                        try {
+                            const result = JSON.parse(response.responseText);
+                            if (response.status >= 200 && response.status < 300) {
+                                resolve({ success: true, message: '激活成功', data: result });
+                            } else {
+                                resolve({ success: false, message: result.message || '激活失败，请稍后重试' });
+                            }
+                        } catch (error) {
+                            resolve({ success: false, message: '激活失败，服务器返回格式错误' });
+                        }
+                    },
+                    onerror: function(error) {
+                        console.error('验证激活码网络错误:', error);
+                        resolve({ success: false, message: '激活失败，网络错误' });
+                    },
+                    ontimeout: function() {
+                        resolve({ success: false, message: '激活失败，请求超时' });
+                    }
+                });
+            });
+        } catch (error) {
+            console.error('验证激活码失败:', error);
+            return { success: false, message: error.message || '激活失败，请稍后重试' };
+        }
+    }
+    
+    /**
+     * 检查激活状态
+     * @returns {boolean} 激活状态
+     */
+    function checkActivationStatus() {
+        const status = GM_getValue('activation_status');
+        activationStatus = status === 'active' ? 'active' : 'inactive';
+        return activationStatus === 'active';
+    }
+    
+    /**
+     * 设置激活状态
+     * @param {boolean} isActive - 是否激活
+     * @param {string} [code] - 激活码（可选）
+     */
+    function setActivationStatus(isActive, code = '') {
+        activationStatus = isActive ? 'active' : 'inactive';
+        GM_setValue('activation_status', activationStatus);
+        if (code) {
+            GM_setValue('activation_code', code);
+        }
+    }
+    
+    /**
+     * 获取已存储的激活码
+     * @returns {string} 激活码
+     */
+    function getStoredActivationCode() {
+        return GM_getValue('activation_code', '');
+    }
+    
+    /**
      * 清理资源
      */
     async function cleanup() {
@@ -254,6 +377,9 @@ const SbCLi = (function() {
             // 初始化用户
             await initUser(client);
             
+            // 检查激活状态
+            checkActivationStatus();
+            
             return userId;
         } catch (error) {
             console.error('聊天服务初始化失败:', error);
@@ -270,6 +396,11 @@ const SbCLi = (function() {
         init,
         sendMessage,
         setupRealtime,
-        loadHistory
+        loadHistory,
+        // 激活码相关API
+        verifyActivation,
+        checkActivationStatus,
+        setActivationStatus,
+        getStoredActivationCode
     };
 })();
