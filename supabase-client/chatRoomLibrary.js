@@ -501,6 +501,8 @@ const ChatRoomLibrary = (function () {
                 console.log('浏览历史按钮被点击');
                 let hisdata = await SbCLi.loadHistory(10);
                 if (hisdata) {
+                    // 清空消息区域
+                    this.messageArea.innerHTML = '';
                     hisdata.reverse().forEach(msg => { chatRoomInstance.addMsgCard(msg) });
                 }
                 // 关闭菜单
@@ -525,15 +527,42 @@ const ChatRoomLibrary = (function () {
                 console.log('Top10按钮被点击');
                 let hisdata = await SbCLi.loadHistory(10,"my_likes");
                 if (hisdata) {
+                    // 清空消息区域
+                    this.messageArea.innerHTML = '';
                     hisdata.reverse().forEach(msg => { chatRoomInstance.addMsgCard(msg) });
                 }
                 // 关闭菜单
                 menuCard.style.display = 'none';
             });
             
+            // 创建我的信息按钮
+            const myInfoButton = document.createElement('button');
+            myInfoButton.textContent = '👤我的信息';
+            myInfoButton.style.padding = '10px';
+            myInfoButton.style.background = 'var(--chat-surface)';
+            myInfoButton.style.color = 'var(--chat-text)';
+            myInfoButton.style.border = '1px solid var(--border-color)';
+            myInfoButton.style.borderRadius = '8px';
+            myInfoButton.style.fontSize = '14px';
+            myInfoButton.style.cursor = 'pointer';
+            myInfoButton.style.transition = 'all 0.2s ease';
+            myInfoButton.style.userSelect = 'none';
+            
+            // 添加点击事件
+            myInfoButton.addEventListener('click', () => {
+                console.log('我的信息按钮被点击');
+                
+                // 关闭菜单
+                menuCard.style.display = 'none';
+                
+                // 创建并显示我的信息卡片
+                this.showMyInfoCard();
+            });
+            
             // 将按钮添加到容器
             menuButtonsContainer.appendChild(historyButton);
             menuButtonsContainer.appendChild(top10Button);
+            menuButtonsContainer.appendChild(myInfoButton);
             
             // 将按钮容器添加到菜单卡片
             menuCard.appendChild(menuButtonsContainer);
@@ -561,6 +590,10 @@ const ChatRoomLibrary = (function () {
 
             this.container.append(this.messageArea, this.inputContainer);
             document.body.appendChild(this.container);
+
+            // UI初始化后自动打开容器并加载我的信息
+            this.toggleMinimize();
+            this.showMyInfoCard();
 
             return this;
         }
@@ -735,6 +768,49 @@ const ChatRoomLibrary = (function () {
             if (titleElement) {
                 titleElement.textContent = title;
             }
+        }
+        
+        /**
+         * 显示我的信息卡片
+         */
+        showMyInfoCard() {
+            // 清空消息区域
+            this.messageArea.innerHTML = '';
+            
+            // 获取用户信息
+            const regTime = new Date().toLocaleString('zh-CN');
+            
+            // 创建信息卡片
+            const infoCard = document.createElement('div');
+            infoCard.style.padding = '16px';
+            infoCard.style.background = 'var(--chat-surface)';
+            infoCard.style.borderRadius = '12px';
+            infoCard.style.boxShadow = '0 4px 16px rgba(0, 0, 0, 0.2)';
+            infoCard.style.margin = '20px auto';
+            infoCard.style.maxWidth = '90%';
+            infoCard.style.textAlign = 'center';
+            infoCard.style.animation = 'fadeInUp 0.4s ease-out forwards';
+            infoCard.style.opacity = '0';
+            infoCard.style.transform = 'translateY(10px)';
+            
+            // 创建卡片内容
+            infoCard.innerHTML = `
+                <h3 style="color: var(--chat-text); margin-bottom: 16px; font-size: 18px;">👤 我的信息</h3>
+                <div style="margin-bottom: 12px; padding: 10px; background: var(--chat-surface-light); border-radius: 8px;">
+                    <p style="color: var(--chat-text-secondary); font-size: 14px; margin: 0;">匿名用户ID</p>
+                    <p style="color: var(--chat-text); font-size: 16px; margin: 4px 0 0 0; word-break: break-all;">${userId}</p>
+                </div>
+                <div style="margin-bottom: 12px; padding: 10px; background: var(--chat-surface-light); border-radius: 8px;">
+                    <p style="color: var(--chat-text-secondary); font-size: 14px; margin: 0;">注册时间</p>
+                    <p style="color: var(--chat-text); font-size: 16px; margin: 4px 0 0 0;">${regTime}</p>
+                </div>
+                <div style="margin-top: 20px; color: var(--chat-text-secondary); font-size: 12px;">
+                    <p>💡 提示：这是您的匿名用户信息</p>
+                </div>
+            `;
+            
+            // 添加到消息区域
+            this.messageArea.appendChild(infoCard);
         }
         
         /**
