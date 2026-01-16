@@ -424,9 +424,140 @@ const ChatRoomLibrary = (function () {
             });
             this.messageArea.id = 'chat-messages';
 
-            // 创建输入区域容器（为空，用户可以自行添加输入功能）
+            // 创建菜单按钮
             this.inputContainer = document.createElement('div');
             this.inputContainer.id = 'input-container';
+            this.inputContainer.style.padding = '12px';
+            this.inputContainer.style.borderTop = '1px solid var(--border-color)';
+            this.inputContainer.style.boxSizing = 'border-box';
+            this.inputContainer.style.background = 'var(--chat-surface)';
+            this.inputContainer.style.position = 'relative';
+            this.inputContainer.style.borderBottomLeftRadius = '20px';
+            this.inputContainer.style.borderBottomRightRadius = '20px';
+            
+            // 创建菜单按钮元素
+            const menuButton = document.createElement('button');
+            menuButton.textContent = '📋菜单';
+            menuButton.style.width = '100%';
+            menuButton.style.padding = '10px';
+            menuButton.style.background = 'var(--chat-surface-light)';
+            menuButton.style.color = 'var(--chat-text)';
+            menuButton.style.border = '1px solid var(--border-color)';
+            menuButton.style.borderRadius = '12px';
+            menuButton.style.fontSize = '14px';
+            menuButton.style.cursor = 'pointer';
+            menuButton.style.transition = 'all 0.2s ease';
+            menuButton.style.userSelect = 'none';
+            
+            // 添加悬停效果
+            menuButton.addEventListener('mouseenter', () => {
+                menuButton.style.background = 'var(--border-color)';
+                menuButton.style.transform = 'scale(1.02)';
+            });
+            
+            menuButton.addEventListener('mouseleave', () => {
+                menuButton.style.background = 'var(--chat-surface-light)';
+                menuButton.style.transform = 'scale(1)';
+            });
+            
+            // 创建菜单卡片
+            const menuCard = document.createElement('div');
+            menuCard.id = 'menu-card';
+            menuCard.style.position = 'absolute';
+            menuCard.style.bottom = '100%';
+            menuCard.style.left = '0';
+            menuCard.style.width = '100%';
+            menuCard.style.background = 'var(--chat-surface)';
+            menuCard.style.border = '1px solid var(--border-color)';
+            menuCard.style.borderRadius = '12px 12px 0 0';
+            menuCard.style.boxShadow = '0 -4px 16px rgba(0, 0, 0, 0.3)';
+            menuCard.style.zIndex = '1000000';
+            menuCard.style.display = 'none';
+            menuCard.style.animation = 'slideIn 0.3s ease-out';
+            menuCard.style.padding = '12px';
+            menuCard.style.boxSizing = 'border-box';
+            
+            // 添加菜单按钮组
+            const menuButtonsContainer = document.createElement('div');
+            menuButtonsContainer.style.display = 'flex';
+            menuButtonsContainer.style.flexDirection = 'column';
+            menuButtonsContainer.style.gap = '8px';
+            
+            // 创建浏览历史按钮
+            const historyButton = document.createElement('button');
+            historyButton.textContent = '📜浏览历史';
+            historyButton.style.padding = '10px';
+            historyButton.style.background = 'var(--chat-surface)';
+            historyButton.style.color = 'var(--chat-text)';
+            historyButton.style.border = '1px solid var(--border-color)';
+            historyButton.style.borderRadius = '8px';
+            historyButton.style.fontSize = '14px';
+            historyButton.style.cursor = 'pointer';
+            historyButton.style.transition = 'all 0.2s ease';
+            historyButton.style.userSelect = 'none';
+            
+            // 添加点击事件（示例：可根据实际需求修改）
+            historyButton.addEventListener('click', async () => {
+                console.log('浏览历史按钮被点击');
+                let hisdata = await SbCLi.loadHistory(10);
+                if (hisdata) {
+                    hisdata.reverse().forEach(msg => { chatRoomInstance.addMsgCard(msg) });
+                }
+                // 关闭菜单
+                menuCard.style.display = 'none';
+            });
+            
+            // 创建Top10按钮
+            const top10Button = document.createElement('button');
+            top10Button.textContent = '🐳top10';
+            top10Button.style.padding = '10px';
+            top10Button.style.background = 'var(--chat-surface)';
+            top10Button.style.color = 'var(--chat-text)';
+            top10Button.style.border = '1px solid var(--border-color)';
+            top10Button.style.borderRadius = '8px';
+            top10Button.style.fontSize = '14px';
+            top10Button.style.cursor = 'pointer';
+            top10Button.style.transition = 'all 0.2s ease';
+            top10Button.style.userSelect = 'none';
+            
+            // 添加点击事件（示例：可根据实际需求修改）
+            top10Button.addEventListener('click', async () => {
+                console.log('Top10按钮被点击');
+                let hisdata = await SbCLi.loadHistory(10,"my_likes");
+                if (hisdata) {
+                    hisdata.reverse().forEach(msg => { chatRoomInstance.addMsgCard(msg) });
+                }
+                // 关闭菜单
+                menuCard.style.display = 'none';
+            });
+            
+            // 将按钮添加到容器
+            menuButtonsContainer.appendChild(historyButton);
+            menuButtonsContainer.appendChild(top10Button);
+            
+            // 将按钮容器添加到菜单卡片
+            menuCard.appendChild(menuButtonsContainer);
+            
+            // 菜单按钮点击事件
+            menuButton.addEventListener('click', () => {
+                // 切换菜单显示状态
+                if (menuCard.style.display === 'none' || menuCard.style.display === '') {
+                    menuCard.style.display = 'block';
+                } else {
+                    menuCard.style.display = 'none';
+                }
+            });
+            
+            // 将按钮和菜单卡片添加到输入容器
+            this.inputContainer.appendChild(menuButton);
+            this.inputContainer.appendChild(menuCard);
+            
+            // 点击外部关闭菜单
+            document.addEventListener('click', (e) => {
+                if (!this.inputContainer.contains(e.target)) {
+                    menuCard.style.display = 'none';
+                }
+            });
 
             this.container.append(this.messageArea, this.inputContainer);
             document.body.appendChild(this.container);

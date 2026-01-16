@@ -169,11 +169,11 @@ const SbCLi = (function() {
             }
             else if (flag === 'my_likes') {
                 // 我喜欢的
-                baseQuery = baseQuery.filter('like_list', 'cs', `{"${userId}"}`);
+                baseQuery = baseQuery.filter('like_list', 'cs', `{"${userId}"}`).order('likes', { ascending: false });
             }
             else if (flag === 'all_likes') { 
                 // 所有喜欢
-                baseQuery = baseQuery.filter('likes', 'gt', 0);
+                baseQuery = baseQuery.filter('likes', 'gt', 0).order('likes', { ascending: false });
             }
             else if (flag === 'all') {
                 // 所有消息, 无需处理
@@ -181,7 +181,6 @@ const SbCLi = (function() {
       
             // 执行查询
             const { data, error } = await baseQuery
-                .order('likes', { ascending: false })
                 .order('created_at', { ascending: false })
                 .limit(limit);
             
