@@ -152,35 +152,38 @@ const SbCLi = (function() {
     /**
      * 加载消息历史
      * @param {number} limit - 加载消息数量
-     * @param {string} user_id - 用户ID，默认加载当前用户的消息，传入'all'加载所有用户的消息
+     * @param {string} flag - 加载标志，默认加载当前用户的消息, 'my_likes'加载我喜欢的消息, 'all_likes'加载所有喜欢的消息, 'all'加载所有消息
      * @returns {Array} 消息历史数组
      */
-    async function loadHistory(limit = 20, user_id = userId) {
+    async function loadHistory(limit = 20, flag = userId) {
         if (!supabaseClient) {
             throw new Error('Supabase 客户端未初始化');
         }
         
         try {
-            let baseQuery;
+            let baseQuery = supabaseClient.from('video_bookmarks').select('*');
             
-            // 根据user_id参数决定查询范围
-            if (user_id === 'all') {
-                baseQuery = supabaseClient
-                    .from('video_bookmarks')
-                    .select('*')
-                    .order('created_at', { ascending: false })
-                    .limit(limit);
-            } else {
-                baseQuery = supabaseClient
-                    .from('video_bookmarks')
-                    .select('*')
-                    .eq('user_id', user_id)
-                    .order('created_at', { ascending: false })
-                    .limit(limit);
+            if (flag === userId) {
+                // 我的历史
+                baseQuery = baseQuery.eq('user_id', userId);
             }
-            
+            else if (flag === 'my_likes') {
+                // 我喜欢的
+                baseQuery = baseQuery.filter('like_list', 'cs', `{"${userId}"}`);
+            }
+            else if (flag === 'all_likes') { 
+                // 所有喜欢
+                baseQuery = baseQuery.filter('likes', 'gt', 0);
+            }
+            else if (flag === 'all') {
+                // 所有消息, 无需处理
+            }
+      
             // 执行查询
-            const { data, error } = await baseQuery;
+            const { data, error } = await baseQuery
+                .order('likes', { ascending: false })
+                .order('created_at', { ascending: false })
+                .limit(limit);
             
             if (error) throw error;
             return data || [];
@@ -209,11 +212,16 @@ const SbCLi = (function() {
             const { data, error } = await supabaseClient
                 .from('video_bookmarks')
                 .upsert({
-                    "user_id": userId,
+                    "user_id": msginfo.user_id || userId,
                     "url": msginfo.url || location.href,
                     "content": msginfo.content || document.title,
-                    "video_url": msginfo.video_url || "",
-                    "image_url": msginfo.image_url || ""
+                    "video_url": msginfo.video_url,
+                    "image_url": msginfo.image_url,
+                    "likes": msginfo.likes,
+                    "like_list": msginfo.like_list,
+                },
+                {
+                    onConflict: 'user_id,url'
                 });
             
             return data || error;
@@ -259,6 +267,7 @@ const SbCLi = (function() {
      */
     return {
         VERSION,
+        userId,
         init,
         sendMessage,
         setupRealtime,

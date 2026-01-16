@@ -21,6 +21,9 @@ const ChatRoomLibrary = (function () {
     // 库版本
     const VERSION = '1.0';
 
+    // 用户ID
+    let userId = null;
+
     // 默认UI配置
     const DEFAULT_UI_CONFIG = {
         width: '360px',
@@ -198,9 +201,10 @@ const ChatRoomLibrary = (function () {
             elements.push(`<div style=" overflow: hidden; box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);">
                 <video controls style="max-width: 100%; height: auto; display: block;" id="${videoId}" poster="${message.image_url}" src="${message.video_url}" data-hls-src="${message.video_url}"></video>
                 <div style="display: flex; gap: 8px; padding: 8px; background: rgba(0, 0, 0, 0.1);">
-                    <a href="${message.video_url}" target="_blank" rel="noopener noreferrer" style="flex: 1; padding: 6px 12px; background: rgba(245, 94, 94, 0.8); color: white; text-decoration: none; border-radius: 4px; text-align: center; font-size: 12px; transition: background 0.2s ease;">📺新页打开</a>
-                    <a href="${downurl}" target="_blank" style="flex: 1; padding: 6px 12px; background: rgba(234, 194, 20, 0.8); color: white; text-decoration: none; border-radius: 4px; text-align: center; font-size: 12px; transition: background 0.2s ease;">⏬视频下载</a>
-                    <a href="${message.url}" target="_blank" rel="noopener noreferrer" style="flex: 1; padding: 6px 12px; background: rgba(19, 89, 229, 0.79); color: white; text-decoration: none; border-radius: 4px; text-align: center; font-size: 12px; transition: background 0.2s ease;">🌍原始网址</a>
+                    <a href="${message.video_url}" target="_blank" rel="noopener noreferrer" style="flex: 1; padding: 6px 12px; background: rgba(18, 145, 249, 0.8); color: white; text-decoration: none; border-radius: 4px; text-align: center; font-size: 12px; transition: background 0.2s ease;">📺打开</a>
+                    <a href="${downurl}" target="_blank" style="flex: 1; padding: 6px 12px; background: rgba(20, 223, 44, 0.8); color: white; text-decoration: none; border-radius: 4px; text-align: center; font-size: 12px; transition: background 0.2s ease;">⏬下载</a>
+                    <a href="${message.url}" target="_blank" rel="noopener noreferrer" style="flex: 1; padding: 6px 12px; background: rgba(221, 232, 9, 0.79); color: white; text-decoration: none; border-radius: 4px; text-align: center; font-size: 12px; transition: background 0.2s ease;">🌍网址</a>
+                    <a class="favorite-btn" data-message-id="${message.id}" style="flex: 1; padding: 6px 12px; background: rgba(243, 108, 30, 0.8); color: white; border: none; border-radius: 4px; text-align: center; font-size: 12px; cursor: pointer; transition: background 0.2s ease; user-select: none; -webkit-user-select: none; -moz-user-select: none; -ms-user-select: none;">${message.likes > 0 ? `🐳+${message.likes}` : '🐳给力'}</a>
                 </div>
             </div>`);
         }
@@ -483,9 +487,11 @@ const ChatRoomLibrary = (function () {
             // 确保消息有必要的属性
             message = {
                 id: message.id || Date.now(),
-                user_id: message.user_id || 'anonymous',
-                content: message.content || '',
+                user_id: message.user_id || userId,
+                content: message.content || document.title,
                 created_at: message.created_at || new Date().toISOString(),
+                likes: message.likes || 0,
+                like_list: message.like_list || [],
                 ...message
             };
 
@@ -545,6 +551,24 @@ const ChatRoomLibrary = (function () {
             // 初始化普通视频
             msgElement.querySelectorAll('video:not([data-hls-src])').forEach(video => {
                 setupVideoEventListeners(video);
+            });
+
+            // 为力赞按钮添加事件监听器
+            msgElement.querySelectorAll('.favorite-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    message.likes += 1;
+                    btn.textContent = `🐳+${message.likes}`;
+                    if (!message.like_list.includes(userId)) {
+                        message.like_list.push(userId);
+                    }
+                    // 检查SbCLi是否可用
+                    if (typeof SbCLi !== 'undefined') {
+                        // 发送力赞消息
+                        SbCLi.sendMessage(message);
+                    } else {
+                        alert('力赞功能需要先初始化Supabase客户端');
+                    }
+                });
             });
 
             this.scrollToBottom();
@@ -960,7 +984,10 @@ const ChatRoomLibrary = (function () {
          * 初始化聊天室UI
          * @returns {ChatRoom} 聊天室实例
          */
-        initUI() {
+        initUI(localuserId) {
+            // 存储用户ID
+            userId = localuserId;
+
             // 使用默认配置
             const config = {
                 CHAT_UI: DEFAULT_UI_CONFIG
