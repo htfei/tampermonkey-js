@@ -526,7 +526,7 @@ const ChatRoomLibrary = (function () {
         
         // 创建Top10按钮
         const top10Button = document.createElement('button');
-        top10Button.textContent = '🐳top10';
+        top10Button.textContent = '🐳top排行';
         top10Button.style.padding = '10px';
         top10Button.style.background = 'var(--chat-surface)';
         top10Button.style.color = 'var(--chat-text)';
@@ -814,12 +814,11 @@ const ChatRoomLibrary = (function () {
         // 清空消息区域
         messageArea.innerHTML = '';
         
-        // 获取用户信息
-        const regTime = new Date().toLocaleString('zh-CN');
-        
-        // 检查激活状态
-        const isActive = SbCLi?.checkActivationStatus() || false;
-        const activationCode = SbCLi?.getStoredActivationCode() || '';
+        // 解构赋值读取激活信息
+        const { success, message, data } = GM_getValue('activation_info') || {};
+        GM_log('用户激活信息:', { success, message, data });
+        const isActive = success;
+        const activationCode = data?.activation_code || null;   
         
         // 创建信息卡片
         const infoCard = document.createElement('div');
@@ -839,16 +838,24 @@ const ChatRoomLibrary = (function () {
             <div style="margin-bottom: 12px; padding: 10px; background: var(--chat-surface-light); border-radius: 8px;">
                 <p style="color: var(--chat-text-secondary); font-size: 14px; margin: 0;">激活状态</p>
                 <p style="color: ${isActive ? '#52c41a' : '#ff4d4f'}; font-size: 16px; margin: 4px 0 0 0;">
-                    ${isActive ? '✅ 已激活' : '❌ 未激活'}
+                    ${message ? message : '❌ 未激活'}
                 </p>
             </div>
         `;
         
         // 激活码HTML（仅当已激活时显示）
-        const activationCodeHtml = isActive ? `
+        const activationInfoHtml = activationCode ? `
             <div style="margin-bottom: 12px; padding: 10px; background: var(--chat-surface-light); border-radius: 8px;">
                 <p style="color: var(--chat-text-secondary); font-size: 14px; margin: 0;">激活码</p>
                 <p style="color: var(--chat-text); font-size: 16px; margin: 4px 0 0 0; word-break: break-all;">${activationCode}</p>
+            </div>
+            <div style="margin-bottom: 12px; padding: 10px; background: var(--chat-surface-light); border-radius: 8px;">
+                <p style="color: var(--chat-text-secondary); font-size: 14px; margin: 0;">有效期</p>
+                <p style="color: var(--chat-text); font-size: 16px; margin: 4px 0 0 0; word-break: break-all;">${data?.valid_for_days < 999 ? data?.valid_for_days + '天' : '永久'}</p>
+            </div>
+            <div style="margin-bottom: 12px; padding: 10px; background: var(--chat-surface-light); border-radius: 8px;">
+                <p style="color: var(--chat-text-secondary); font-size: 14px; margin: 0;">首次激活时间</p>
+                <p style="color: var(--chat-text); font-size: 16px; margin: 4px 0 0 0; word-break: break-all;">${new Date(data?.activated_at).toLocaleString()}</p>
             </div>
         ` : '';
         
@@ -861,7 +868,7 @@ const ChatRoomLibrary = (function () {
                            style="flex: 1; padding: 8px; background: var(--chat-bg); color: var(--chat-text); 
                                   border: 1px solid var(--border-color); border-radius: 4px; font-size: 14px;">
                     <button id="activation-submit" 
-                            style="padding: 8px 16px; background: linear-gradient(135deg, #1890ff 0%, #096dd9 100%); 
+                            style="padding: 8px 14px; background: linear-gradient(135deg, #1890ff 0%, #096dd9 100%); 
                                    color: white; border: none; border-radius: 4px; font-size: 14px; 
                                    cursor: pointer; transition: all 0.2s ease;">激活</button>
                 </div>
@@ -869,22 +876,21 @@ const ChatRoomLibrary = (function () {
             </div>
         ` : '';
         
+        // 匿名信息
+        const anonymousInfoHtml = `<div style="margin-bottom: 12px; padding: 10px; background: var(--chat-surface-light); border-radius: 8px;">
+                <p style="color: var(--chat-text-secondary); font-size: 14px; margin: 0;">匿名ID</p>
+                <p style="color: var(--chat-text); font-size: 12px; margin: 4px 0 0 0; word-break: break-all;">${userId}</p>
+            </div>`;
+        
         // 创建卡片内容
         infoCard.innerHTML = `
             <h3 style="color: var(--chat-text); margin-bottom: 16px; font-size: 18px;">👤 我的信息</h3>
-            <div style="margin-bottom: 12px; padding: 10px; background: var(--chat-surface-light); border-radius: 8px;">
-                <p style="color: var(--chat-text-secondary); font-size: 14px; margin: 0;">匿名ID</p>
-                <p style="color: var(--chat-text); font-size: 16px; margin: 4px 0 0 0; word-break: break-all;">${userId}</p>
-            </div>
-            <div style="margin-bottom: 12px; padding: 10px; background: var(--chat-surface-light); border-radius: 8px;">
-                <p style="color: var(--chat-text-secondary); font-size: 14px; margin: 0;">创建时间</p>
-                <p style="color: var(--chat-text); font-size: 16px; margin: 4px 0 0 0;">${regTime}</p>
-            </div>
+            ${anonymousInfoHtml}
             ${activationStatusHtml}
-            ${activationCodeHtml}
+            ${activationInfoHtml}
             ${activationInputHtml}
             <div style="margin-top: 20px; color: var(--chat-text-secondary); font-size: 12px;">
-                <p>💡 提示：这是您的匿名信息</p>
+                <p>💡 提示：请勿泄露激活码，否则可能导致封禁</p>
             </div>
         `;
         
@@ -920,12 +926,9 @@ const ChatRoomLibrary = (function () {
                             // 激活成功
                             message.textContent = result.message;
                             message.style.color = '#52c41a';
-                            SbCLi.setActivationStatus(true, code);
                             
                             // 刷新页面
-                            setTimeout(() => {
-                                showMyInfoCard();
-                            }, 1500);
+                            setTimeout(() => { showMyInfoCard(); }, 1000);
                         } else {
                             // 激活失败
                             message.textContent = result.message;
