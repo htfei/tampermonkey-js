@@ -28,8 +28,8 @@ const ChatRoomLibrary = (function () {
     const DEFAULT_UI_CONFIG = {
         width: '360px',
         height: '75vh',
-        position: { right: '5px', bottom: '200px' },
-        bubblePosition: { right: '5px', bottom: '50px' },
+        position: { right: '5px', bottom: '0px' },
+        bubblePosition: { right: '5px', bottom: '0px' },
         theme: {
             primary: '#8b5cf6',
             primaryLight: '#a78bfa',
