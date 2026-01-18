@@ -356,6 +356,7 @@ const ChatRoomLibrary = (function () {
             width: `${chatRoomConfig.CHAT_UI.width}`,
             height: `${chatRoomConfig.CHAT_UI.height}`,
             maxHeight: '95vh',
+            minWidth: '320px',
             backgroundColor: 'var(--chat-bg)',
             borderRadius: '20px',
             boxShadow: '0 20px 60px var(--shadow-color), 0 0 1px rgba(255,255,255,0.1) inset',
@@ -366,7 +367,7 @@ const ChatRoomLibrary = (function () {
             overflowWrap: 'break-word',
             boxSizing: 'border-box',
             transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-            resize: 'none'
+            resize: 'both'
         });
 
         // 聊天窗口头部
@@ -385,6 +386,9 @@ const ChatRoomLibrary = (function () {
         
         // 初始化容器拖拽功能
         initContainerDrag();
+        
+        // 添加容器大小调整功能
+        makeContainerResizable();
 
         // 最小化气泡
         bubble = document.createElement('div');
@@ -650,12 +654,12 @@ const ChatRoomLibrary = (function () {
                 currentVideo.pause();
             }
         }
-        else {
+        /*else {
             // 最大化时，恢复之前的视频播放状态
             if (currentVideo) {
                 currentVideo.play().catch(err => console.error('恢复视频播放失败:', err));
             }
-        }
+        }*/
     }
 
     /**
@@ -1077,6 +1081,95 @@ const ChatRoomLibrary = (function () {
                 e.stopPropagation();
                 e.preventDefault();
                 return false;
+            }
+        });
+    }
+    
+    /**
+     * 添加容器大小调整功能
+     */
+    function makeContainerResizable() {
+        // 创建调整大小的手柄
+        const resizeHandle = document.createElement('div');
+        resizeHandle.id = 'chat-resize-handle';
+        Object.assign(resizeHandle.style, {
+            position: 'absolute',
+            right: '5px',
+            bottom: '5px',
+            width: '12px',
+            height: '12px',
+            background: 'var(--border-color)',
+            borderRadius: '50%',
+            cursor: 'nwse-resize',
+            zIndex: '1000000',
+            opacity: '0.5',
+            transition: 'opacity 0.2s ease'
+        });
+        containerInstance.appendChild(resizeHandle);
+        
+        // 调整大小的状态变量
+        let isResizing = false;
+        let startX = 0;
+        let startY = 0;
+        let startWidth = 0;
+        let startHeight = 0;
+        
+        // 手柄悬停效果
+        resizeHandle.addEventListener('mouseenter', () => {
+            resizeHandle.style.opacity = '1';
+        });
+        
+        resizeHandle.addEventListener('mouseleave', () => {
+            if (!isResizing) {
+                resizeHandle.style.opacity = '0.5';
+            }
+        });
+        
+        // 开始调整大小
+        resizeHandle.addEventListener('mousedown', (e) => {
+            isResizing = true;
+            startX = e.clientX;
+            startY = e.clientY;
+            startWidth = containerInstance.offsetWidth;
+            startHeight = containerInstance.offsetHeight;
+            
+            // 阻止默认行为和冒泡
+            e.preventDefault();
+            e.stopPropagation();
+            
+            // 添加视觉反馈
+            containerInstance.style.zIndex = '999999';
+            resizeHandle.style.opacity = '1';
+        });
+        
+        // 调整大小
+        document.addEventListener('mousemove', (e) => {
+            if (!isResizing) return;
+            
+            // 计算新的尺寸
+            const deltaX = e.clientX - startX;
+            const deltaY = e.clientY - startY;
+            
+            // 限制最小和最大尺寸
+            const minWidth = 300;
+            const minHeight = 400;
+            const maxWidth = window.innerWidth * 0.8;
+            const maxHeight = window.innerHeight * 0.9;
+            
+            let newWidth = Math.max(minWidth, Math.min(startWidth + deltaX, maxWidth));
+            let newHeight = Math.max(minHeight, Math.min(startHeight + deltaY, maxHeight));
+            
+            // 更新容器尺寸
+            containerInstance.style.width = `${newWidth}px`;
+            containerInstance.style.height = `${newHeight}px`;
+        });
+        
+        // 结束调整大小
+        document.addEventListener('mouseup', () => {
+            if (isResizing) {
+                isResizing = false;
+                resizeHandle.style.opacity = '0.5';
+                containerInstance.style.zIndex = '999998';
             }
         });
     }
