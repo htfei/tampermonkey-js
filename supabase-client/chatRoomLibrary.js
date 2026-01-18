@@ -45,19 +45,16 @@ const ChatRoomLibrary = (function () {
 
     // 聊天室状态管理
     let chatRoomConfig = null;
-    let container = null;
+    let containerInstance = null;
     let bubble = null;
     let messageArea = null;
     let inputContainer = null;
     let header = null;
-    let isFirstExpand = true;
     let isMinimized = false;
     let currentVideo = null;
-    let resizeFrameId = null;
     
     // 气泡拖拽状态
     let isDragging = false;
-    let isDragAction = false;
     let startX = 0;
     let startY = 0;
     let initialLeft = 0;
@@ -333,17 +330,16 @@ const ChatRoomLibrary = (function () {
     /**
      * 初始化聊天室UI
      * @param {string} user_id - 用户ID
-     * @param {Object} config - 配置参数
+     * @param {string} title - 聊天室标题
      * @returns {Object} 聊天室实例
      */
-    function initUI(user_id, config = {}) {
+    function initUI(user_id, title = '聊天室') {
         userId = user_id;
         // 合并配置
         chatRoomConfig = {
-            ...config,
+            title,
             CHAT_UI: {
-                ...DEFAULT_UI_CONFIG,
-                ...config.CHAT_UI
+                ...DEFAULT_UI_CONFIG
             }
         };
 
@@ -351,9 +347,9 @@ const ChatRoomLibrary = (function () {
         injectStyles(chatRoomConfig.CHAT_UI);
 
         // 聊天窗口容器
-        container = document.createElement('div');
-        container.id = 'chat-container';
-        Object.assign(container.style, {
+        containerInstance = document.createElement('div');
+        containerInstance.id = 'chat-container';
+        Object.assign(containerInstance.style, {
             position: 'fixed',
             right: chatRoomConfig.CHAT_UI.position.right,
             bottom: chatRoomConfig.CHAT_UI.position.bottom,
@@ -378,14 +374,14 @@ const ChatRoomLibrary = (function () {
         header.id = 'chat-header';
         header.innerHTML = `
             <div class="online-count">
-                <span id="chat-title"></span>
+                <span id="chat-title">${chatRoomConfig.title}</span>
                 <span class="online-dot"></span>
                 <span id="online-users"></span> 
             </div>
         `;
         header.style.padding = '10px 24px';
         header.style.cursor = 'grab'; // 设置初始光标样式为 grab，提示用户可以拖拽
-        container.appendChild(header);
+        containerInstance.appendChild(header);
         
         // 初始化容器拖拽功能
         initContainerDrag();
@@ -515,10 +511,15 @@ const ChatRoomLibrary = (function () {
         historyButton.addEventListener('click', async () => {
             console.log('浏览历史按钮被点击');
             let hisdata = await SbCLi.loadHistory(10);
-            if (hisdata) {
+            if (hisdata?.length > 0) {
+                // console.log('有历史记录',hisdata);
                 // 清空消息区域
                 messageArea.innerHTML = '';
                 hisdata.reverse().forEach(msg => { addMsgCard(msg) });
+            }
+            else{
+                console.log('没有历史记录');
+                addMsgCard({content:'没有历史记录'});
             }
             // 关闭菜单
             menuCard.style.display = 'none';
@@ -541,10 +542,14 @@ const ChatRoomLibrary = (function () {
         top10Button.addEventListener('click', async () => {
             console.log('Top10按钮被点击');
             let hisdata = await SbCLi.loadHistory(10,"my_likes");
-            if (hisdata) {
+            if (hisdata?.length > 0) {
                 // 清空消息区域
                 messageArea.innerHTML = '';
                 hisdata.reverse().forEach(msg => { addMsgCard(msg) });
+            }
+            else{
+                console.log('没有Top10记录');
+                addMsgCard({content:'没有Top10记录'});
             }
             // 关闭菜单
             menuCard.style.display = 'none';
@@ -603,22 +608,20 @@ const ChatRoomLibrary = (function () {
             }
         });
 
-        container.append(messageArea, inputContainer);
-        document.body.appendChild(container);
+        containerInstance.append(messageArea, inputContainer);
+        document.body.appendChild(containerInstance);
 
         // UI初始化后自动打开容器并加载我的信息
         toggleMinimize();
-        showMyInfoCard();
-
+        //showMyInfoCard();
 
         return {
-            container,
+            containerInstance,
             bubble,
             messageArea,
             toggleMinimize,
             addMsgCard,
-            updateOnlineCount,
-            setTitle
+            updateOnlineCount
         };
     }
 
@@ -627,24 +630,18 @@ const ChatRoomLibrary = (function () {
      */
     function toggleMinimize() {
         // 计算当前状态
-        const wasHidden = container.style.display === 'none' || container.style.display === '';
+        const wasHidden = containerInstance.style.display === 'none' || containerInstance.style.display === '';
         
         // 直接切换容器的显示状态
         if (wasHidden) {
-            container.style.display = 'flex';
+            containerInstance.style.display = 'flex';
             isMinimized = false;
         } else {
-            container.style.display = 'none';
+            containerInstance.style.display = 'none';
             isMinimized = true;
         }
         // 气泡始终显示
         bubble.style.display = 'flex';
-
-        // 只有首次从隐藏状态切换到显示状态时，才自动滚动到最新消息
-        if (wasHidden && isFirstExpand) {
-            scrollToBottom();
-            isFirstExpand = false;
-        }
 
         // 视频状态处理
         if (isMinimized) {
@@ -788,17 +785,6 @@ const ChatRoomLibrary = (function () {
         if (counter) {
             counter.textContent = count > 1 ? `${count} 人在线` : '';
             counter.style.fontWeight = count > 0 ? '600' : '400';
-        }
-    }
-
-    /**
-     * 设置聊天室标题
-     * @param {string} title - 聊天室标题
-     */
-    function setTitle(title) {
-        const titleElement = document.getElementById('chat-title');
-        if (titleElement) {
-            titleElement.textContent = title;
         }
     }
     
@@ -1053,12 +1039,6 @@ const ChatRoomLibrary = (function () {
      */
     function stopDrag(e) {
         if (isDragging) {
-            // 计算拖拽距离
-            const dx = Math.abs(e.clientX - startX);
-            const dy = Math.abs(e.clientY - startY);
-            // 判断是否为拖拽操作
-            isDragAction = dx > 5 || dy > 5;
-            
             // 恢复样式
             isDragging = false;
             bubble.style.cursor = 'pointer';
@@ -1072,17 +1052,17 @@ const ChatRoomLibrary = (function () {
      * 初始化容器拖拽功能
      */
     function initContainerDrag() {
-        container.isDragging = false;
-        container.isDragAction = false;
-        container.startX = 0;
-        container.startY = 0;
-        container.initialLeft = 0;
-        container.initialTop = 0;
-        container.dragHandle = header;
+        containerInstance.isDragging = false;
+        containerInstance.isDragAction = false;
+        containerInstance.startX = 0;
+        containerInstance.startY = 0;
+        containerInstance.initialLeft = 0;
+        containerInstance.initialTop = 0;
+        containerInstance.dragHandle = header;
         
         // 绑定事件 - 参考悬浮UI库的实现
-        container.dragHandle.addEventListener('mousedown', (e) => startContainerDrag(e));
-        container.dragHandle.addEventListener('touchstart', (e) => startContainerDrag(e), { passive: false });
+        containerInstance.dragHandle.addEventListener('mousedown', (e) => startContainerDrag(e));
+        containerInstance.dragHandle.addEventListener('touchstart', (e) => startContainerDrag(e), { passive: false });
         
         document.addEventListener('mousemove', (e) => dragContainer(e));
         document.addEventListener('touchmove', (e) => dragContainer(e), { passive: false });
@@ -1091,9 +1071,9 @@ const ChatRoomLibrary = (function () {
         document.addEventListener('touchend', (e) => stopContainerDrag(e));
         
         // 防止拖拽时触发点击事件
-        container.dragHandle.addEventListener('click', (e) => {
-            if (container.isDragAction) {
-                container.isDragAction = false;
+        containerInstance.dragHandle.addEventListener('click', (e) => {
+            if (containerInstance.isDragAction) {
+                containerInstance.isDragAction = false;
                 e.stopPropagation();
                 e.preventDefault();
                 return false;
@@ -1107,7 +1087,7 @@ const ChatRoomLibrary = (function () {
      */
     function startContainerDrag(e) {
         // 只有在容器可见时才能拖拽
-        if (container.style.display === 'none') return;
+        if (containerInstance.style.display === 'none') return;
         
         // 处理触摸事件对象
         const event = e.touches ? e.touches[0] : e;
@@ -1116,23 +1096,23 @@ const ChatRoomLibrary = (function () {
         e.preventDefault();
         e.stopPropagation();
         
-        container.isDragging = true;
-        container.startX = event.clientX;
-        container.startY = event.clientY;
+        containerInstance.isDragging = true;
+        containerInstance.startX = event.clientX;
+        containerInstance.startY = event.clientY;
         
         // 获取初始位置
-        const rect = container.getBoundingClientRect();
-        container.initialLeft = rect.left;
-        container.initialTop = rect.top;
+        const rect = containerInstance.getBoundingClientRect();
+        containerInstance.initialLeft = rect.left;
+        containerInstance.initialTop = rect.top;
         
         // 改变光标样式
-        container.dragHandle.style.cursor = 'grabbing';
+        containerInstance.dragHandle.style.cursor = 'grabbing';
         // 提高z-index，确保拖拽时在最上层
-        container.style.zIndex = '999999';
+        containerInstance.style.zIndex = '999999';
         
         // 添加拖拽时的视觉效果
-        container.style.transform = 'scale(1.01)';
-        container.style.transition = 'transform 0.1s ease';
+        containerInstance.style.transform = 'scale(1.01)';
+        containerInstance.style.transition = 'transform 0.1s ease';
     }
     
     /**
@@ -1140,34 +1120,34 @@ const ChatRoomLibrary = (function () {
      * @param {MouseEvent|Touch} e - 鼠标或触摸事件
      */
     function dragContainer(e) {
-        if (!container.isDragging) return;
+        if (!containerInstance.isDragging) return;
         
         // 处理触摸事件对象
         const event = e.touches ? e.touches[0] : e;
         
         // 计算位移
-        const dx = event.clientX - container.startX;
-        const dy = event.clientY - container.startY;
+        const dx = event.clientX - containerInstance.startX;
+        const dy = event.clientY - containerInstance.startY;
         
         // 计算新位置
-        let newLeft = container.initialLeft + dx;
-        let newTop = container.initialTop + dy;
+        let newLeft = containerInstance.initialLeft + dx;
+        let newTop = containerInstance.initialTop + dy;
         
         // 限制在可视区域内
         const windowWidth = window.innerWidth;
         const windowHeight = window.innerHeight;
-        const containerWidth = container.offsetWidth;
-        const containerHeight = container.offsetHeight;
+        const containerWidth = containerInstance.offsetWidth;
+        const containerHeight = containerInstance.offsetHeight;
         
         newLeft = Math.max(0, Math.min(newLeft, windowWidth - containerWidth));
         newTop = Math.max(0, Math.min(newTop, windowHeight - containerHeight));
         
         // 更新位置
-        container.style.left = `${newLeft}px`;
-        container.style.top = `${newTop}px`;
+        containerInstance.style.left = `${newLeft}px`;
+        containerInstance.style.top = `${newTop}px`;
         // 清除原来的right和bottom样式
-        container.style.right = 'auto';
-        container.style.bottom = 'auto';
+        containerInstance.style.right = 'auto';
+        containerInstance.style.bottom = 'auto';
     }
     
     /**
@@ -1175,20 +1155,20 @@ const ChatRoomLibrary = (function () {
      * @param {MouseEvent|Touch} e - 鼠标或触摸事件
      */
     function stopContainerDrag(e) {
-        if (container.isDragging) {
+        if (containerInstance.isDragging) {
             // 计算拖拽距离
             const event = e.touches ? e.changedTouches[0] : e;
-            const dx = Math.abs(event.clientX - container.startX);
-            const dy = Math.abs(event.clientY - container.startY);
+            const dx = Math.abs(event.clientX - containerInstance.startX);
+            const dy = Math.abs(event.clientY - containerInstance.startY);
             // 判断是否为拖拽操作
-            container.isDragAction = dx > 5 || dy > 5;
+            containerInstance.isDragAction = dx > 5 || dy > 5;
             
             // 恢复样式
-            container.isDragging = false;
-            container.dragHandle.style.cursor = 'grab';
-            container.style.zIndex = '999998'; // 恢复原来的z-index
-            container.style.transform = 'scale(1)';
-            container.style.transition = 'transform 0.1s ease';
+            containerInstance.isDragging = false;
+            containerInstance.dragHandle.style.cursor = 'grab';
+            containerInstance.style.zIndex = '999998'; // 恢复原来的z-index
+            containerInstance.style.transform = 'scale(1)';
+            containerInstance.style.transition = 'transform 0.1s ease'; 
         }
     }
     
@@ -1201,7 +1181,6 @@ const ChatRoomLibrary = (function () {
         VERSION,
         initUI,
         addMsgCard,
-        updateOnlineCount,
-        setTitle
+        updateOnlineCount
     };
 })();

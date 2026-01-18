@@ -18,9 +18,10 @@ const SbCLi = (function() {
     const VERSION = '1.0';
     
     // 默认配置
-    const DEFAULT_CONFIG = {
+    const CONFIG = {
         SUPABASE_URL: 'https://icaugjyuwenraxxgwvzf.supabase.co',
         SUPABASE_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImljYXVnanl1d2VucmF4eGd3dnpmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDI4ODcwNjcsImV4cCI6MjA1ODQ2MzA2N30.-IsrU3_NyoqDxFeNH1l2d6SgVv9pPA0uIVEA44FmuSQ',
+        SUPABASE_AUTH_TOKEN: 'sb-icaugjyuwenraxxgwvzf-auth-token',
         // 激活码相关配置
         ACTIVATION: {
             SCRIPT_ID: 'script_id',
@@ -43,8 +44,8 @@ const SbCLi = (function() {
         }
         
         supabaseClient = window.supabase.createClient(
-            DEFAULT_CONFIG.SUPABASE_URL,
-            DEFAULT_CONFIG.SUPABASE_KEY,
+            CONFIG.SUPABASE_URL,
+            CONFIG.SUPABASE_KEY,
             { realtime: { params: { eventsPerSecond: 10 } } }
         );
         
@@ -59,19 +60,23 @@ const SbCLi = (function() {
         try {
 
             // 获取匿名会话 ✅
-            let gm_userId = await GM_getValue('user_id');// 使用 GM_getValue 实现跨域一致性 
-            const { data: anonData, error: anonError } = await client.auth.getSession();
-            GM_log('===获取匿名用户成功===', anonData, gm_userId, anonError);
-            userId = anonData.session?.user?.id; //生效的ID
+            let gm_auth_token = await GM_getValue(CONFIG.SUPABASE_AUTH_TOKEN);// 使用 GM_getValue 实现跨域一致性 
+            GM_log('===获取脚本会话===', gm_auth_token);
+            userId = gm_auth_token?.user?.id; //gm的ID
             if(userId){
-                if (gm_userId != userId) {
-                    GM_log('===Session与GM存储的用户ID不一致===', userId, gm_userId);
-                    GM_setValue('user_id', userId);
-                }
+                // 脚本会话存在,写入localStorage
+                localStorage.setItem(CONFIG.SUPABASE_AUTH_TOKEN, JSON.stringify(gm_auth_token));
+                const { data: anonData, error: anonError } = await client.auth.getSession();
+                GM_log('===获取本地会话===', anonData?.session || anonError);
                 return;
-            }else if(gm_userId){ //session不存在,但gm_user_id存在,即同一个脚本在不同网页生效时
-                userId = gm_userId; // 从GM存储中获取用户ID
-                // todo: 将gm_userId写入session,是否能生效未知,先不处理
+            }
+
+            const { data: anonData, error: anonError } = await client.auth.getSession();
+            GM_log('===获取本地会话===', anonData?.session || anonError);
+            userId = anonData?.session?.user?.id; //生效的ID
+            if(userId){
+                // 本地会话存在,写入GM存储
+                GM_setValue(CONFIG.SUPABASE_AUTH_TOKEN, anonData.session);
                 return;
             }
 
@@ -97,7 +102,10 @@ const SbCLi = (function() {
             if (error) throw error;
             
             userId = data.session.user.id;
-            GM_setValue('user_id', userId);
+            // 注册成功后, 会自动将会话写入localStorage
+            // localStorage.setItem(CONFIG.SUPABASE_AUTH_TOKEN, data.session);
+            // 手动写入GM存储
+            GM_setValue(CONFIG.SUPABASE_AUTH_TOKEN, data.session);
         } catch (error) {
             console.error('用户初始化失败:', error);
             throw error;
@@ -250,14 +258,14 @@ const SbCLi = (function() {
             return new Promise((resolve, reject) => {
                 GM_xmlhttpRequest({
                     method: 'POST',
-                    url: DEFAULT_CONFIG.ACTIVATION.VERIFY_ENDPOINT,
+                    url: CONFIG.ACTIVATION.VERIFY_ENDPOINT,
                     headers: {
                         'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${DEFAULT_CONFIG.SUPABASE_KEY}`
+                        'Authorization': `Bearer ${CONFIG.SUPABASE_KEY}`
                     },
                     data: JSON.stringify({
                         code,
-                        script_id: DEFAULT_CONFIG.ACTIVATION.SCRIPT_ID,
+                        script_id: CONFIG.ACTIVATION.SCRIPT_ID,
                         user_id: userId
                     }),
                     onload: function(response) {
@@ -304,7 +312,7 @@ const SbCLi = (function() {
     async function init(scriptId = 'script_id') {
         try {
             // 更新默认配置中的SCRIPT_ID
-            DEFAULT_CONFIG.ACTIVATION.SCRIPT_ID = scriptId;
+            CONFIG.ACTIVATION.SCRIPT_ID = scriptId;
 
             // 初始化 Supabase 客户端
             const client = await initSupabaseClient();
