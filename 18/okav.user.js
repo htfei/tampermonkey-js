@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        okav破解VIP视频免费看
 // @namespace    okav
-// @version      1.0.3
+// @version      1.0.4
 // @description  来不及解释了，快上车！！！
 // @author       w2f
 // @match        https://okav.2egkga7a.icu/
@@ -17,8 +17,8 @@
 // @connect      supabase.co
 // @require      https://unpkg.com/@supabase/supabase-js@2.49.3/dist/umd/supabase.js
 // @require      https://cdnjs.cloudflare.com/ajax/libs/hls.js/1.1.5/hls.min.js
-// @require      https://scriptcat.org/lib/5007/1.0.1/supabaseClientLibrary.js#sha384=An/EKSp9xaz4YGHGLWUZYfW1950+SEeQhsmfjbbAfh8GOY8dHA7ZMuwEhnEq4gVJ
-// @require      https://scriptcat.org/lib/5008/1.0.3/chatRoomLibrary.js#sha384=Rot5TRczD6A15DdM28xrwncuNdle1gd2ChGSanpvMRNQZiF62lgbqhdVI9bRYOMz
+// @require      https://scriptcat.org/lib/5008/1.0.4/chatRoomLibrary.js#sha384=3k+waqPcDu31KwjrAaXcdaZAtsN44Pc+ziUFzh/BFH8jBBLuTwX4kTTIzoY+jIdm
+// @require      https://scriptcat.org/lib/5007/1.0.2/supabaseClientLibrary.js#sha384=CfW/04TZ2no1CMCTmhQfdul3DWbWQHq9Jfvba55Tyo71xAZBrXvNAZ/FSfwADuVV
 // @downloadURL https://update.sleazyfork.org/scripts/562111/okav%E7%A0%B4%E8%A7%A3VIP%E8%A7%86%E9%A2%91%E5%85%8D%E8%B4%B9%E7%9C%8B.user.js
 // @updateURL https://update.sleazyfork.org/scripts/562111/okav%E7%A0%B4%E8%A7%A3VIP%E8%A7%86%E9%A2%91%E5%85%8D%E8%B4%B9%E7%9C%8B.meta.js
 // ==/UserScript==
@@ -27,21 +27,14 @@
     'use strict';
 
     // 初始化
-    const user_id = await SbCLi.init();
+    const script_id = 'okav';
+    const user_id = await SbCLi.init(script_id);
     GM_log('用户ID:', user_id);
-
     // 初始化UI
-    const chatRoom = await ChatRoomLibrary.initUI(user_id);
-    chatRoom.setTitle('OKAV破解VIP视频免费看');
-
-    // 加载历史消息
-    let hisdata = await SbCLi.loadHistory(10);
-    if (hisdata) {
-        hisdata.reverse().forEach(msg => { chatRoom.addMsgCard(msg) });
-    }
+    const chatRoom = await ChatRoomLibrary.initUI(user_id, script_id, 'https://sleazyfork.org/zh-CN/scripts/562111');
 
     var oldhref = null;
-    var retrynum = 0;
+    var retrynum = 0; 
     function check_circle() {
         if (location.href != oldhref) {
             // 开始新一轮检查
@@ -49,9 +42,9 @@
             if (retrynum > 10) {
                 retrynum = 0;
                 oldhref = location.href;
-                const videoInfo = { content: '长时间未破解，请访问其他资源，已反馈记录！' };
-                chatRoom.addMsgCard(videoInfo);
-                SbCLi.sendMessage(videoInfo);
+                const videoInfo = { content: '📢 检测到长时间未破解成功，请刷新后重试，或者先访问其他可用资源！' };
+                chatRoom.addMsgCard(videoInfo);// todo: tips消息类型
+                //SbCLi.sendMessage(videoInfo);
                 return;
             }
 
@@ -72,7 +65,12 @@
                 retrynum = 0;
                 oldhref = location.href;
                 // 加载卡片，发送消息
-                chatRoom.addMsgCard(videoInfo);
+                if (SbCLi.decreaseTrialCount() > 0){
+                    chatRoom.addMsgCard(videoInfo);
+                }
+                else{
+                    chatRoom.addMsgCard({ content: '设备未激活，今日试看次数已用完！' });
+                }
                 const res = SbCLi.sendMessage(videoInfo);
                 GM_log('发送消息的响应:', res);
             }

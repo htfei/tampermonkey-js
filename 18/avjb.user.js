@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         艾薇社区破解VIP视频免费看
 // @namespace    aiwei_vip_video_free_see
-// @version      1.4
+// @version      1.5
 // @description  来不及解释了，快上车！！！
 // @author       w2f
 // @match        https://avjb.com/*
@@ -17,8 +17,8 @@
 // @connect      supabase.co
 // @require      https://unpkg.com/@supabase/supabase-js@2.49.3/dist/umd/supabase.js
 // @require      https://cdnjs.cloudflare.com/ajax/libs/hls.js/1.1.5/hls.min.js
-// @require      https://scriptcat.org/lib/5007/1.0.1/supabaseClientLibrary.js#sha384=An/EKSp9xaz4YGHGLWUZYfW1950+SEeQhsmfjbbAfh8GOY8dHA7ZMuwEhnEq4gVJ
-// @require      https://scriptcat.org/lib/5008/1.0.3/chatRoomLibrary.js#sha384=Rot5TRczD6A15DdM28xrwncuNdle1gd2ChGSanpvMRNQZiF62lgbqhdVI9bRYOMz
+// @require      https://scriptcat.org/lib/5008/1.0.4/chatRoomLibrary.js#sha384=3k+waqPcDu31KwjrAaXcdaZAtsN44Pc+ziUFzh/BFH8jBBLuTwX4kTTIzoY+jIdm
+// @require      https://scriptcat.org/lib/5007/1.0.2/supabaseClientLibrary.js#sha384=CfW/04TZ2no1CMCTmhQfdul3DWbWQHq9Jfvba55Tyo71xAZBrXvNAZ/FSfwADuVV
 // @downloadURL  https://update.greasyfork.org/scripts/529208/%E8%89%BE%E8%96%87%E7%A4%BE%E5%8C%BA%E7%A0%B4%E8%A7%A3VIP%E8%A7%86%E9%A2%91%E5%85%8D%E8%B4%B9%E7%9C%8B.user.js
 // @updateURL    https://update.greasyfork.org/scripts/529208/%E8%89%BE%E8%96%87%E7%A4%BE%E5%8C%BA%E7%A0%B4%E8%A7%A3VIP%E8%A7%86%E9%A2%91%E5%85%8D%E8%B4%B9%E7%9C%8B.meta.js
 // ==/UserScript==
@@ -26,19 +26,12 @@
 (async function () {
     'use strict';
 
-    // 初始化UI
-    const chatRoom = await ChatRoomLibrary.initUI();
-    chatRoom.setTitle('艾薇社区破解VIP视频免费看');
-
     // 初始化
-    const user_id = await SbCLi.init();
+    const script_id = 'avjb';
+    const user_id = await SbCLi.init(script_id);
     GM_log('用户ID:', user_id);
-
-    // 加载历史消息
-    let hisdata = await SbCLi.loadHistory(10);
-    if (hisdata) {
-        hisdata.reverse().forEach(msg => { chatRoom.addMsgCard(msg) });
-    }
+    // 初始化UI
+    const chatRoom = await ChatRoomLibrary.initUI(user_id, script_id, "https://sleazyfork.org/zh-CN/scripts/529208", false);
 
     // 2.获取视频地址
     //const url = "https://r22.jb-aiwei.cc/contents/videos/76000/76444/index.m3u8";
