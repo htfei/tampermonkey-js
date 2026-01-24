@@ -30,6 +30,17 @@ const ChatRoomLibrary = (function () {
         height: '70vh',
         position: { right: '5px', top: '0px' },
         bubblePosition: { right: '5px', bottom: '0px' },
+        theme: {
+            primary: '#8b5cf6',
+            primaryLight: '#a78bfa',
+            background: '#0a0a0a',
+            surface: '#1a1a1a',
+            surfaceLight: '#2a2a2a',
+            text: '#e0e0e0',
+            textSecondary: '#999999',
+            border: '#4e4e4e',
+            shadow: 'rgba(0, 0, 0, 0.8)'
+        }
     };
 
     // 聊天室状态管理
@@ -347,7 +358,6 @@ const ChatRoomLibrary = (function () {
             maxHeight: '100vh',
             minHeight: '30vh',
             maxWidth: '100vw',
-            minWidth: '300px',
             backgroundColor: 'var(--chat-bg)',
             borderRadius: '20px',
             boxShadow: '0 20px 60px var(--shadow-color), 0 0 1px rgba(255,255,255,0.1) inset',
@@ -839,9 +849,9 @@ const ChatRoomLibrary = (function () {
         const activationInputHtml = !isActive ? `
             <div style="margin-bottom: 12px; padding: 10px; background: var(--chat-surface-light); border-radius: 8px;">
                 <p style="color: var(--chat-text-secondary); font-size: 14px; margin: 0 0 8px 0;">输入激活码</p>
-                <div style="display: flex; gap: 8px;">
+                <div style="display: flex; flex-direction: column; gap: 8px;">
                     <input type="text" id="activation-input" placeholder="请输入激活码" 
-                           style="flex: 1; padding: 8px; background: var(--chat-bg); color: var(--chat-text); 
+                           style="width: 100%; padding: 8px; box-sizing: border-box; background: var(--chat-bg); color: var(--chat-text); 
                                   border: 1px solid var(--border-color); border-radius: 4px; font-size: 14px;">
                     <button id="activation-submit" 
                             style="padding: 8px 14px; background: linear-gradient(135deg, #1890ff 0%, #096dd9 100%); 
@@ -1157,10 +1167,10 @@ const ChatRoomLibrary = (function () {
             
             // 限制最小和最大尺寸，适配手机端
             const isMobile = window.innerWidth <= 768;
-            const minWidth = isMobile ? 280 : 300;
+            const minWidth = isMobile ? Math.floor(window.innerWidth * 0.6) : 350;
             const minHeight = isMobile ? 300 : 400;
-            const maxWidth = window.innerWidth * (isMobile ? 0.95 : 0.8);
-            const maxHeight = window.innerHeight * (isMobile ? 0.8 : 0.9);
+            const maxWidth = window.innerWidth;
+            const maxHeight = window.innerHeight;
             
             let newWidth = Math.max(minWidth, Math.min(startWidth + deltaX, maxWidth));
             let newHeight = Math.max(minHeight, Math.min(startHeight + deltaY, maxHeight));
