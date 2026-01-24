@@ -1167,7 +1167,7 @@ const ChatRoomLibrary = (function () {
             
             // 限制最小和最大尺寸，适配手机端
             const isMobile = window.innerWidth <= 768;
-            const minWidth = isMobile ? Math.floor(window.innerWidth * 0.6) : 350;
+            const minWidth = isMobile ? Math.floor(window.innerWidth * 0.6) : 360;
             const minHeight = isMobile ? 300 : 400;
             const maxWidth = window.innerWidth;
             const maxHeight = window.innerHeight;
