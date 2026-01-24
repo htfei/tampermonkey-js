@@ -154,7 +154,7 @@ const ChatRoomLibrary = (function () {
         hls.on(Hls.Events.MANIFEST_PARSED, () => {
             console.log('[HLS] 视频流已解析');
             //播放
-            videoElement?.play();
+            //videoElement?.play();
         });
 
         hls.on(Hls.Events.ERROR, (event, data) => {
@@ -333,11 +333,13 @@ const ChatRoomLibrary = (function () {
      * @param {string} title - 聊天室标题
      * @returns {Object} 聊天室实例
      */
-    function initUI(user_id, title = '聊天室') {
+    function initUI(user_id, title = '聊天室', homepageUrl = '', flag = true) {
         userId = user_id;
         // 合并配置
         chatRoomConfig = {
             title,
+            homepageUrl,
+            flag,
             CHAT_UI: {
                 ...DEFAULT_UI_CONFIG
             }
@@ -499,23 +501,25 @@ const ChatRoomLibrary = (function () {
         menuButtonsContainer.style.flexDirection = 'column';
         menuButtonsContainer.style.gap = '8px';
         
-        // 创建浏览历史按钮
-        const historyButton = document.createElement('button');
-        historyButton.textContent = '📜浏览历史';
-        historyButton.style.padding = '10px';
-        historyButton.style.background = 'var(--chat-surface)';
-        historyButton.style.color = 'var(--chat-text)';
-        historyButton.style.border = '1px solid var(--border-color)';
-        historyButton.style.borderRadius = '8px';
-        historyButton.style.fontSize = '14px';
-        historyButton.style.cursor = 'pointer';
-        historyButton.style.transition = 'all 0.2s ease';
-        historyButton.style.userSelect = 'none';
-        
-        // 添加点击事件（示例：可根据实际需求修改）
-        historyButton.addEventListener('click', async () => {
+        function createMenuButton(text, onClick) {
+            const button = document.createElement('button');
+            button.textContent = text;
+            button.style.padding = '10px';
+            button.style.background = 'var(--chat-surface)';
+            button.style.color = 'var(--chat-text)';
+            button.style.border = '1px solid var(--border-color)';
+            button.style.borderRadius = '8px';
+            button.style.fontSize = '14px';
+            button.style.cursor = 'pointer';
+            button.style.transition = 'all 0.2s ease';
+            button.style.userSelect = 'none';
+            button.addEventListener('click', onClick);
+            return button;
+        }
+
+        async function menuButtonOnClick(count = 10, flag = userId) {
             console.log('浏览历史按钮被点击');
-            let hisdata = await SbCLi.loadHistory(10);
+            let hisdata = await SbCLi.loadHistory(10, flag);
             if (hisdata?.length > 0) {
                 // console.log('有历史记录',hisdata);
                 // 清空消息区域
@@ -528,66 +532,91 @@ const ChatRoomLibrary = (function () {
             }
             // 关闭菜单
             menuCard.style.display = 'none';
-        });
-        
+        }
+
+        // 创建浏览历史按钮
+        // const historyButton = createMenuButton('📜我的历史', async () => { menuButtonOnClick(10) });
+    
         // 创建Top10按钮
-        const top10Button = document.createElement('button');
-        top10Button.textContent = '🐳top排行';
-        top10Button.style.padding = '10px';
-        top10Button.style.background = 'var(--chat-surface)';
-        top10Button.style.color = 'var(--chat-text)';
-        top10Button.style.border = '1px solid var(--border-color)';
-        top10Button.style.borderRadius = '8px';
-        top10Button.style.fontSize = '14px';
-        top10Button.style.cursor = 'pointer';
-        top10Button.style.transition = 'all 0.2s ease';
-        top10Button.style.userSelect = 'none';
+        const top10Button = createMenuButton('💗我的Top10', async () => { menuButtonOnClick(10,"my_likes") });
+
+        // 创建Top10按钮
+        const worldTopButton = createMenuButton('🐳世界Top10', async () => { menuButtonOnClick(10,"all_likes") });
+
+        // 世界频道状态变量
+        let isWorldChannelActive = false;
         
-        // 添加点击事件（示例：可根据实际需求修改）
-        top10Button.addEventListener('click', async () => {
-            console.log('Top10按钮被点击');
-            let hisdata = await SbCLi.loadHistory(10,"my_likes");
-            if (hisdata?.length > 0) {
-                // 清空消息区域
-                messageArea.innerHTML = '';
-                hisdata.reverse().forEach(msg => { addMsgCard(msg) });
+        // 消息和状态回调函数
+        const messageCallback = (payload) => {
+            console.log('收到消息:', payload);
+            // 添加消息卡片
+            if(payload.user_id != userId) addMsgCard(payload);
+        };
+
+        const presenceCallback = (onlineCount) => {
+            console.log('当前在线用户数:', onlineCount);
+            // 更新在线人数
+            updateOnlineCount(onlineCount);
+        };
+        
+        // 创建世界频道按钮
+        const worldButton = createMenuButton('📢世界频道(未加入)', async () => {
+            if (!isWorldChannelActive) {
+                // 加入世界频道
+                await menuButtonOnClick(3, "all");
+                await SbCLi.setupRealtime(messageCallback, presenceCallback);
+                worldButton.textContent = '📢世界频道(已加入)';
+                updateTitle(chatRoomConfig.title + '📢世界频道');
+                isWorldChannelActive = true;
+            } else {
+                // 退出世界频道
+                await SbCLi.cleanup();
+                worldButton.textContent = '📢世界频道';
+                updateTitle(chatRoomConfig.title);
+                updateOnlineCount(0);
+                isWorldChannelActive = false;
             }
-            else{
-                console.log('没有Top10记录');
-                addMsgCard({content:'没有Top10记录'});
-            }
+            
             // 关闭菜单
             menuCard.style.display = 'none';
         });
         
         // 创建我的信息按钮
-        const myInfoButton = document.createElement('button');
-        myInfoButton.textContent = '👤我的信息';
-        myInfoButton.style.padding = '10px';
-        myInfoButton.style.background = 'var(--chat-surface)';
-        myInfoButton.style.color = 'var(--chat-text)';
-        myInfoButton.style.border = '1px solid var(--border-color)';
-        myInfoButton.style.borderRadius = '8px';
-        myInfoButton.style.fontSize = '14px';
-        myInfoButton.style.cursor = 'pointer';
-        myInfoButton.style.transition = 'all 0.2s ease';
-        myInfoButton.style.userSelect = 'none';
+        let myInfoButton ;
+        if (chatRoomConfig.flag) {
+            myInfoButton= createMenuButton('👤激活信息',  async () => {
+                console.log('我的信息按钮被点击');
+                // 关闭菜单
+                menuCard.style.display = 'none';
+                // 创建并显示我的信息卡片
+                showMyInfoCard();
+            });
+        }
         
-        // 添加点击事件
-        myInfoButton.addEventListener('click', () => {
-            console.log('我的信息按钮被点击');
-            
-            // 关闭菜单
-            menuCard.style.display = 'none';
-            
-            // 创建并显示我的信息卡片
-            showMyInfoCard();
-        });
+        // 创建脚本主页按钮（如果提供了主页URL）
+        let homepageButton;
+        if (chatRoomConfig.homepageUrl) {
+            homepageButton = createMenuButton('🏠脚本主页', async () => {
+                console.log('脚本主页按钮被点击');
+                // 关闭菜单
+                menuCard.style.display = 'none';
+                
+                // 打开脚本主页
+                window.open(chatRoomConfig.homepageUrl, '_blank', 'noopener noreferrer');
+            });
+        }
         
         // 将按钮添加到容器
-        menuButtonsContainer.appendChild(historyButton);
+        menuButtonsContainer.appendChild(worldButton);
+        menuButtonsContainer.appendChild(worldTopButton);
         menuButtonsContainer.appendChild(top10Button);
-        menuButtonsContainer.appendChild(myInfoButton);
+        // menuButtonsContainer.appendChild(historyButton);//未激活用户也会记录历史
+        if(myInfoButton){
+            menuButtonsContainer.appendChild(myInfoButton);
+        }
+        if (homepageButton) {
+            menuButtonsContainer.appendChild(homepageButton);
+        }
         
         // 将按钮容器添加到菜单卡片
         menuCard.appendChild(menuButtonsContainer);
@@ -776,6 +805,14 @@ const ChatRoomLibrary = (function () {
         }
     }
 
+    //更新容器标题
+    function updateTitle(title) {
+        const counter = document.getElementById('chat-title');
+        if (counter) {
+            counter.textContent = `${title}`;
+        }
+    }
+    
     /**
      * 更新在线人数
      * @param {number} count - 在线人数
@@ -819,36 +856,20 @@ const ChatRoomLibrary = (function () {
         infoCard.style.opacity = '0';
         infoCard.style.transform = 'translateY(10px)';
         
-        // 激活状态HTML
-        const activationStatusHtml = `
-            <div style="margin-bottom: 12px; padding: 10px; background: var(--chat-surface-light); border-radius: 8px;">
-                <p style="color: var(--chat-text-secondary); font-size: 14px; margin: 0;">激活状态</p>
-                <p style="color: ${isActive ? '#52c41a' : '#ff4d4f'}; font-size: 16px; margin: 4px 0 0 0;">
-                    ${message ? message : '❌ 未激活'}
-                </p>
-            </div>
-        `;
-        
         // 激活码HTML（仅当已激活时显示）
         const activationInfoHtml = activationCode ? `
             <div style="margin-bottom: 12px; padding: 10px; background: var(--chat-surface-light); border-radius: 8px;">
-                <p style="color: var(--chat-text-secondary); font-size: 14px; margin: 0;">激活码</p>
+                <p style="color: var(--chat-text-secondary); font-size: 14px; margin: 0;">当前激活码</p>
                 <p style="color: var(--chat-text); font-size: 16px; margin: 4px 0 0 0; word-break: break-all;">${activationCode}</p>
-            </div>
-            <div style="margin-bottom: 12px; padding: 10px; background: var(--chat-surface-light); border-radius: 8px;">
                 <p style="color: var(--chat-text-secondary); font-size: 14px; margin: 0;">有效期</p>
                 <p style="color: var(--chat-text); font-size: 16px; margin: 4px 0 0 0; word-break: break-all;">${data?.valid_for_days < 999 ? data?.valid_for_days + '天' : '永久'}</p>
-            </div>
-            <div style="margin-bottom: 12px; padding: 10px; background: var(--chat-surface-light); border-radius: 8px;">
                 <p style="color: var(--chat-text-secondary); font-size: 14px; margin: 0;">首次激活时间</p>
                 <p style="color: var(--chat-text); font-size: 16px; margin: 4px 0 0 0; word-break: break-all;">${new Date(data?.activated_at).toLocaleString()}</p>
             </div>
         ` : '';
         
         // 激活输入框HTML（仅当未激活时显示）
-        const activationInputHtml = !isActive ? `
-            <div style="margin-bottom: 12px; padding: 10px; background: var(--chat-surface-light); border-radius: 8px;">
-                <p style="color: var(--chat-text-secondary); font-size: 14px; margin: 0 0 8px 0;">输入激活码</p>
+        const activationInputHtml = `
                 <div style="display: flex; flex-direction: column; gap: 8px;">
                     <input type="text" id="activation-input" placeholder="请输入激活码" 
                            style="width: 100%; padding: 8px; box-sizing: border-box; background: var(--chat-bg); color: var(--chat-text); 
@@ -859,9 +880,19 @@ const ChatRoomLibrary = (function () {
                                    cursor: pointer; transition: all 0.2s ease;">激活</button>
                 </div>
                 <div id="activation-message" style="color: #ff4d4f; font-size: 12px; margin-top: 8px;"></div>
-            </div>
-        ` : '';
+        `;
         
+        // 激活状态HTML
+        const activationStatusHtml = `
+            <div style="margin-bottom: 12px; padding: 10px; background: var(--chat-surface-light); border-radius: 8px;">
+                <p style="color: var(--chat-text-secondary); font-size: 14px; margin: 0;">激活状态</p>
+                <p style="color: ${isActive ? '#52c41a' : '#ff4d4f'}; font-size: 16px; margin: 4px 0 0 0;">
+                    ${message ? message : '❌ 未激活'}
+                </p>
+                ${!isActive ? activationInputHtml : ''}
+            </div>
+        `;
+
         // 匿名信息
         const anonymousInfoHtml = `<div style="margin-bottom: 12px; padding: 10px; background: var(--chat-surface-light); border-radius: 8px;">
                 <p style="color: var(--chat-text-secondary); font-size: 14px; margin: 0;">匿名ID</p>
@@ -870,11 +901,10 @@ const ChatRoomLibrary = (function () {
         
         // 创建卡片内容
         infoCard.innerHTML = `
-            <h3 style="color: var(--chat-text); margin-bottom: 16px; font-size: 18px;">👤 我的信息</h3>
+            <h3 style="color: var(--chat-text); margin-bottom: 16px; font-size: 18px;">👤 激活信息</h3>
             ${anonymousInfoHtml}
             ${activationStatusHtml}
             ${activationInfoHtml}
-            ${activationInputHtml}
             <div style="margin-top: 20px; color: var(--chat-text-secondary); font-size: 12px;">
                 <p>💡 提示：请勿泄露激活码，否则可能导致封禁</p>
             </div>

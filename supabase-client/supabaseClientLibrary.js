@@ -372,6 +372,7 @@ const SbCLi = (function() {
         userId,
         activation_info,
         init,
+        cleanup,
         sendMessage,
         setupRealtime,
         loadHistory,
