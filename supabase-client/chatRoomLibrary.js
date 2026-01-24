@@ -27,20 +27,9 @@ const ChatRoomLibrary = (function () {
     // 默认UI配置
     const DEFAULT_UI_CONFIG = {
         width: '360px',
-        height: '75vh',
-        position: { right: '5px', bottom: '0px' },
+        height: '70vh',
+        position: { right: '5px', top: '0px' },
         bubblePosition: { right: '5px', bottom: '0px' },
-        theme: {
-            primary: '#8b5cf6',
-            primaryLight: '#a78bfa',
-            background: '#0a0a0a',
-            surface: '#1a1a1a',
-            surfaceLight: '#2a2a2a',
-            text: '#e0e0e0',
-            textSecondary: '#999999',
-            border: '#333333',
-            shadow: 'rgba(0, 0, 0, 0.8)'
-        }
     };
 
     // 聊天室状态管理
@@ -352,11 +341,13 @@ const ChatRoomLibrary = (function () {
         Object.assign(containerInstance.style, {
             position: 'fixed',
             right: chatRoomConfig.CHAT_UI.position.right,
-            bottom: chatRoomConfig.CHAT_UI.position.bottom,
+            top: chatRoomConfig.CHAT_UI.position.top,
             width: `${chatRoomConfig.CHAT_UI.width}`,
             height: `${chatRoomConfig.CHAT_UI.height}`,
-            maxHeight: '95vh',
-            minWidth: '320px',
+            maxHeight: '100vh',
+            minHeight: '30vh',
+            maxWidth: '100vw',
+            minWidth: '300px',
             backgroundColor: 'var(--chat-bg)',
             borderRadius: '20px',
             boxShadow: '0 20px 60px var(--shadow-color), 0 0 1px rgba(255,255,255,0.1) inset',
@@ -366,8 +357,8 @@ const ChatRoomLibrary = (function () {
             wordWrap: 'break-word',
             overflowWrap: 'break-word',
             boxSizing: 'border-box',
-            transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-            resize: 'both'
+            transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
+            // 移除默认的resize属性，只使用自定义的调整大小手柄
         });
 
         // 聊天窗口头部
@@ -755,13 +746,8 @@ const ChatRoomLibrary = (function () {
                 if (!message.like_list.includes(userId)) {
                     message.like_list.push(userId);
                 }
-                // 检查SbCLi是否可用
-                if (typeof SbCLi !== 'undefined') {
-                    // 发送力赞消息
-                    SbCLi.sendMessage(message);
-                } else {
-                    alert('力赞功能需要先初始化Supabase客户端');
-                }
+                // 发送消息
+                SbCLi.sendMessage(message);
             });
         });
 
@@ -795,7 +781,7 @@ const ChatRoomLibrary = (function () {
     /**
      * 显示我的信息卡片
      */
-    function showMyInfoCard() {
+    async function showMyInfoCard() {
         if (!messageArea) {
             console.error('聊天室UI未初始化，请先调用 initUI()');
             return;
@@ -1098,12 +1084,12 @@ const ChatRoomLibrary = (function () {
             bottom: '5px',
             width: '12px',
             height: '12px',
-            background: 'var(--border-color)',
+            background: '#3b82f6',
             borderRadius: '50%',
             cursor: 'nwse-resize',
             zIndex: '1000000',
-            opacity: '0.5',
-            transition: 'opacity 0.2s ease'
+            opacity: '0.9',
+            transition: 'all 0.2s ease'
         });
         containerInstance.appendChild(resizeHandle);
         
@@ -1114,22 +1100,35 @@ const ChatRoomLibrary = (function () {
         let startWidth = 0;
         let startHeight = 0;
         
+        // 获取事件坐标
+        const getEventCoords = (e) => {
+            return {
+                x: e.touches ? e.touches[0].clientX : e.clientX,
+                y: e.touches ? e.touches[0].clientY : e.clientY
+            };
+        };
+        
         // 手柄悬停效果
         resizeHandle.addEventListener('mouseenter', () => {
             resizeHandle.style.opacity = '1';
+            resizeHandle.style.transform = 'scale(1.2)';
+            resizeHandle.style.background = '#1d4ed8';
         });
         
         resizeHandle.addEventListener('mouseleave', () => {
             if (!isResizing) {
-                resizeHandle.style.opacity = '0.5';
+                resizeHandle.style.opacity = '0.9';
+                resizeHandle.style.transform = 'scale(1)';
+                resizeHandle.style.background = '#3b82f6';
             }
         });
         
         // 开始调整大小
-        resizeHandle.addEventListener('mousedown', (e) => {
+        const startResize = (e) => {
             isResizing = true;
-            startX = e.clientX;
-            startY = e.clientY;
+            const coords = getEventCoords(e);
+            startX = coords.x;
+            startY = coords.y;
             startWidth = containerInstance.offsetWidth;
             startHeight = containerInstance.offsetHeight;
             
@@ -1140,21 +1139,28 @@ const ChatRoomLibrary = (function () {
             // 添加视觉反馈
             containerInstance.style.zIndex = '999999';
             resizeHandle.style.opacity = '1';
-        });
+            resizeHandle.style.transform = 'scale(1.3)';
+            resizeHandle.style.background = '#1d4ed8';
+        };
         
         // 调整大小
-        document.addEventListener('mousemove', (e) => {
+        const resize = (e) => {
             if (!isResizing) return;
             
-            // 计算新的尺寸
-            const deltaX = e.clientX - startX;
-            const deltaY = e.clientY - startY;
+            // 阻止默认行为，避免页面滚动
+            e.preventDefault();
             
-            // 限制最小和最大尺寸
-            const minWidth = 300;
-            const minHeight = 400;
-            const maxWidth = window.innerWidth * 0.8;
-            const maxHeight = window.innerHeight * 0.9;
+            // 计算新的尺寸
+            const coords = getEventCoords(e);
+            const deltaX = coords.x - startX;
+            const deltaY = coords.y - startY;
+            
+            // 限制最小和最大尺寸，适配手机端
+            const isMobile = window.innerWidth <= 768;
+            const minWidth = isMobile ? 280 : 300;
+            const minHeight = isMobile ? 300 : 400;
+            const maxWidth = window.innerWidth * (isMobile ? 0.95 : 0.8);
+            const maxHeight = window.innerHeight * (isMobile ? 0.8 : 0.9);
             
             let newWidth = Math.max(minWidth, Math.min(startWidth + deltaX, maxWidth));
             let newHeight = Math.max(minHeight, Math.min(startHeight + deltaY, maxHeight));
@@ -1162,16 +1168,30 @@ const ChatRoomLibrary = (function () {
             // 更新容器尺寸
             containerInstance.style.width = `${newWidth}px`;
             containerInstance.style.height = `${newHeight}px`;
-        });
+        };
         
         // 结束调整大小
-        document.addEventListener('mouseup', () => {
+        const stopResize = () => {
             if (isResizing) {
                 isResizing = false;
-                resizeHandle.style.opacity = '0.5';
+                resizeHandle.style.opacity = '0.9';
+                resizeHandle.style.transform = 'scale(1)';
+                resizeHandle.style.background = '#3b82f6';
                 containerInstance.style.zIndex = '999998';
             }
-        });
+        };
+        
+        // 鼠标事件
+        resizeHandle.addEventListener('mousedown', startResize);
+        document.addEventListener('mousemove', resize);
+        document.addEventListener('mouseup', stopResize);
+        document.addEventListener('mouseleave', stopResize);
+        
+        // 触摸事件（手机端支持）
+        resizeHandle.addEventListener('touchstart', startResize, { passive: false });
+        document.addEventListener('touchmove', resize, { passive: false });
+        document.addEventListener('touchend', stopResize);
+        document.addEventListener('touchcancel', stopResize);
     }
     
     /**

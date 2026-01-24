@@ -33,6 +33,7 @@ const SbCLi = (function() {
     let supabaseClient = null;
     let userId = null;
     let messageChannel = null;
+    let activation_info = null;
 
     /**
      * 初始化 Supabase 客户端
@@ -58,28 +59,26 @@ const SbCLi = (function() {
      */
     async function initUser(client) {
         try {
-
             // 获取匿名会话 ✅
+            const res = await client.auth.getSession(); //必须先调用这个，因为要定期刷新token
+            GM_log('===获取本地会话===', res);
+            userId = res?.data?.session?.user?.id; //生效的ID
+            if(userId){
+                // 本地会话存在,写入GM存储
+                GM_setValue(CONFIG.SUPABASE_AUTH_TOKEN, res.data.session);
+                return;
+            }
+            
             let gm_auth_token = await GM_getValue(CONFIG.SUPABASE_AUTH_TOKEN);// 使用 GM_getValue 实现跨域一致性 
             GM_log('===获取脚本会话===', gm_auth_token);
             userId = gm_auth_token?.user?.id; //gm的ID
             if(userId){
-                // 脚本会话存在,写入localStorage
+                // 脚本会话存在,写入localStorage //实测有效，可以将userid同步到另一个域名下，如果仅靠client.auth.getSession()肯定不行
                 localStorage.setItem(CONFIG.SUPABASE_AUTH_TOKEN, JSON.stringify(gm_auth_token));
-                const { data: anonData, error: anonError } = await client.auth.getSession();
-                GM_log('===获取本地会话===', anonData?.session || anonError);
+                //const { data: anonData, error: anonError } = await client.auth.getSession();
+                //GM_log('===获取本地会话1===', anonData?.session || anonError);
                 return;
             }
-
-            const { data: anonData, error: anonError } = await client.auth.getSession();
-            GM_log('===获取本地会话===', anonData?.session || anonError);
-            userId = anonData?.session?.user?.id; //生效的ID
-            if(userId){
-                // 本地会话存在,写入GM存储
-                GM_setValue(CONFIG.SUPABASE_AUTH_TOKEN, anonData.session);
-                return;
-            }
-
             
             // 注册登录匿名用户,成功后会自动写入localstrage中，下次getSession()会成功获取到会话
             const { data, error } = await client.auth.signInAnonymously({
@@ -271,7 +270,8 @@ const SbCLi = (function() {
                     onload: function(response) {
                         try {
                             const result = JSON.parse(response.responseText);
-                            console.log('===激活码验证结果===', result);
+                            SbCLi.activation_info = result;
+                            console.log('===激活码验证结果===', SbCLi.activation_info);
                             GM_setValue('activation_info', result);
                             resolve(result);
                         } catch (error) {
@@ -319,8 +319,17 @@ const SbCLi = (function() {
             
             // 初始化用户
             await initUser(client);
-            // GM_deleteValue('activation_info'); //test
             
+            // 验证激活码信息
+            // GM_deleteValue('activation_info'); //test
+            const { success, message, data } = GM_getValue('activation_info') || {};
+            GM_log('本地缓存的激活码信息:', { success, message, data });
+            const activationCode = data?.activation_code || null;
+            if (activationCode) {
+                const activationResult = await SbCLi.verifyActivation(activationCode);
+                //GM_log('激活码验证结果:', activationResult);
+            }
+
             return userId;
         } catch (error) {
             console.error('聊天服务初始化失败:', error);
@@ -328,17 +337,47 @@ const SbCLi = (function() {
         }
     }
     
+    // 减少试看次数
+    function decreaseTrialCount() {
+        // 如果用户已激活，试看次数不减少
+        console.log('decreaseTrialCount==用户激活信息:', SbCLi.activation_info);
+        if (SbCLi.activation_info?.success) {
+            return 1;
+        }
+        const today = new Date().toDateString();
+        const savedData = GM_getValue('trial_data', {
+            date: today,
+            count: 4
+        });
+        
+        if (savedData.date !== today) {
+            savedData.date = today;
+            savedData.count = 4;
+        }
+        
+        if (savedData.count > 0) {
+            savedData.count--;
+            GM_setValue('trial_data', savedData);
+        }
+        
+        return savedData.count;
+    }
+    
+
     /**
      * 库的公共 API
      */
     return {
         VERSION,
         userId,
+        activation_info,
         init,
         sendMessage,
         setupRealtime,
         loadHistory,
         // 激活码相关API
         verifyActivation,
+        // 试看次数相关API
+        decreaseTrialCount,
     };
 })();
