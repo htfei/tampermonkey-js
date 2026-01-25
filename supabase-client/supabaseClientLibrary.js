@@ -35,6 +35,17 @@ const SbCLi = (function() {
     let messageChannel = null;
     let activation_info = null;
 
+    //获取脚本配置
+    async function getScriptConfig(script_id = CONFIG.ACTIVATION.SCRIPT_ID) {
+        const res = await supabaseClient
+            .from('script_catalog')
+            .select('*')
+            .eq('script_id', script_id)
+            .single();
+        GM_log('===获取脚本配置===', script_id, res);
+        return res;
+    }
+        
     /**
      * 初始化 Supabase 客户端
      * @returns {Object} Supabase 客户端实例
@@ -270,8 +281,8 @@ const SbCLi = (function() {
                     onload: function(response) {
                         try {
                             const result = JSON.parse(response.responseText);
-                            SbCLi.activation_info = result;
-                            console.log('===激活码验证结果===', SbCLi.activation_info);
+                            activation_info = result;
+                            console.log('===激活码验证结果===', activation_info);
                             GM_setValue('activation_info', result);
                             resolve(result);
                         } catch (error) {
@@ -340,8 +351,8 @@ const SbCLi = (function() {
     // 减少试看次数
     function decreaseTrialCount() {
         // 如果用户已激活，试看次数不减少
-        console.log('decreaseTrialCount==用户激活信息:', SbCLi.activation_info);
-        if (SbCLi.activation_info?.success) {
+        console.log('==用户激活信息:', activation_info);
+        if (activation_info?.success) {
             return 1;
         }
         const today = new Date().toDateString();
@@ -369,8 +380,6 @@ const SbCLi = (function() {
      */
     return {
         VERSION,
-        userId,
-        activation_info,
         init,
         cleanup,
         sendMessage,
@@ -380,5 +389,11 @@ const SbCLi = (function() {
         verifyActivation,
         // 试看次数相关API
         decreaseTrialCount,
+        // 脚本配置相关API
+        getScriptConfig,
+        // 获取用户ID
+        getUserId: () => userId,
+        // 获取脚本ID
+        getScriptId: () => CONFIG.ACTIVATION.SCRIPT_ID
     };
 })();

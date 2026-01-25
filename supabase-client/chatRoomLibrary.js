@@ -329,21 +329,39 @@ const ChatRoomLibrary = (function () {
 
     /**
      * 初始化聊天室UI
-     * @param {string} user_id - 用户ID
-     * @param {string} title - 聊天室标题
      * @returns {Object} 聊天室实例
      */
-    function initUI(user_id, title = '聊天室', homepageUrl = '', flag = true) {
-        userId = user_id;
-        // 合并配置
-        chatRoomConfig = {
-            title,
-            homepageUrl,
-            flag,
-            CHAT_UI: {
-                ...DEFAULT_UI_CONFIG
-            }
-        };
+    async function initUI() {
+        userId = SbCLi.getUserId();
+        GM_log('===用户ID===', userId);
+
+        // 获取脚本配置
+        const res = await SbCLi.getScriptConfig();
+        if (res.error) {
+            GM_log('===获取脚本配置失败===', res.error);
+            chatRoomConfig = {
+                script_id: null,
+                name: SbCLi.getScriptId(),
+                version: null,
+                url: null,
+                applicable_sites: [],
+                description: '',
+                is_free: false,
+                purchase_url: '',
+                latest_notice: null, //默认不显示
+                updated_at: new Date().toISOString(),
+                CHAT_UI: {
+                    ...DEFAULT_UI_CONFIG
+                }
+            };
+        }else{
+            chatRoomConfig = {
+                ...res.data,
+                CHAT_UI: {
+                    ...DEFAULT_UI_CONFIG
+                }
+            };
+        }
 
         // 注入样式
         injectStyles(chatRoomConfig.CHAT_UI);
@@ -378,7 +396,7 @@ const ChatRoomLibrary = (function () {
         header.id = 'chat-header';
         header.innerHTML = `
             <div class="online-count">
-                <span id="chat-title">${chatRoomConfig.title}</span>
+                <span id="chat-title">${chatRoomConfig.name}</span>
                 <span class="online-dot"></span>
                 <span id="online-users"></span> 
             </div>
@@ -538,10 +556,10 @@ const ChatRoomLibrary = (function () {
         // const historyButton = createMenuButton('📜我的历史', async () => { menuButtonOnClick(10) });
     
         // 创建Top10按钮
-        const top10Button = createMenuButton('💗我的Top10', async () => { menuButtonOnClick(10,"my_likes") });
+        const top10Button = createMenuButton('💗我的最爱', async () => { menuButtonOnClick(10,"my_likes") });
 
         // 创建Top10按钮
-        const worldTopButton = createMenuButton('🐳世界Top10', async () => { menuButtonOnClick(10,"all_likes") });
+        const worldTopButton = createMenuButton('🐳世界Top', async () => { menuButtonOnClick(10,"all_likes") });
 
         // 世界频道状态变量
         let isWorldChannelActive = false;
@@ -560,19 +578,19 @@ const ChatRoomLibrary = (function () {
         };
         
         // 创建世界频道按钮
-        const worldButton = createMenuButton('📢世界频道(未加入)', async () => {
+        const worldButton = createMenuButton('📢世界频道', async () => {
             if (!isWorldChannelActive) {
                 // 加入世界频道
                 await menuButtonOnClick(3, "all");
                 await SbCLi.setupRealtime(messageCallback, presenceCallback);
                 worldButton.textContent = '📢世界频道(已加入)';
-                updateTitle(chatRoomConfig.title + '📢世界频道');
+                updateTitle(chatRoomConfig.name + '📢世界频道');
                 isWorldChannelActive = true;
             } else {
                 // 退出世界频道
                 await SbCLi.cleanup();
                 worldButton.textContent = '📢世界频道';
-                updateTitle(chatRoomConfig.title);
+                updateTitle(chatRoomConfig.name);
                 updateOnlineCount(0);
                 isWorldChannelActive = false;
             }
@@ -583,7 +601,7 @@ const ChatRoomLibrary = (function () {
         
         // 创建我的信息按钮
         let myInfoButton ;
-        if (chatRoomConfig.flag) {
+        if (!chatRoomConfig.is_free) {
             myInfoButton= createMenuButton('👤激活信息',  async () => {
                 console.log('我的信息按钮被点击');
                 // 关闭菜单
@@ -593,16 +611,17 @@ const ChatRoomLibrary = (function () {
             });
         }
         
-        // 创建脚本主页按钮（如果提供了主页URL）
-        let homepageButton;
-        if (chatRoomConfig.homepageUrl) {
-            homepageButton = createMenuButton('🏠脚本主页', async () => {
-                console.log('脚本主页按钮被点击');
+        // 创建系统通知按钮
+        let systemNoticeButton;
+        if (chatRoomConfig.script_id){
+            systemNoticeButton = createMenuButton('📢系统公告', async () => {
+                console.log('系统通知按钮被点击');
                 // 关闭菜单
                 menuCard.style.display = 'none';
                 
-                // 打开脚本主页
-                window.open(chatRoomConfig.homepageUrl, '_blank', 'noopener noreferrer');
+                // 清空消息区域并显示系统通知卡片
+                messageArea.innerHTML = '';
+                showSystemNoticeCard();
             });
         }
         
@@ -614,8 +633,8 @@ const ChatRoomLibrary = (function () {
         if(myInfoButton){
             menuButtonsContainer.appendChild(myInfoButton);
         }
-        if (homepageButton) {
-            menuButtonsContainer.appendChild(homepageButton);
+        if(systemNoticeButton){
+            menuButtonsContainer.appendChild(systemNoticeButton);
         }
         
         // 将按钮容器添加到菜单卡片
@@ -649,6 +668,9 @@ const ChatRoomLibrary = (function () {
         toggleMinimize();
         //showMyInfoCard();
 
+        // 显示系统通知卡片
+        showSystemNoticeCard();
+
         return {
             containerInstance,
             bubble,
@@ -659,6 +681,113 @@ const ChatRoomLibrary = (function () {
         };
     }
 
+    /**
+     * 显示系统通知卡片
+     */
+    function showSystemNoticeCard() {
+        if (!messageArea || !chatRoomConfig.script_id) return;
+        
+        // 格式化更新时间
+        const formattedDate = new Date(chatRoomConfig.updated_at).toLocaleString('zh-CN', {
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+        
+        // 创建通知卡片
+        const noticeCard = document.createElement('div');
+        noticeCard.style.cssText = `
+            background: linear-gradient(135deg, var(--chat-surface), var(--chat-surface-light));
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 16px;
+            margin: 16px auto;
+            max-width: 95%;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+            animation: slideIn 0.4s ease-out forwards;
+            opacity: 0;
+            transform: translateY(-10px);
+        `;
+        
+        // 最新公告HTML
+        const latestNoticeHtml = chatRoomConfig.latest_notice ? `
+            <div style="margin-bottom: 12px;">
+                <h4 style="color: var(--chat-text); margin: 0 0 8px 0; font-size: 14px; font-weight: 600;">
+                    <p style="color: var(--chat-text-secondary); font-size: 11px; margin: 4px 0 0 0;"> ${formattedDate}</p>
+                </h4>
+                <p style="color: var(--chat-text); margin: 0; font-size: 13px; line-height: 1.5;">${chatRoomConfig.latest_notice}</p>
+            </div>
+        ` : '';
+
+        // 处理脚本描述显示（普通文本）
+        const descriptionHtml = chatRoomConfig.description ? `
+            <div style="margin-bottom: 12px;">
+                <h4 style="color: var(--chat-text); margin: 0 0 8px 0; font-size: 14px; font-weight: 600;">脚本描述</h4>
+                <p style="color: var(--chat-text-secondary); margin: 0; font-size: 13px; line-height: 1.5;">${chatRoomConfig.description}</p>
+            </div>
+        ` : '';
+        
+        // 处理适用网站显示（转为超链接）
+        const applicableSitesHtml = chatRoomConfig.applicable_sites && chatRoomConfig.applicable_sites.length > 0 ? `
+            <div style="margin-bottom: 12px;">
+                <h4 style="color: var(--chat-text); margin: 0 0 8px 0; font-size: 14px; font-weight: 600;">最新网址</h4>
+                <div style="display: flex; flex-wrap: wrap; gap: 6px;">
+                    ${chatRoomConfig.applicable_sites.map(site => {
+                        // 检查是否为URL格式
+                        const isUrl = /^https?:\/\//i.test(site);
+                        if (isUrl) {
+                            return `<a href="${site}" target="_blank" rel="noopener noreferrer" style="background: var(--chat-bg); border: 1px solid var(--border-color); border-radius: 12px; padding: 4px 10px; font-size: 12px; color: var(--chat-text-secondary); text-decoration: none;">${site}</a>`;
+                        } else {
+                            return `<span style="background: var(--chat-bg); border: 1px solid var(--border-color); border-radius: 12px; padding: 4px 10px; font-size: 12px; color: var(--chat-text-secondary);">${site}</span>`;
+                        }
+                    }).join('')}
+                </div>
+            </div>
+        ` : '';
+
+        // 处理购买信息显示
+        const purchaseHtml = !chatRoomConfig.is_free && chatRoomConfig.purchase_url ? `
+                <a href="${chatRoomConfig.purchase_url}" target="_blank" rel="noopener noreferrer"
+                   style="display: inline-block; padding: 6px 14px; background: linear-gradient(135deg, var(--primary-color), var(--primary-light));
+                          color: white; text-decoration: none; border-radius: 4px; font-size: 13px;">⚡️发电支持</a>
+        ` : '';
+
+        // 处理版本和脚本地址显示
+        // 获取当前脚本版本
+        const currentVersion = GM_info?.script?.version || '未知';
+        // 比较当前版本和最新版本
+        const isLatest = currentVersion === chatRoomConfig.version;
+        const versionAndUrlHtml = !isLatest ? `
+                <a href="${chatRoomConfig.url}" target="_blank" rel="noopener noreferrer"
+                   style="display: inline-block; padding: 6px 14px; background: linear-gradient(135deg, var(--primary-color), var(--primary-light));
+                          color: white; text-decoration: none; border-radius: 4px; font-size: 13px;">🔥更新脚本</a>
+        ` : '';
+
+        // 卡片内容
+        noticeCard.innerHTML = `
+            <div style="margin-bottom: 12px;">
+                <h3 style="color: var(--chat-text); margin: 0 0 8px 0; font-size: 16px;">📢 ${chatRoomConfig.name}系统公告</h3>
+            </div>
+
+            ${latestNoticeHtml}
+            
+            ${descriptionHtml}
+            
+            ${applicableSitesHtml}
+
+            ${versionAndUrlHtml}
+            ${purchaseHtml}
+        `;
+        
+        // 添加到消息区域
+        messageArea.appendChild(noticeCard);
+        
+        // 滚动到底部
+        scrollToBottom();
+    }
+    
     /**
      * 切换最小化状态
      */
@@ -874,10 +1003,14 @@ const ChatRoomLibrary = (function () {
                     <input type="text" id="activation-input" placeholder="请输入激活码" 
                            style="width: 100%; padding: 8px; box-sizing: border-box; background: var(--chat-bg); color: var(--chat-text); 
                                   border: 1px solid var(--border-color); border-radius: 4px; font-size: 14px;">
-                    <button id="activation-submit" 
-                            style="padding: 8px 14px; background: linear-gradient(135deg, #1890ff 0%, #096dd9 100%); 
-                                   color: white; border: none; border-radius: 4px; font-size: 14px; 
-                                   cursor: pointer; transition: all 0.2s ease;">激活</button>
+                    <div style="display: flex; flex-direction: column; gap: 8px;">
+                        <button id="activation-submit" 
+                                style="padding: 8px 14px; background: linear-gradient(135deg, #1890ff 0%, #096dd9 100%); 
+                                       color: white; border: none; border-radius: 4px; font-size: 14px; 
+                                       cursor: pointer; transition: all 0.2s ease;">激活</button>
+                        <a href="${chatRoomConfig.purchase_url || '#'}" target="_blank" rel="noopener noreferrer" 
+                           style="text-align: center; color: var(--primary-color); font-size: 13px; text-decoration: none;">获取激活码</a>
+                    </div>
                 </div>
                 <div id="activation-message" style="color: #ff4d4f; font-size: 12px; margin-top: 8px;"></div>
         `;
