@@ -748,7 +748,7 @@ const ChatRoomLibrary = (function () {
         ` : '';
 
         // 处理购买信息显示
-        const purchaseHtml = !chatRoomConfig.is_free && chatRoomConfig.purchase_url ? `
+        const purchaseHtml = chatRoomConfig.purchase_url ? `
                 <a href="${chatRoomConfig.purchase_url}" target="_blank" rel="noopener noreferrer"
                    style="display: inline-block; padding: 6px 14px; background: linear-gradient(135deg, var(--primary-color), var(--primary-light));
                           color: white; text-decoration: none; border-radius: 4px; font-size: 13px;">⚡️发电支持</a>
