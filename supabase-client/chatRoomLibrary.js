@@ -26,10 +26,10 @@ const ChatRoomLibrary = (function () {
 
     // 默认UI配置
     const DEFAULT_UI_CONFIG = {
-        width: '360px',
-        height: '70vh',
-        position: { right: '5px', top: '0px' },
-        bubblePosition: { right: '5px', bottom: '0px' },
+        width: window.innerWidth <= 768 ? '100dvw' : '25dvw',
+        height: '100dvh',
+        position: { right: '0px', top: '0px' },
+        bubblePosition: { right: '0px', bottom: '0px' },
         theme: {
             primary: '#8b5cf6',
             primaryLight: '#a78bfa',
@@ -52,7 +52,7 @@ const ChatRoomLibrary = (function () {
     let header = null;
     let isMinimized = false;
     let currentVideo = null;
-    
+
     // 气泡拖拽状态
     let isDragging = false;
     let startX = 0;
@@ -209,7 +209,7 @@ const ChatRoomLibrary = (function () {
             if (remaining) elements.push(`<div style="margin-bottom: 8px;">${remaining}</div>`);
         });
 
-        if(message.video_url) {
+        if (message.video_url) {
             const videoId = `${message.id}-video`;
             const downurl = `https://tools.thatwind.com/tool/m3u8downloader#m3u8=${message.video_url}&referer=${message.url}&filename=${message.content}`;
             elements.push(`<div style=" overflow: hidden; box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);">
@@ -336,32 +336,13 @@ const ChatRoomLibrary = (function () {
         GM_log('===用户ID===', userId);
 
         // 获取脚本配置
-        const res = await SbCLi.getScriptConfig();
-        if (res.error) {
-            GM_log('===获取脚本配置失败===', res.error);
-            chatRoomConfig = {
-                script_id: null,
-                name: SbCLi.getScriptId(),
-                version: null,
-                url: null,
-                applicable_sites: [],
-                description: '',
-                is_free: false,
-                purchase_url: '',
-                latest_notice: null, //默认不显示
-                updated_at: new Date().toISOString(),
-                CHAT_UI: {
-                    ...DEFAULT_UI_CONFIG
-                }
-            };
-        }else{
-            chatRoomConfig = {
-                ...res.data,
-                CHAT_UI: {
-                    ...DEFAULT_UI_CONFIG
-                }
-            };
-        }
+        const scriptConfig = await SbCLi.getScriptConfig();
+        chatRoomConfig = {
+            ...scriptConfig,
+            CHAT_UI: {
+                ...DEFAULT_UI_CONFIG
+            }
+        };
 
         // 注入样式
         injectStyles(chatRoomConfig.CHAT_UI);
@@ -404,17 +385,17 @@ const ChatRoomLibrary = (function () {
         header.style.padding = '10px 24px';
         header.style.cursor = 'grab'; // 设置初始光标样式为 grab，提示用户可以拖拽
         containerInstance.appendChild(header);
-        
+
         // 初始化容器拖拽功能
         initContainerDrag();
-        
+
         // 添加容器大小调整功能
         makeContainerResizable();
 
         // 最小化气泡
         bubble = document.createElement('div');
         bubble.id = 'chat-bubble';
-        
+
         // 创建点击区域
         const bubbleContent = document.createElement('div');
         bubbleContent.id = 'chat-bubble-icon';
@@ -425,15 +406,15 @@ const ChatRoomLibrary = (function () {
         bubbleContent.style.alignItems = 'center';
         bubbleContent.style.justifyContent = 'center';
         bubbleContent.style.cursor = 'pointer';
-        
+
         // 添加点击事件到内容区域
         bubbleContent.addEventListener('click', (e) => {
             e.stopPropagation();
             toggleMinimize();
         });
-        
+
         bubble.appendChild(bubbleContent);
-        
+
         Object.assign(bubble.style, {
             right: chatRoomConfig.CHAT_UI.bubblePosition.right,
             bottom: chatRoomConfig.CHAT_UI.bubblePosition.bottom,
@@ -441,10 +422,10 @@ const ChatRoomLibrary = (function () {
         });
         // 添加show类确保气泡显示
         bubble.classList.add('show');
-        
+
         // 添加拖拽功能
         makeBubbleDraggable();
-        
+
         document.body.appendChild(bubble);
 
         // 创建消息区域
@@ -470,196 +451,205 @@ const ChatRoomLibrary = (function () {
         inputContainer.style.position = 'relative';
         inputContainer.style.borderBottomLeftRadius = '20px';
         inputContainer.style.borderBottomRightRadius = '20px';
-        
-        // 创建菜单按钮元素
-        const menuButton = document.createElement('button');
-        menuButton.textContent = '📋菜单';
-        menuButton.style.width = '100%';
-        menuButton.style.padding = '10px';
-        menuButton.style.background = 'var(--chat-surface-light)';
-        menuButton.style.color = 'var(--chat-text)';
-        menuButton.style.border = '1px solid var(--border-color)';
-        menuButton.style.borderRadius = '12px';
-        menuButton.style.fontSize = '14px';
-        menuButton.style.cursor = 'pointer';
-        menuButton.style.transition = 'all 0.2s ease';
-        menuButton.style.userSelect = 'none';
-        
-        // 添加悬停效果
-        menuButton.addEventListener('mouseenter', () => {
-            menuButton.style.background = 'var(--border-color)';
-            menuButton.style.transform = 'scale(1.02)';
-        });
-        
-        menuButton.addEventListener('mouseleave', () => {
+
+        // 根据feature_flags.menu决定是否创建菜单
+        if (chatRoomConfig.feature_flags?.menu) {
+            // 创建菜单按钮元素
+            const menuButton = document.createElement('button');
+            menuButton.textContent = '📋菜单';
+            menuButton.style.width = '100%';
+            menuButton.style.padding = '10px';
             menuButton.style.background = 'var(--chat-surface-light)';
-            menuButton.style.transform = 'scale(1)';
-        });
-        
-        // 创建菜单卡片
-        const menuCard = document.createElement('div');
-        menuCard.id = 'menu-card';
-        menuCard.style.position = 'absolute';
-        menuCard.style.bottom = '100%';
-        menuCard.style.left = '0';
-        menuCard.style.width = '100%';
-        menuCard.style.background = 'var(--chat-surface)';
-        menuCard.style.border = '1px solid var(--border-color)';
-        menuCard.style.borderRadius = '12px 12px 0 0';
-        menuCard.style.boxShadow = '0 -4px 16px rgba(0, 0, 0, 0.3)';
-        menuCard.style.zIndex = '1000000';
-        menuCard.style.display = 'none';
-        menuCard.style.animation = 'slideIn 0.3s ease-out';
-        menuCard.style.padding = '12px';
-        menuCard.style.boxSizing = 'border-box';
-        
-        // 添加菜单按钮组
-        const menuButtonsContainer = document.createElement('div');
-        menuButtonsContainer.style.display = 'flex';
-        menuButtonsContainer.style.flexDirection = 'column';
-        menuButtonsContainer.style.gap = '8px';
-        
-        function createMenuButton(text, onClick) {
-            const button = document.createElement('button');
-            button.textContent = text;
-            button.style.padding = '10px';
-            button.style.background = 'var(--chat-surface)';
-            button.style.color = 'var(--chat-text)';
-            button.style.border = '1px solid var(--border-color)';
-            button.style.borderRadius = '8px';
-            button.style.fontSize = '14px';
-            button.style.cursor = 'pointer';
-            button.style.transition = 'all 0.2s ease';
-            button.style.userSelect = 'none';
-            button.addEventListener('click', onClick);
-            return button;
-        }
+            menuButton.style.color = 'var(--chat-text)';
+            menuButton.style.border = '1px solid var(--border-color)';
+            menuButton.style.borderRadius = '12px';
+            menuButton.style.fontSize = '14px';
+            menuButton.style.cursor = 'pointer';
+            menuButton.style.transition = 'all 0.2s ease';
+            menuButton.style.userSelect = 'none';
 
-        async function menuButtonOnClick(count = 10, flag = userId) {
-            console.log('浏览历史按钮被点击');
-            let hisdata = await SbCLi.loadHistory(10, flag);
-            if (hisdata?.length > 0) {
-                // console.log('有历史记录',hisdata);
-                // 清空消息区域
-                messageArea.innerHTML = '';
-                hisdata.reverse().forEach(msg => { addMsgCard(msg) });
-            }
-            else{
-                console.log('没有历史记录');
-                addMsgCard({content:'没有历史记录'});
-            }
-            // 关闭菜单
+            // 添加悬停效果
+            menuButton.addEventListener('mouseenter', () => {
+                menuButton.style.background = 'var(--border-color)';
+                menuButton.style.transform = 'scale(1.02)';
+            });
+
+            menuButton.addEventListener('mouseleave', () => {
+                menuButton.style.background = 'var(--chat-surface-light)';
+                menuButton.style.transform = 'scale(1)';
+            });
+
+            // 创建菜单卡片
+            const menuCard = document.createElement('div');
+            menuCard.id = 'menu-card';
+            menuCard.style.position = 'absolute';
+            menuCard.style.bottom = '100%';
+            menuCard.style.left = '0';
+            menuCard.style.width = '100%';
+            menuCard.style.background = 'var(--chat-surface)';
+            menuCard.style.border = '1px solid var(--border-color)';
+            menuCard.style.borderRadius = '12px 12px 0 0';
+            menuCard.style.boxShadow = '0 -4px 16px rgba(0, 0, 0, 0.3)';
+            menuCard.style.zIndex = '1000000';
             menuCard.style.display = 'none';
-        }
+            menuCard.style.animation = 'slideIn 0.3s ease-out';
+            menuCard.style.padding = '12px';
+            menuCard.style.boxSizing = 'border-box';
 
-        // 创建浏览历史按钮
-        // const historyButton = createMenuButton('📜我的历史', async () => { menuButtonOnClick(10) });
-    
-        // 创建Top10按钮
-        const top10Button = createMenuButton('💗我的最爱', async () => { menuButtonOnClick(10,"my_likes") });
+            // 添加菜单按钮组
+            const menuButtonsContainer = document.createElement('div');
+            menuButtonsContainer.style.display = 'flex';
+            menuButtonsContainer.style.flexDirection = 'column';
+            menuButtonsContainer.style.gap = '8px';
 
-        // 创建Top10按钮
-        const worldTopButton = createMenuButton('🐳世界Top', async () => { menuButtonOnClick(10,"all_likes") });
-
-        // 世界频道状态变量
-        let isWorldChannelActive = false;
-        
-        // 消息和状态回调函数
-        const messageCallback = (payload) => {
-            console.log('收到消息:', payload);
-            // 添加消息卡片
-            if(payload.user_id != userId) addMsgCard(payload);
-        };
-
-        const presenceCallback = (onlineCount) => {
-            console.log('当前在线用户数:', onlineCount);
-            // 更新在线人数
-            updateOnlineCount(onlineCount);
-        };
-        
-        // 创建世界频道按钮
-        const worldButton = createMenuButton('📢世界频道', async () => {
-            if (!isWorldChannelActive) {
-                // 加入世界频道
-                await menuButtonOnClick(3, "all");
-                await SbCLi.setupRealtime(messageCallback, presenceCallback);
-                worldButton.textContent = '📢世界频道(已加入)';
-                updateTitle(chatRoomConfig.name + '📢世界频道');
-                isWorldChannelActive = true;
-            } else {
-                // 退出世界频道
-                await SbCLi.cleanup();
-                worldButton.textContent = '📢世界频道';
-                updateTitle(chatRoomConfig.name);
-                updateOnlineCount(0);
-                isWorldChannelActive = false;
+            function createMenuButton(text, onClick) {
+                const button = document.createElement('button');
+                button.textContent = text;
+                button.style.padding = '10px';
+                button.style.background = 'var(--chat-surface)';
+                button.style.color = 'var(--chat-text)';
+                button.style.border = '1px solid var(--border-color)';
+                button.style.borderRadius = '8px';
+                button.style.fontSize = '14px';
+                button.style.cursor = 'pointer';
+                button.style.transition = 'all 0.2s ease';
+                button.style.userSelect = 'none';
+                button.addEventListener('click', onClick);
+                return button;
             }
-            
-            // 关闭菜单
-            menuCard.style.display = 'none';
-        });
-        
-        // 创建我的信息按钮
-        let myInfoButton ;
-        if (!chatRoomConfig.is_free) {
-            myInfoButton= createMenuButton('👤激活信息',  async () => {
-                console.log('我的信息按钮被点击');
+
+            // 世界频道状态变量
+            let isWorldChannelActive = false;
+
+            // 消息和状态回调函数
+            const messageCallback = (payload) => {
+                console.log('收到消息:', payload);
+                // 添加消息卡片
+                if (payload.user_id != userId) addMsgCard(payload);
+            };
+
+            const presenceCallback = (onlineCount) => {
+                console.log('当前在线用户数:', onlineCount);
+                // 更新在线人数
+                updateOnlineCount(onlineCount);
+            };
+
+            // 创建世界频道按钮 (根据world_channel标志)
+            if (chatRoomConfig.feature_flags?.world_channel) {
+                const worldButton = createMenuButton('📢世界频道', async () => {
+                    if (!isWorldChannelActive) {
+                        // 加入世界频道
+                        await menuButtonOnClick(3, "all");
+                        await SbCLi.setupRealtime(messageCallback, presenceCallback);
+                        worldButton.textContent = '📢世界频道(已加入)';
+                        updateTitle(chatRoomConfig.name + '📢世界频道');
+                        isWorldChannelActive = true;
+                    } else {
+                        // 退出世界频道
+                        await SbCLi.cleanup();
+                        worldButton.textContent = '📢世界频道';
+                        updateTitle(chatRoomConfig.name);
+                        updateOnlineCount(0);
+                        isWorldChannelActive = false;
+                    }
+
+                    // 关闭菜单
+                    menuCard.style.display = 'none';
+                });
+                menuButtonsContainer.appendChild(worldButton);
+            }
+
+            async function menuButtonOnClick(count = 10, flag = userId) {
+                console.log('浏览历史按钮被点击');
+                let hisdata = await SbCLi.loadHistory(10, flag);
+                if (hisdata?.length > 0) {
+                    // console.log('有历史记录',hisdata);
+                    // 清空消息区域
+                    messageArea.innerHTML = '';
+                    hisdata.reverse().forEach(msg => { addMsgCard(msg) });
+                }
+                else {
+                    console.log('没有历史记录');
+                    addMsgCard({ content: '没有历史记录' });
+                }
                 // 关闭菜单
                 menuCard.style.display = 'none';
-                // 创建并显示我的信息卡片
-                showMyInfoCard();
-            });
-        }
-        
-        // 创建系统通知按钮
-        let systemNoticeButton;
-        if (chatRoomConfig.script_id){
-            systemNoticeButton = createMenuButton('📢系统公告', async () => {
-                console.log('系统通知按钮被点击');
-                // 关闭菜单
-                menuCard.style.display = 'none';
-                
-                // 清空消息区域并显示系统通知卡片
-                messageArea.innerHTML = '';
-                showSystemNoticeCard();
-            });
-        }
-        
-        // 将按钮添加到容器
-        menuButtonsContainer.appendChild(worldButton);
-        menuButtonsContainer.appendChild(worldTopButton);
-        menuButtonsContainer.appendChild(top10Button);
-        // menuButtonsContainer.appendChild(historyButton);//未激活用户也会记录历史
-        if(myInfoButton){
-            menuButtonsContainer.appendChild(myInfoButton);
-        }
-        if(systemNoticeButton){
-            menuButtonsContainer.appendChild(systemNoticeButton);
-        }
-        
-        // 将按钮容器添加到菜单卡片
-        menuCard.appendChild(menuButtonsContainer);
-        
-        // 菜单按钮点击事件
-        menuButton.addEventListener('click', () => {
-            // 切换菜单显示状态
-            if (menuCard.style.display === 'none' || menuCard.style.display === '') {
-                menuCard.style.display = 'block';
-            } else {
-                menuCard.style.display = 'none';
             }
-        });
-        
-        // 将按钮和菜单卡片添加到输入容器
-        inputContainer.appendChild(menuButton);
-        inputContainer.appendChild(menuCard);
-        
-        // 点击外部关闭菜单
-        document.addEventListener('click', (e) => {
-            if (!inputContainer.contains(e.target)) {
-                menuCard.style.display = 'none';
+
+            // 创建世界Top按钮 (根据world_top标志)
+            if (chatRoomConfig.feature_flags?.world_top) {
+                const worldTopButton = createMenuButton('🐳世界Top', async () => { menuButtonOnClick(10, "all_likes") });
+                menuButtonsContainer.appendChild(worldTopButton);
             }
-        });
+
+            // 创建我的最爱按钮 (根据my_likes标志)
+            if (chatRoomConfig.feature_flags?.my_likes) {
+                const top10Button = createMenuButton('💗我的最爱', async () => { menuButtonOnClick(10, "my_likes") });
+                menuButtonsContainer.appendChild(top10Button);
+            }
+
+            // 创建浏览历史按钮 (根据my_history标志)
+            if (chatRoomConfig.feature_flags?.my_history) {
+                const historyButton = createMenuButton('📜我的历史', async () => { menuButtonOnClick(10) });
+                menuButtonsContainer.appendChild(historyButton);
+            }
+
+            // 创建激活信息按钮 (根据activation_info标志)
+            if (chatRoomConfig.feature_flags?.activation_info) {
+                const myInfoButton = createMenuButton('👤激活信息', async () => {
+                    console.log('我的信息按钮被点击');
+                    // 关闭菜单
+                    menuCard.style.display = 'none';
+                    // 创建并显示我的信息卡片
+                    showMyInfoCard();
+                });
+                menuButtonsContainer.appendChild(myInfoButton);
+            }
+
+            // 创建系统公告按钮 (根据system_announcement标志)
+            if (chatRoomConfig.feature_flags?.system_announcement && chatRoomConfig.script_id) {
+                const systemNoticeButton = createMenuButton('📢系统公告', async () => {
+                    console.log('系统通知按钮被点击');
+                    // 关闭菜单
+                    menuCard.style.display = 'none';
+
+                    // 清空消息区域并显示系统通知卡片
+                    messageArea.innerHTML = '';
+                    showSystemNoticeCard();
+                });
+                menuButtonsContainer.appendChild(systemNoticeButton);
+            }
+
+            // 将按钮容器添加到菜单卡片
+            menuCard.appendChild(menuButtonsContainer);
+
+            // 将菜单卡片添加到输入容器
+            inputContainer.appendChild(menuCard);
+
+            // 菜单按钮点击事件
+            menuButton.addEventListener('click', () => {
+                //console.log('菜单按钮被点击');
+                // 切换菜单显示状态
+                if (menuCard.style.display === 'none' || menuCard.style.display === '') {
+                    menuCard.style.display = 'block';
+                    //console.log('菜单已打开');
+                } else {
+                    menuCard.style.display = 'none';
+                    //console.log('菜单已关闭');
+                }
+            });
+
+            // 点击外部关闭菜单
+            document.addEventListener('click', (e) => {
+                if (!inputContainer.contains(e.target)) {
+                    menuCard.style.display = 'none';
+                }
+            });
+
+            // 将菜单按钮添加到输入容器
+            inputContainer.appendChild(menuButton);
+        }
+        // 如果menu为false，不加载菜单栏
 
         containerInstance.append(messageArea, inputContainer);
         document.body.appendChild(containerInstance);
@@ -686,7 +676,7 @@ const ChatRoomLibrary = (function () {
      */
     function showSystemNoticeCard() {
         if (!messageArea || !chatRoomConfig.script_id) return;
-        
+
         // 格式化更新时间
         const formattedDate = new Date(chatRoomConfig.updated_at).toLocaleString('zh-CN', {
             year: 'numeric',
@@ -695,7 +685,7 @@ const ChatRoomLibrary = (function () {
             hour: '2-digit',
             minute: '2-digit'
         });
-        
+
         // 创建通知卡片
         const noticeCard = document.createElement('div');
         noticeCard.style.cssText = `
@@ -710,7 +700,7 @@ const ChatRoomLibrary = (function () {
             opacity: 0;
             transform: translateY(-10px);
         `;
-        
+
         // 最新公告HTML
         const latestNoticeHtml = chatRoomConfig.latest_notice ? `
             <div style="margin-bottom: 12px;">
@@ -728,21 +718,21 @@ const ChatRoomLibrary = (function () {
                 <p style="color: var(--chat-text-secondary); margin: 0; font-size: 13px; line-height: 1.5;">${chatRoomConfig.description}</p>
             </div>
         ` : '';
-        
+
         // 处理适用网站显示（转为超链接）
         const applicableSitesHtml = chatRoomConfig.applicable_sites && chatRoomConfig.applicable_sites.length > 0 ? `
             <div style="margin-bottom: 12px;">
                 <h4 style="color: var(--chat-text); margin: 0 0 8px 0; font-size: 14px; font-weight: 600;">最新网址</h4>
                 <div style="display: flex; flex-wrap: wrap; gap: 6px;">
                     ${chatRoomConfig.applicable_sites.map(site => {
-                        // 检查是否为URL格式
-                        const isUrl = /^https?:\/\//i.test(site);
-                        if (isUrl) {
-                            return `<a href="${site}" target="_blank" rel="noopener noreferrer" style="background: var(--chat-bg); border: 1px solid var(--border-color); border-radius: 12px; padding: 4px 10px; font-size: 12px; color: var(--chat-text-secondary); text-decoration: none;">${site}</a>`;
-                        } else {
-                            return `<span style="background: var(--chat-bg); border: 1px solid var(--border-color); border-radius: 12px; padding: 4px 10px; font-size: 12px; color: var(--chat-text-secondary);">${site}</span>`;
-                        }
-                    }).join('')}
+            // 检查是否为URL格式
+            const isUrl = /^https?:\/\//i.test(site);
+            if (isUrl) {
+                return `<a href="${site}" target="_blank" rel="noopener noreferrer" style="background: var(--chat-bg); border: 1px solid var(--border-color); border-radius: 12px; padding: 4px 10px; font-size: 12px; color: var(--chat-text-secondary); text-decoration: none;">${site}</a>`;
+            } else {
+                return `<span style="background: var(--chat-bg); border: 1px solid var(--border-color); border-radius: 12px; padding: 4px 10px; font-size: 12px; color: var(--chat-text-secondary);">${site}</span>`;
+            }
+        }).join('')}
                 </div>
             </div>
         ` : '';
@@ -780,21 +770,21 @@ const ChatRoomLibrary = (function () {
             ${versionAndUrlHtml}
             ${purchaseHtml}
         `;
-        
+
         // 添加到消息区域
         messageArea.appendChild(noticeCard);
-        
+
         // 滚动到底部
         scrollToBottom();
     }
-    
+
     /**
      * 切换最小化状态
      */
     function toggleMinimize() {
         // 计算当前状态
         const wasHidden = containerInstance.style.display === 'none' || containerInstance.style.display === '';
-        
+
         // 直接切换容器的显示状态
         if (wasHidden) {
             containerInstance.style.display = 'flex';
@@ -941,7 +931,7 @@ const ChatRoomLibrary = (function () {
             counter.textContent = `${title}`;
         }
     }
-    
+
     /**
      * 更新在线人数
      * @param {number} count - 在线人数
@@ -953,7 +943,7 @@ const ChatRoomLibrary = (function () {
             counter.style.fontWeight = count > 0 ? '600' : '400';
         }
     }
-    
+
     /**
      * 显示我的信息卡片
      */
@@ -962,16 +952,16 @@ const ChatRoomLibrary = (function () {
             console.error('聊天室UI未初始化，请先调用 initUI()');
             return;
         }
-        
+
         // 清空消息区域
         messageArea.innerHTML = '';
-        
+
         // 解构赋值读取激活信息
         const { success, message, data } = GM_getValue('activation_info') || {};
         GM_log('用户激活信息:', { success, message, data });
         const isActive = success;
-        const activationCode = data?.activation_code || null;   
-        
+        const activationCode = data?.activation_code || null;
+
         // 创建信息卡片
         const infoCard = document.createElement('div');
         infoCard.style.padding = '16px';
@@ -984,7 +974,7 @@ const ChatRoomLibrary = (function () {
         infoCard.style.animation = 'fadeInUp 0.4s ease-out forwards';
         infoCard.style.opacity = '0';
         infoCard.style.transform = 'translateY(10px)';
-        
+
         // 激活码HTML（仅当已激活时显示）
         const activationInfoHtml = activationCode ? `
             <div style="margin-bottom: 12px; padding: 10px; background: var(--chat-surface-light); border-radius: 8px;">
@@ -996,7 +986,7 @@ const ChatRoomLibrary = (function () {
                 <p style="color: var(--chat-text); font-size: 16px; margin: 4px 0 0 0; word-break: break-all;">${new Date(data?.activated_at).toLocaleString()}</p>
             </div>
         ` : '';
-        
+
         // 激活输入框HTML（仅当未激活时显示）
         const activationInputHtml = `
                 <div style="display: flex; flex-direction: column; gap: 8px;">
@@ -1014,7 +1004,7 @@ const ChatRoomLibrary = (function () {
                 </div>
                 <div id="activation-message" style="color: #ff4d4f; font-size: 12px; margin-top: 8px;"></div>
         `;
-        
+
         // 激活状态HTML
         const activationStatusHtml = `
             <div style="margin-bottom: 12px; padding: 10px; background: var(--chat-surface-light); border-radius: 8px;">
@@ -1031,7 +1021,7 @@ const ChatRoomLibrary = (function () {
                 <p style="color: var(--chat-text-secondary); font-size: 14px; margin: 0;">匿名ID</p>
                 <p style="color: var(--chat-text); font-size: 12px; margin: 4px 0 0 0; word-break: break-all;">${userId}</p>
             </div>`;
-        
+
         // 创建卡片内容
         infoCard.innerHTML = `
             <h3 style="color: var(--chat-text); margin-bottom: 16px; font-size: 18px;">👤 激活信息</h3>
@@ -1042,16 +1032,16 @@ const ChatRoomLibrary = (function () {
                 <p>💡 提示：请勿泄露激活码，否则可能导致封禁</p>
             </div>
         `;
-        
+
         // 添加到消息区域
         messageArea.appendChild(infoCard);
-        
+
         // 绑定激活按钮事件（仅当未激活时）
         if (!isActive) {
             const input = infoCard.querySelector('#activation-input');
             const button = infoCard.querySelector('#activation-submit');
             const message = infoCard.querySelector('#activation-message');
-            
+
             if (input && button && message) {
                 // 处理激活
                 const handleActivation = async () => {
@@ -1060,22 +1050,22 @@ const ChatRoomLibrary = (function () {
                         message.textContent = '请输入激活码';
                         return;
                     }
-                    
+
                     // 禁用按钮，显示加载状态
                     button.disabled = true;
                     button.textContent = '激活中...';
                     button.style.opacity = '0.7';
                     message.textContent = '';
-                    
+
                     try {
                         // 调用激活验证
                         const result = await SbCLi.verifyActivation(code);
-                        
+
                         if (result.success) {
                             // 激活成功
                             message.textContent = result.message;
                             message.style.color = '#52c41a';
-                            
+
                             // 刷新页面
                             setTimeout(() => { showMyInfoCard(); }, 1000);
                         } else {
@@ -1095,10 +1085,10 @@ const ChatRoomLibrary = (function () {
                         button.style.opacity = '1';
                     }
                 };
-                
+
                 // 绑定按钮点击事件
                 button.addEventListener('click', handleActivation);
-                
+
                 // 绑定回车事件
                 input.addEventListener('keypress', (e) => {
                     if (e.key === 'Enter') {
@@ -1108,7 +1098,7 @@ const ChatRoomLibrary = (function () {
             }
         }
     }
-    
+
     /**
      * 使气泡可拖拽
      */
@@ -1119,7 +1109,7 @@ const ChatRoomLibrary = (function () {
             // 不要在这里调用preventDefault()，以免阻止点击事件
             startDrag(e.touches[0]);
         });
-        
+
         document.addEventListener('mousemove', (e) => drag(e));
         document.addEventListener('touchmove', (e) => {
             // 只在拖拽过程中调用preventDefault()，防止页面滚动
@@ -1128,7 +1118,7 @@ const ChatRoomLibrary = (function () {
             }
             drag(e.touches[0]);
         }, { passive: false });
-        
+
         document.addEventListener('mouseup', (e) => stopDrag(e));
         document.addEventListener('touchend', (e) => {
             const touch = e.changedTouches[0];
@@ -1139,7 +1129,7 @@ const ChatRoomLibrary = (function () {
             }
         });
     }
-    
+
     /**
      * 开始拖动
      * @param {MouseEvent|Touch} e - 鼠标或触摸事件
@@ -1147,47 +1137,47 @@ const ChatRoomLibrary = (function () {
     function startDrag(e) {
         // 只有在气泡可见时才能拖拽
         if (bubble.style.display === 'none') return;
-        
+
         isDragging = true;
         startX = e.clientX;
         startY = e.clientY;
-        
+
         // 获取初始位置
         const rect = bubble.getBoundingClientRect();
         initialLeft = rect.left;
         initialTop = rect.top;
-        
+
         // 改变光标样式
         bubble.style.cursor = 'grabbing';
         // 添加拖拽时的视觉效果
         bubble.style.transform = 'scale(1.05)';
         bubble.style.transition = 'transform 0.1s ease';
     }
-    
+
     /**
      * 拖动过程
      * @param {MouseEvent|Touch} e - 鼠标或触摸事件
      */
     function drag(e) {
         if (!isDragging) return;
-        
+
         // 计算位移
         const dx = e.clientX - startX;
         const dy = e.clientY - startY;
-        
+
         // 计算新位置
         let newLeft = initialLeft + dx;
         let newTop = initialTop + dy;
-        
+
         // 限制在可视区域内
         const windowWidth = window.innerWidth;
         const windowHeight = window.innerHeight;
         const bubbleWidth = bubble.offsetWidth;
         const bubbleHeight = bubble.offsetHeight;
-        
+
         newLeft = Math.max(0, Math.min(newLeft, windowWidth - bubbleWidth));
         newTop = Math.max(0, Math.min(newTop, windowHeight - bubbleHeight));
-        
+
         // 更新位置
         bubble.style.left = `${newLeft}px`;
         bubble.style.top = `${newTop}px`;
@@ -1195,7 +1185,7 @@ const ChatRoomLibrary = (function () {
         bubble.style.right = 'auto';
         bubble.style.bottom = 'auto';
     }
-    
+
     /**
      * 结束拖动
      * @param {MouseEvent|Touch} e - 鼠标或触摸事件
@@ -1210,7 +1200,7 @@ const ChatRoomLibrary = (function () {
             bubble.style.transition = 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
         }
     }
-    
+
     /**
      * 初始化容器拖拽功能
      */
@@ -1222,17 +1212,17 @@ const ChatRoomLibrary = (function () {
         containerInstance.initialLeft = 0;
         containerInstance.initialTop = 0;
         containerInstance.dragHandle = header;
-        
+
         // 绑定事件 - 参考悬浮UI库的实现
         containerInstance.dragHandle.addEventListener('mousedown', (e) => startContainerDrag(e));
         containerInstance.dragHandle.addEventListener('touchstart', (e) => startContainerDrag(e), { passive: false });
-        
+
         document.addEventListener('mousemove', (e) => dragContainer(e));
         document.addEventListener('touchmove', (e) => dragContainer(e), { passive: false });
-        
+
         document.addEventListener('mouseup', (e) => stopContainerDrag(e));
         document.addEventListener('touchend', (e) => stopContainerDrag(e));
-        
+
         // 防止拖拽时触发点击事件
         containerInstance.dragHandle.addEventListener('click', (e) => {
             if (containerInstance.isDragAction) {
@@ -1243,7 +1233,7 @@ const ChatRoomLibrary = (function () {
             }
         });
     }
-    
+
     /**
      * 添加容器大小调整功能
      */
@@ -1253,26 +1243,26 @@ const ChatRoomLibrary = (function () {
         resizeHandle.id = 'chat-resize-handle';
         Object.assign(resizeHandle.style, {
             position: 'absolute',
-            right: '5px',
+            left: '5px',
             bottom: '5px',
             width: '12px',
             height: '12px',
             background: '#3b82f6',
             borderRadius: '50%',
-            cursor: 'nwse-resize',
+            cursor: 'nesw-resize',
             zIndex: '1000000',
             opacity: '0.9',
             transition: 'all 0.2s ease'
         });
         containerInstance.appendChild(resizeHandle);
-        
+
         // 调整大小的状态变量
         let isResizing = false;
         let startX = 0;
         let startY = 0;
         let startWidth = 0;
         let startHeight = 0;
-        
+
         // 获取事件坐标
         const getEventCoords = (e) => {
             return {
@@ -1280,14 +1270,14 @@ const ChatRoomLibrary = (function () {
                 y: e.touches ? e.touches[0].clientY : e.clientY
             };
         };
-        
+
         // 手柄悬停效果
         resizeHandle.addEventListener('mouseenter', () => {
             resizeHandle.style.opacity = '1';
             resizeHandle.style.transform = 'scale(1.2)';
             resizeHandle.style.background = '#1d4ed8';
         });
-        
+
         resizeHandle.addEventListener('mouseleave', () => {
             if (!isResizing) {
                 resizeHandle.style.opacity = '0.9';
@@ -1295,7 +1285,7 @@ const ChatRoomLibrary = (function () {
                 resizeHandle.style.background = '#3b82f6';
             }
         });
-        
+
         // 开始调整大小
         const startResize = (e) => {
             isResizing = true;
@@ -1304,45 +1294,47 @@ const ChatRoomLibrary = (function () {
             startY = coords.y;
             startWidth = containerInstance.offsetWidth;
             startHeight = containerInstance.offsetHeight;
-            
+
             // 阻止默认行为和冒泡
             e.preventDefault();
             e.stopPropagation();
-            
+
             // 添加视觉反馈
             containerInstance.style.zIndex = '999999';
             resizeHandle.style.opacity = '1';
             resizeHandle.style.transform = 'scale(1.3)';
             resizeHandle.style.background = '#1d4ed8';
         };
-        
+
         // 调整大小
         const resize = (e) => {
             if (!isResizing) return;
-            
+
             // 阻止默认行为，避免页面滚动
             e.preventDefault();
-            
+
             // 计算新的尺寸
             const coords = getEventCoords(e);
             const deltaX = coords.x - startX;
             const deltaY = coords.y - startY;
-            
+
             // 限制最小和最大尺寸，适配手机端
             const isMobile = window.innerWidth <= 768;
             const minWidth = isMobile ? Math.floor(window.innerWidth * 0.6) : 360;
             const minHeight = isMobile ? 300 : 400;
             const maxWidth = window.innerWidth;
             const maxHeight = window.innerHeight;
-            
-            let newWidth = Math.max(minWidth, Math.min(startWidth + deltaX, maxWidth));
+
+            // 因为手柄在左下角，所以需要反转deltaX的符号
+            // 向右拖动应该使宽度减少，向左拖动应该使宽度增加
+            let newWidth = Math.max(minWidth, Math.min(startWidth - deltaX, maxWidth));
             let newHeight = Math.max(minHeight, Math.min(startHeight + deltaY, maxHeight));
-            
+
             // 更新容器尺寸
             containerInstance.style.width = `${newWidth}px`;
             containerInstance.style.height = `${newHeight}px`;
         };
-        
+
         // 结束调整大小
         const stopResize = () => {
             if (isResizing) {
@@ -1353,20 +1345,20 @@ const ChatRoomLibrary = (function () {
                 containerInstance.style.zIndex = '999998';
             }
         };
-        
+
         // 鼠标事件
         resizeHandle.addEventListener('mousedown', startResize);
         document.addEventListener('mousemove', resize);
         document.addEventListener('mouseup', stopResize);
         document.addEventListener('mouseleave', stopResize);
-        
+
         // 触摸事件（手机端支持）
         resizeHandle.addEventListener('touchstart', startResize, { passive: false });
         document.addEventListener('touchmove', resize, { passive: false });
         document.addEventListener('touchend', stopResize);
         document.addEventListener('touchcancel', stopResize);
     }
-    
+
     /**
      * 开始容器拖动
      * @param {MouseEvent|Touch} e - 鼠标或触摸事件
@@ -1374,60 +1366,60 @@ const ChatRoomLibrary = (function () {
     function startContainerDrag(e) {
         // 只有在容器可见时才能拖拽
         if (containerInstance.style.display === 'none') return;
-        
+
         // 处理触摸事件对象
         const event = e.touches ? e.touches[0] : e;
-        
+
         // 阻止默认行为和冒泡
         e.preventDefault();
         e.stopPropagation();
-        
+
         containerInstance.isDragging = true;
         containerInstance.startX = event.clientX;
         containerInstance.startY = event.clientY;
-        
+
         // 获取初始位置
         const rect = containerInstance.getBoundingClientRect();
         containerInstance.initialLeft = rect.left;
         containerInstance.initialTop = rect.top;
-        
+
         // 改变光标样式
         containerInstance.dragHandle.style.cursor = 'grabbing';
         // 提高z-index，确保拖拽时在最上层
         containerInstance.style.zIndex = '999999';
-        
+
         // 添加拖拽时的视觉效果
         containerInstance.style.transform = 'scale(1.01)';
         containerInstance.style.transition = 'transform 0.1s ease';
     }
-    
+
     /**
      * 拖动容器
      * @param {MouseEvent|Touch} e - 鼠标或触摸事件
      */
     function dragContainer(e) {
         if (!containerInstance.isDragging) return;
-        
+
         // 处理触摸事件对象
         const event = e.touches ? e.touches[0] : e;
-        
+
         // 计算位移
         const dx = event.clientX - containerInstance.startX;
         const dy = event.clientY - containerInstance.startY;
-        
+
         // 计算新位置
         let newLeft = containerInstance.initialLeft + dx;
         let newTop = containerInstance.initialTop + dy;
-        
+
         // 限制在可视区域内
         const windowWidth = window.innerWidth;
         const windowHeight = window.innerHeight;
         const containerWidth = containerInstance.offsetWidth;
         const containerHeight = containerInstance.offsetHeight;
-        
+
         newLeft = Math.max(0, Math.min(newLeft, windowWidth - containerWidth));
         newTop = Math.max(0, Math.min(newTop, windowHeight - containerHeight));
-        
+
         // 更新位置
         containerInstance.style.left = `${newLeft}px`;
         containerInstance.style.top = `${newTop}px`;
@@ -1435,7 +1427,7 @@ const ChatRoomLibrary = (function () {
         containerInstance.style.right = 'auto';
         containerInstance.style.bottom = 'auto';
     }
-    
+
     /**
      * 结束容器拖动
      * @param {MouseEvent|Touch} e - 鼠标或触摸事件
@@ -1448,16 +1440,16 @@ const ChatRoomLibrary = (function () {
             const dy = Math.abs(event.clientY - containerInstance.startY);
             // 判断是否为拖拽操作
             containerInstance.isDragAction = dx > 5 || dy > 5;
-            
+
             // 恢复样式
             containerInstance.isDragging = false;
             containerInstance.dragHandle.style.cursor = 'grab';
             containerInstance.style.zIndex = '999998'; // 恢复原来的z-index
             containerInstance.style.transform = 'scale(1)';
-            containerInstance.style.transition = 'transform 0.1s ease'; 
+            containerInstance.style.transition = 'transform 0.1s ease';
         }
     }
-    
+
 
 
     /**

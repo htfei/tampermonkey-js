@@ -34,16 +34,44 @@ const SbCLi = (function() {
     let userId = null;
     let messageChannel = null;
     let activation_info = null;
+    let scriptConfig = null;
 
     //获取脚本配置
     async function getScriptConfig(script_id = CONFIG.ACTIVATION.SCRIPT_ID) {
+        if(scriptConfig) return scriptConfig;
         const res = await supabaseClient
             .from('script_catalog')
             .select('*')
             .eq('script_id', script_id)
             .single();
         GM_log('===获取脚本配置===', script_id, res);
-        return res;
+        if (res.error) {
+            //GM_log('===获取脚本配置失败===', res.error);
+            scriptConfig = {
+                script_id: null,
+                name: SbCLi.getScriptId(),
+                version: null,
+                url: null,
+                applicable_sites: [],
+                description: '',
+                is_free: false,
+                purchase_url: '',
+                latest_notice: null, //默认不显示
+                updated_at: new Date().toISOString(),
+                feature_flags: {
+                    activation_info: true,
+                    menu: true,
+                    my_history: false,
+                    my_likes: true,
+                    system_announcement: true,
+                    world_channel: true,
+                    world_top: true
+                }
+            }
+        }else{
+            scriptConfig = res.data;
+        }
+        return scriptConfig;
     }
         
     /**
@@ -341,6 +369,9 @@ const SbCLi = (function() {
                 //GM_log('激活码验证结果:', activationResult);
             }
 
+            // 获取脚本配置
+            await getScriptConfig();
+            
             return userId;
         } catch (error) {
             console.error('聊天服务初始化失败:', error);
@@ -351,8 +382,8 @@ const SbCLi = (function() {
     // 减少试看次数
     function decreaseTrialCount() {
         // 如果用户已激活，试看次数不减少
-        console.log('==用户激活信息:', activation_info);
-        if (activation_info?.success) {
+        console.log('==isfree or 已激活 ==', scriptConfig?.is_free, activation_info?.success);
+        if (scriptConfig?.is_free || activation_info?.success) {
             return 1;
         }
         const today = new Date().toDateString();
