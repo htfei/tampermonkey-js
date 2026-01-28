@@ -1,10 +1,15 @@
 // ==UserScript==
 // @name        okav破解VIP视频免费看
 // @namespace    okav
-// @version      1.0.5
+// @version      1.0.6
 // @description  来不及解释了，快上车！！！
 // @author       w2f
+// @match        https://okav.com
+// @match        https://okav.link
+// @match        https://avfby.com
 // @match        https://okav.2egkga7a.icu/
+// @match        https://okav.wagey3aw.icu/
+// @include      /^http(s)?:\/\/okav.\d+\.icu/
 // @icon         https://okav.2egkga7a.icu/images/favicon.ico
 // @license      MIT
 // @grant        GM_log
