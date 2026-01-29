@@ -39,7 +39,7 @@
             window.mediaInfo = {
                 url: window.location.href,
                 //id: json_obj.mediaInfo.id,
-                content: json_obj.mediaInfo.desc,
+                content: json_obj.mediaInfo.title || json_obj.mediaInfo.desc,
                 video_url: location.origin + '/api/app/media/m3u8ex/' + json_obj.mediaInfo.videoUrl + '?token=' + localStorage.getItem('token'),
                 image_url: null,
             };
