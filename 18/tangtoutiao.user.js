@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         汤头条破解VIP视频免费看🥣
 // @namespace    tangtoutiao_vip_video_free_see
-// @version      2.0.1
+// @version      2.1
 // @description  来不及解释了，快上车！！！
 // @author       w2f
 // @match        https://p1.xpyortno.cc/*
@@ -22,10 +22,10 @@
 // @connect      supabase.co
 // @require      https://unpkg.com/@supabase/supabase-js@2.49.3/dist/umd/supabase.js
 // @require      https://cdnjs.cloudflare.com/ajax/libs/hls.js/1.1.5/hls.min.js
-// @require      https://scriptcat.org/lib/5007/1.0.1/supabaseClientLibrary.js#sha384=An/EKSp9xaz4YGHGLWUZYfW1950+SEeQhsmfjbbAfh8GOY8dHA7ZMuwEhnEq4gVJ
-// @require      https://scriptcat.org/lib/5008/1.0.3/chatRoomLibrary.js#sha384=Rot5TRczD6A15DdM28xrwncuNdle1gd2ChGSanpvMRNQZiF62lgbqhdVI9bRYOMz
-// @downloadURL https://update.sleazyfork.org/scripts/559718/%E6%B1%A4%E5%A4%B4%E6%9D%A1%E7%A0%B4%E8%A7%A3VIP%E8%A7%86%E9%A2%91%E5%85%8D%E8%B4%B9%E7%9C%8B%F0%9F%A5%A3.user.js
-// @updateURL https://update.sleazyfork.org/scripts/559718/%E6%B1%A4%E5%A4%B4%E6%9D%A1%E7%A0%B4%E8%A7%A3VIP%E8%A7%86%E9%A2%91%E5%85%8D%E8%B4%B9%E7%9C%8B%F0%9F%A5%A3.meta.js
+// @require      https://scriptcat.org/lib/5007/1.0.4/supabaseClientLibrary.js#sha384=UVgc6octvKJ1F7mziyZvq8As2JOFlBP67kH/AOywBSXFrlKuyXMJCViIiNfbAjgu
+// @require      https://scriptcat.org/lib/5008/1.0.6/chatRoomLibrary.js#sha384=K75aUnIAOk8+4AgNJhFH/4Z5ouseZgL0DZxQjyMkXf8+ZLZdI2dsPWsQBEbwSptw
+// @downloadURL  https://update.sleazyfork.org/scripts/559718/%E6%B1%A4%E5%A4%B4%E6%9D%A1%E7%A0%B4%E8%A7%A3VIP%E8%A7%86%E9%A2%91%E5%85%8D%E8%B4%B9%E7%9C%8B%F0%9F%A5%A3.user.js
+// @updateURL    https://update.sleazyfork.org/scripts/559718/%E6%B1%A4%E5%A4%B4%E6%9D%A1%E7%A0%B4%E8%A7%A3VIP%E8%A7%86%E9%A2%91%E5%85%8D%E8%B4%B9%E7%9C%8B%F0%9F%A5%A3.meta.js
 // ==/UserScript==
 
 (async function () {
@@ -35,23 +35,6 @@
 
     // 存储拦截的请求
     let interceptedRequests = [];
-
-    // 初始化UI
-    const chatRoom = await ChatRoomLibrary.initUI();
-    chatRoom.setTitle('汤头条破解VIP视频免费看');
-
-    // 初始化
-    const user_id = await SbCLi.init();
-    GM_log('用户ID:', user_id);
-
-    // 加载历史消息
-    let hisdata = await SbCLi.loadHistory(10);
-    if (hisdata) {
-        hisdata.reverse().forEach(msg => {
-            interceptedRequests.push(msg.video_url); //防止加载历史视频时被拦截导致再次发送
-            chatRoom.addMsgCard(msg);
-        });
-    }
 
     // 拦截媒体资源请求（media类型）
     function interceptMediaRequests() {
@@ -159,9 +142,13 @@
                     video_url: url,
                     image_url: null,
                 };
-                // 加载卡片
-                chatRoom.addMsgCard(videoInfo);
-                // 发送消息
+                // 加载卡片，发送消息
+                if (SbCLi.decreaseTrialCount() > 0) {
+                    chatRoom.addMsgCard(videoInfo);
+                }
+                else {
+                    chatRoom.addMsgCard({ content: '设备未激活，今日试看次数已用完！' });
+                }
                 const res = SbCLi.sendMessage(videoInfo);
                 GM_log('发送消息的响应:', res);
             }
@@ -172,7 +159,9 @@
 
     // 初始化
     interceptMediaRequests();
-
+    // 初始化
+    await SbCLi.init('ttt');
+    const chatRoom = await ChatRoomLibrary.initUI();
     function remove_ad() {
         //微密圈去广告
         document.querySelector("welcome-ad")?.remove();//去除 开屏广告 5s倒计时

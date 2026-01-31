@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         萝莉窝破解VIP视频免费看
 // @namespace    luoliwo_vip_video_free_see
-// @version      1.2
+// @version      1.3
 // @description  来不及解释了，快上车！！！
 // @author       w2f
 // @match        https://daga88n.com/*
@@ -18,26 +18,18 @@
 // @connect      supabase.co
 // @require      https://unpkg.com/@supabase/supabase-js@2.49.3/dist/umd/supabase.js
 // @require      https://cdnjs.cloudflare.com/ajax/libs/hls.js/1.1.5/hls.min.js
-// @require      https://scriptcat.org/lib/5007/1.0.1/supabaseClientLibrary.js#sha384=An/EKSp9xaz4YGHGLWUZYfW1950+SEeQhsmfjbbAfh8GOY8dHA7ZMuwEhnEq4gVJ
-// @require      https://scriptcat.org/lib/5008/1.0.3/chatRoomLibrary.js#sha384=Rot5TRczD6A15DdM28xrwncuNdle1gd2ChGSanpvMRNQZiF62lgbqhdVI9bRYOMz
+// @require      https://scriptcat.org/lib/5007/1.0.4/supabaseClientLibrary.js#sha384=UVgc6octvKJ1F7mziyZvq8As2JOFlBP67kH/AOywBSXFrlKuyXMJCViIiNfbAjgu
+// @require      https://scriptcat.org/lib/5008/1.0.6/chatRoomLibrary.js#sha384=K75aUnIAOk8+4AgNJhFH/4Z5ouseZgL0DZxQjyMkXf8+ZLZdI2dsPWsQBEbwSptw
+// @downloadURL https://update.sleazyfork.org/scripts/547842/%E8%90%9D%E8%8E%89%E7%AA%9D%E7%A0%B4%E8%A7%A3VIP%E8%A7%86%E9%A2%91%E5%85%8D%E8%B4%B9%E7%9C%8B.user.js
+// @updateURL https://update.sleazyfork.org/scripts/547842/%E8%90%9D%E8%8E%89%E7%AA%9D%E7%A0%B4%E8%A7%A3VIP%E8%A7%86%E9%A2%91%E5%85%8D%E8%B4%B9%E7%9C%8B.meta.js
 // ==/UserScript==
 
 (async function () {
     'use strict';
 
-    // 初始化UI
-    const chatRoom = await ChatRoomLibrary.initUI();
-    chatRoom.setTitle('萝莉喔破解VIP视频免费看');
-
     // 初始化
-    const user_id = await SbCLi.init();
-    GM_log('用户ID:', user_id);
-
-    // 加载历史消息
-    let hisdata = await SbCLi.loadHistory(10);
-    if (hisdata) {
-        hisdata.reverse().forEach(msg => { chatRoom.addMsgCard(msg) });
-    }
+    await SbCLi.init('luoliwo');
+    const chatRoom = await ChatRoomLibrary.initUI();
 
     function check_circle() {
 
@@ -53,9 +45,13 @@
                 video_url: window.m3u8_url,
                 image_url: bgUrl,
             };
-            // 加载卡片
-            chatRoom.addMsgCard(videoInfo);
-            // 发送消息
+            // 加载卡片，发送消息
+            if (SbCLi.decreaseTrialCount() > 0){
+                chatRoom.addMsgCard(videoInfo);
+            }
+            else{
+                chatRoom.addMsgCard({ content: '设备未激活，今日试看次数已用完！' });
+            }
             const res = SbCLi.sendMessage(videoInfo);
             GM_log('发送消息的响应:', res);
 
