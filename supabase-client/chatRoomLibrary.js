@@ -112,7 +112,7 @@ const ChatRoomLibrary = (function () {
         const globalStylesCSS = `
             #chat-container { animation: slideIn 0.4s ease-out; background: var(--chat-bg); border: 1px solid var(--border-color); border-radius: 20px; overflow: hidden; }
             #chat-messages { background: var(--chat-surface); }
-            #input-container { padding: 12px; border-top: 1px solid var(--border-color); box-sizing: border-box; background: var(--chat-surface); position: relative; border-bottom-left-radius: 20px; border-bottom-right-radius: 20px; }
+            #input-container { padding: 5px; border-top: 1px solid var(--border-color); box-sizing: border-box; background: var(--chat-surface); position: relative; border-bottom-left-radius: 20px; border-bottom-right-radius: 20px; }
             .online-dot { width: 8px; height: 8px; border-radius: 50%; background-color: #10b981; margin-right: 6px; display: inline-block; animation: pulse 2s infinite; }
             #chat-header { padding: 20px 24px; border-bottom: 1px solid var(--border-color); background: linear-gradient(135deg, var(--chat-bg), var(--chat-surface)); border-top-left-radius: 20px; border-top-right-radius: 20px; display: flex; align-items: center; justify-content: center; position: relative; height: auto; }
             .online-count { font-size: 16px; font-weight: 600; color: white; }
@@ -382,7 +382,7 @@ const ChatRoomLibrary = (function () {
                 <span id="online-users"></span> 
             </div>
         `;
-        header.style.padding = '10px 24px';
+        header.style.padding = '1px 10px';
         header.style.cursor = 'grab'; // 设置初始光标样式为 grab，提示用户可以拖拽
         containerInstance.appendChild(header);
 
@@ -458,7 +458,7 @@ const ChatRoomLibrary = (function () {
             const menuButton = document.createElement('button');
             menuButton.textContent = '📋菜单';
             menuButton.style.width = '100%';
-            menuButton.style.padding = '10px';
+            menuButton.style.padding = '5px';
             menuButton.style.background = 'var(--chat-surface-light)';
             menuButton.style.color = 'var(--chat-text)';
             menuButton.style.border = '1px solid var(--border-color)';
@@ -493,7 +493,7 @@ const ChatRoomLibrary = (function () {
             menuCard.style.zIndex = '1000000';
             menuCard.style.display = 'none';
             menuCard.style.animation = 'slideIn 0.3s ease-out';
-            menuCard.style.padding = '12px';
+            menuCard.style.padding = '5px';
             menuCard.style.boxSizing = 'border-box';
 
             // 添加菜单按钮组
@@ -505,7 +505,7 @@ const ChatRoomLibrary = (function () {
             function createMenuButton(text, onClick) {
                 const button = document.createElement('button');
                 button.textContent = text;
-                button.style.padding = '10px';
+                button.style.padding = '5px';
                 button.style.background = 'var(--chat-surface)';
                 button.style.color = 'var(--chat-text)';
                 button.style.border = '1px solid var(--border-color)';
@@ -1258,8 +1258,8 @@ const ChatRoomLibrary = (function () {
             position: 'absolute',
             left: '5px',
             bottom: '5px',
-            width: '12px',
-            height: '12px',
+            width: '20px',
+            height: '20px',
             background: '#3b82f6',
             borderRadius: '50%',
             cursor: 'nesw-resize',
