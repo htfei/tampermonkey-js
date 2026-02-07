@@ -35,6 +35,85 @@ const SbCLi = (function() {
     let messageChannel = null;
     let activation_info = null;
     let scriptConfig = null;
+    
+    // GM函数兼容性处理
+    const GM = {
+        // 检查是否支持GM函数
+        isSupported: typeof GM_getValue !== 'undefined' && typeof GM_setValue !== 'undefined',
+        
+        // GM_getValue兼容实现
+        getValue: function(key, defaultValue) {
+            if (GM.isSupported) {
+                return GM_getValue(key, defaultValue);
+            } else {
+                // Safari兼容：使用localStorage
+                try {
+                    const value = localStorage.getItem(key);
+                    return value ? JSON.parse(value) : defaultValue;
+                } catch (e) {
+                    console.error('localStorage getValue error:', e);
+                    return defaultValue;
+                }
+            }
+        },
+        
+        // GM_setValue兼容实现
+        setValue: function(key, value) {
+            if (GM.isSupported) {
+                return GM_setValue(key, value);
+            } else {
+                // Safari兼容：使用localStorage
+                try {
+                    localStorage.setItem(key, JSON.stringify(value));
+                } catch (e) {
+                    console.error('localStorage setValue error:', e);
+                }
+            }
+        },
+        
+        // GM_xmlhttpRequest兼容实现
+        xmlhttpRequest: function(options) {
+            if (GM.isSupported && typeof GM_xmlhttpRequest !== 'undefined') {
+                return GM_xmlhttpRequest(options);
+            } else {
+                // Safari兼容：使用fetch API
+                return new Promise((resolve, reject) => {
+                    fetch(options.url, {
+                        method: options.method || 'GET',
+                        headers: options.headers || {},
+                        body: options.data
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (options.onload) {
+                            options.onload({ responseText: JSON.stringify(data) });
+                        }
+                        resolve(data);
+                    })
+                    .catch(error => {
+                        if (options.onerror) {
+                            options.onerror(error);
+                        }
+                        reject(error);
+                    });
+                });
+            }
+        },
+        
+        // GM_deleteValue兼容实现
+        deleteValue: function(key) {
+            if (GM.isSupported && typeof GM_deleteValue !== 'undefined') {
+                return GM_deleteValue(key);
+            } else {
+                // Safari兼容：使用localStorage
+                try {
+                    localStorage.removeItem(key);
+                } catch (e) {
+                    console.error('localStorage deleteValue error:', e);
+                }
+            }
+        }
+    };
 
     //获取脚本配置
     async function getScriptConfig(script_id = CONFIG.ACTIVATION.SCRIPT_ID) {
@@ -44,9 +123,9 @@ const SbCLi = (function() {
             .select('*')
             .eq('script_id', script_id)
             .single();
-        GM_log('===获取脚本配置===', script_id, res);
+        console.log('===获取脚本配置===', script_id, res);
         if (res.error) {
-            //GM_log('===获取脚本配置失败===', res.error);
+            //console.log('===获取脚本配置失败===', res.error);
             scriptConfig = {
                 script_id: null,
                 name: SbCLi.getScriptId(),
@@ -100,22 +179,22 @@ const SbCLi = (function() {
         try {
             // 获取匿名会话 ✅
             const res = await client.auth.getSession(); //必须先调用这个，因为要定期刷新token
-            GM_log('===获取本地会话===', res);
+            console.log('===获取本地会话===', res);
             userId = res?.data?.session?.user?.id; //生效的ID
             if(userId){
                 // 本地会话存在,写入GM存储
-                GM_setValue(CONFIG.SUPABASE_AUTH_TOKEN, res.data.session);
+                GM.setValue(CONFIG.SUPABASE_AUTH_TOKEN, res.data.session);
                 return;
             }
             
-            let gm_auth_token = await GM_getValue(CONFIG.SUPABASE_AUTH_TOKEN);// 使用 GM_getValue 实现跨域一致性 
-            GM_log('===获取脚本会话===', gm_auth_token);
+            let gm_auth_token = GM.getValue(CONFIG.SUPABASE_AUTH_TOKEN);// 使用 GM.getValue 实现跨域一致性 
+            console.log('===获取脚本会话===', gm_auth_token);
             userId = gm_auth_token?.user?.id; //gm的ID
             if(userId){
                 // 脚本会话存在,写入localStorage //实测有效，可以将userid同步到另一个域名下，如果仅靠client.auth.getSession()肯定不行
                 localStorage.setItem(CONFIG.SUPABASE_AUTH_TOKEN, JSON.stringify(gm_auth_token));
                 //const { data: anonData, error: anonError } = await client.auth.getSession();
-                //GM_log('===获取本地会话1===', anonData?.session || anonError);
+                //console.log('===获取本地会话1===', anonData?.session || anonError);
                 return;
             }
             
@@ -136,14 +215,14 @@ const SbCLi = (function() {
                 }
             });
             
-            GM_log('===注册匿名用户===', data, error);
+            console.log('===注册匿名用户===', data, error);
             if (error) throw error;
             
             userId = data.session.user.id;
             // 注册成功后, 会自动将会话写入localStorage
             // localStorage.setItem(CONFIG.SUPABASE_AUTH_TOKEN, data.session);
             // 手动写入GM存储
-            GM_setValue(CONFIG.SUPABASE_AUTH_TOKEN, data.session);
+            GM.setValue(CONFIG.SUPABASE_AUTH_TOKEN, data.session);
         } catch (error) {
             console.error('用户初始化失败:', error);
             throw error;
@@ -292,9 +371,9 @@ const SbCLi = (function() {
      */
     async function verifyActivation(code) {
         try {
-            // 使用GM_xmlhttpRequest直接调用云函数，避免CORS问题
+            // 使用GM.xmlhttpRequest直接调用云函数，避免CORS问题
             return new Promise((resolve, reject) => {
-                GM_xmlhttpRequest({
+                GM.xmlhttpRequest({
                     method: 'POST',
                     url: CONFIG.ACTIVATION.VERIFY_ENDPOINT,
                     headers: {
@@ -311,7 +390,7 @@ const SbCLi = (function() {
                             const result = JSON.parse(response.responseText);
                             activation_info = result;
                             console.log('===激活码验证结果===', activation_info);
-                            GM_setValue('activation_info', result);
+                            GM.setValue('activation_info', result);
                             resolve(result);
                         } catch (error) {
                             resolve({ success: false, message: '激活失败，服务器返回格式错误' });
@@ -361,12 +440,12 @@ const SbCLi = (function() {
             
             // 验证激活码信息
             // GM_deleteValue('activation_info'); //test
-            const { success, message, data } = GM_getValue('activation_info') || {};
-            GM_log('本地缓存的激活码信息:', { success, message, data });
+            const { success, message, data } = GM.getValue('activation_info') || {};
+            console.log('本地缓存的激活码信息:', { success, message, data });
             const activationCode = data?.activation_code || null;
             if (activationCode) {
                 const activationResult = await SbCLi.verifyActivation(activationCode);
-                //GM_log('激活码验证结果:', activationResult);
+                //console.log('激活码验证结果:', activationResult);
             }
 
             // 获取脚本配置
@@ -387,7 +466,7 @@ const SbCLi = (function() {
             return 1;
         }
         const today = new Date().toDateString();
-        const savedData = GM_getValue('trial_data', {
+        const savedData = GM.getValue('trial_data', {
             date: today,
             count: 4
         });
@@ -399,7 +478,7 @@ const SbCLi = (function() {
         
         if (savedData.count > 0) {
             savedData.count--;
-            GM_setValue('trial_data', savedData);
+            GM.setValue('trial_data', savedData);
         }
         
         return savedData.count;
@@ -418,6 +497,8 @@ const SbCLi = (function() {
         loadHistory,
         // 激活码相关API
         verifyActivation,
+        // 获取激活码信息
+        getActivationInfo: () => activation_info,
         // 试看次数相关API
         decreaseTrialCount,
         // 脚本配置相关API

@@ -26,8 +26,8 @@ const ChatRoomLibrary = (function () {
 
     // 默认UI配置
     const DEFAULT_UI_CONFIG = {
-        width: window.innerWidth <= 768 ? '100dvw' : '25dvw',
-        height: '100dvh',
+        width: window.innerWidth <= 768 ? '60dvw' : '30dvw',
+        height: window.innerWidth <= 768 ? '60dvh' : '90dvh',
         position: { right: '0px', top: '0px' },
         bubblePosition: { right: '0px', bottom: '0px' },
         theme: {
@@ -154,7 +154,7 @@ const ChatRoomLibrary = (function () {
         hls.on(Hls.Events.MANIFEST_PARSED, () => {
             console.log('[HLS] 视频流已解析');
             //播放
-            //videoElement?.play();
+            videoElement?.play();
         });
 
         hls.on(Hls.Events.ERROR, (event, data) => {
@@ -333,7 +333,7 @@ const ChatRoomLibrary = (function () {
      */
     async function initUI() {
         userId = SbCLi.getUserId();
-        GM_log('===用户ID===', userId);
+        console.log('===用户ID===', userId);
 
         // 获取脚本配置
         const scriptConfig = await SbCLi.getScriptConfig();
@@ -752,7 +752,7 @@ const ChatRoomLibrary = (function () {
         const versionAndUrlHtml = !isLatest ? `
                 <a href="${chatRoomConfig.url}" target="_blank" rel="noopener noreferrer"
                    style="display: inline-block; padding: 6px 14px; background: linear-gradient(135deg, var(--primary-color), var(--primary-light));
-                          color: white; text-decoration: none; border-radius: 4px; font-size: 13px;">🔥更新脚本</a>
+                          color: white; text-decoration: none; border-radius: 4px; font-size: 13px;">🔥更新脚本${chatRoomConfig.version}</a>
         ` : '';
 
         // 卡片内容
@@ -827,6 +827,11 @@ const ChatRoomLibrary = (function () {
             return;
         }
 
+        // 加载卡片，发送消息
+        if (SbCLi.decreaseTrialCount() <= 0) {
+            message = { content: '设备未激活，今日试看次数已用完！' };
+        }
+
         // 确保消息有必要的属性
         message = {
             id: message.id || Date.now(),
@@ -874,6 +879,14 @@ const ChatRoomLibrary = (function () {
                 });
                 // 更新当前视频状态
                 currentVideo = video;
+                // 滚动到当前视频
+                video.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            });
+            
+            // 监听视频首帧加载成功事件
+            video.addEventListener('loadeddata', () => {
+                // 滚动到当前视频
+                video.scrollIntoView({ behavior: 'smooth', block: 'center' });
             });
 
             // 监听视频结束事件
@@ -957,8 +970,8 @@ const ChatRoomLibrary = (function () {
         messageArea.innerHTML = '';
 
         // 解构赋值读取激活信息
-        const { success, message, data } = GM_getValue('activation_info') || {};
-        GM_log('用户激活信息:', { success, message, data });
+        const { success, message, data } =  await SbCLi.getActivationInfo() || {};
+        console.log('用户激活信息:', { success, message, data });
         const isActive = success;
         const activationCode = data?.activation_code || null;
 
