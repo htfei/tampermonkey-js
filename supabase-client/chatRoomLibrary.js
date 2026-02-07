@@ -377,7 +377,7 @@ const ChatRoomLibrary = (function () {
         header.id = 'chat-header';
         header.innerHTML = `
             <div class="online-count">
-                <span id="chat-title">${chatRoomConfig.name}</span>
+                <span id="chat-title">${chatRoomConfig.name + (GM_info?.script?.version || "")}</span>
                 <span class="online-dot"></span>
                 <span id="online-users"></span> 
             </div>

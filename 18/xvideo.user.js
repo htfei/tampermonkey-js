@@ -53,26 +53,30 @@
     let last_short_id = null;
     let last_post_id = null;
     function check_m3u8() {
-        let longlist = JSON.parse(localStorage.getItem('longVideoHistoryStore') || '[]');
-        if (longlist.length != 0 && longlist.items[0].id != last_long_id) {
-            let item = longlist.items[0];
-            last_long_id = item.id;
-            addcard(item);
+        if(location.href.includes("/subPage/longViodePlay")) {
+            let longlist = JSON.parse(localStorage.getItem('longVideoHistoryStore') || '[]');
+            if (longlist.length != 0 && longlist.items[0].id != last_long_id) {
+                let item = longlist.items[0];
+                last_long_id = item.id;
+                addcard(item);
+            }
         }
-
-        let shortlist = JSON.parse(localStorage.getItem('shortVideoHistoryStore') || '[]');
-        if (shortlist.length != 0 && shortlist.items[0].id != last_short_id) {
-            let item = shortlist.items[0];
-            last_short_id = item.id;
-            addcard(item);
+        else if(location.href.includes("/tiktok") || location.href.includes("/subPage/shortVideoPlay")) {
+            let shortlist = JSON.parse(localStorage.getItem('shortVideoHistoryStore') || '[]');
+            if (shortlist.length != 0 && shortlist.items[0].id != last_short_id) {
+                let item = shortlist.items[0];
+                last_short_id = item.id;
+                addcard(item);
+            }
         }
-
-        let postlist = JSON.parse(localStorage.getItem('PostHistoryStore') || '[]');
-        if (postlist.length != 0 && postlist.items[0].id != last_post_id) {
-            let item = postlist.items[0];
-            if(item.video?.url == "") return; //图集,没有视频
-            last_post_id = item.id;
-            addcard(item);
+        else if(location.href.includes("/community")) {    
+            let postlist = JSON.parse(localStorage.getItem('PostHistoryStore') || '[]');
+            if (postlist.length != 0 && postlist.items[0].id != last_post_id) {
+                let item = postlist.items[0];
+                if(item.video?.url == "") return; //图集,没有视频
+                last_post_id = item.id;
+                addcard(item);
+            }
         }
     }
 
