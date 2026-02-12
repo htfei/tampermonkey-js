@@ -146,6 +146,7 @@
                 return res.responseText;
             }
             video_info = {
+                ...video_info,
                 url: window.location.href,
                 //id: json_obj.mediaInfo.id,
                 content: video_info.content || document.title,
