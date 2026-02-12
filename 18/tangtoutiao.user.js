@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         汤头条破解VIP视频免费看🥣
 // @namespace    tangtoutiao_vip_video_free_see
-// @version      2.1
+// @version      2.2
 // @description  来不及解释了，快上车！！！
 // @author       w2f
 // @match        https://p1.xpyortno.cc/*
@@ -12,164 +12,62 @@
 // @include      /^http(s)?:\/\/p\w+\.xpyortno\.(com|net|cc)/
 // @icon         https://p2.xpyortno.cc/favicon.ico
 // @license      MIT
-// @grant        GM_log
-// @grant        GM_addStyle
 // @grant        GM_getValue
 // @grant        GM_setValue
 // @grant        GM_deleteValue
 // @grant        GM_xmlhttpRequest
-// @run-at       document-body
+// @run-at       document-start
 // @connect      supabase.co
 // @require      https://unpkg.com/@supabase/supabase-js@2.49.3/dist/umd/supabase.js
 // @require      https://cdnjs.cloudflare.com/ajax/libs/hls.js/1.1.5/hls.min.js
-// @require      https://scriptcat.org/lib/5007/1.0.4/supabaseClientLibrary.js#sha384=UVgc6octvKJ1F7mziyZvq8As2JOFlBP67kH/AOywBSXFrlKuyXMJCViIiNfbAjgu
-// @require      https://scriptcat.org/lib/5008/1.0.6/chatRoomLibrary.js#sha384=K75aUnIAOk8+4AgNJhFH/4Z5ouseZgL0DZxQjyMkXf8+ZLZdI2dsPWsQBEbwSptw
-// @downloadURL  https://update.sleazyfork.org/scripts/559718/%E6%B1%A4%E5%A4%B4%E6%9D%A1%E7%A0%B4%E8%A7%A3VIP%E8%A7%86%E9%A2%91%E5%85%8D%E8%B4%B9%E7%9C%8B%F0%9F%A5%A3.user.js
-// @updateURL    https://update.sleazyfork.org/scripts/559718/%E6%B1%A4%E5%A4%B4%E6%9D%A1%E7%A0%B4%E8%A7%A3VIP%E8%A7%86%E9%A2%91%E5%85%8D%E8%B4%B9%E7%9C%8B%F0%9F%A5%A3.meta.js
+// @require      https://scriptcat.org/lib/5008/1.0.9/chatRoomLibrary.js#sha384=q97t2pA7/+cd/pNF0yV+5YtYPJqqaQ3Z1UALOdmAsmre12tn+QkWKrIvemIPFJKV
+// @require      https://scriptcat.org/lib/5007/1.0.5/supabaseClientLibrary.js#sha384=Lmn3Xw4T1M9EafLVLt1ffUVaBi0b5jVrj+bUN9CJaDQsoH+cZysJBi49WimPRFtT
+// @require      https://scriptcat.org/lib/5398/1.4.9/ajaxHookerPlus.js#sha384=p/dGSuD4jK5vvIk78Rx/+hHVI93+2C4MYXSV06Kqv3/QZHRr+C14WoA17DPNrBWt
 // ==/UserScript==
 
 (async function () {
     'use strict';
-    // 调试开关
-    const DEBUG = true;
-
-    // 存储拦截的请求
-    let interceptedRequests = [];
-
-    // 拦截媒体资源请求（media类型）
-    function interceptMediaRequests() {
-        try {
-            // 监控DOM中媒体元素的创建和变化
-            const observer = new MutationObserver((mutations) => {
-                mutations.forEach((mutation) => {
-                    // 处理新添加的节点
-                    mutation.addedNodes.forEach((node) => {
-                        if (node.nodeType === 1) { // 元素节点
-                            // 检查是否是媒体元素
-                            if (node.tagName === 'VIDEO' || node.tagName === 'AUDIO') {
-                                processMediaElement(node);
-                            }
-                            // 检查子元素中的媒体元素
-                            node.querySelectorAll('video, audio').forEach(processMediaElement);
-                        }
-                    });
-
-                    // 处理属性变化
-                    if (mutation.type === 'attributes' && mutation.target.tagName) {
-                        const tagName = mutation.target.tagName.toLowerCase();
-                        if ((tagName === 'video' || tagName === 'audio') && mutation.attributeName === 'src') {
-                            processMediaElement(mutation.target);
-                        }
-                    }
-                });
-            });
-
-            // 配置观察者
-            observer.observe(document.documentElement, {
-                childList: true,
-                subtree: true,
-                attributes: true,
-                attributeFilter: ['src']
-            });
-
-            // 处理现有媒体元素
-            document.querySelectorAll('video, audio').forEach(processMediaElement);
-
-            // 拦截HTMLMediaElement的src和srcObject属性
-            const originalSetSrc = Object.getOwnPropertyDescriptor(HTMLMediaElement.prototype, 'src').set;
-            Object.defineProperty(HTMLMediaElement.prototype, 'src', {
-                set: function (value) {
-                    if (value && value.includes('.m3u8')) {
-                        logMediaRequest(value);
-                    }
-                    return originalSetSrc.call(this, value);
-                }
-            });
-
-            if (DEBUG) {
-                GM_log('[m3u8拦截器] 媒体请求拦截器已安装');
-            }
-        } catch (e) {
-            GM_log('[m3u8拦截器] 安装媒体请求拦截器失败: ' + e.message);
-        }
-    }
-
+    let last_m3u8url = null;
     function fix_m3u8url(m3u8url) {
         let url = new URL(m3u8url);
         let seg = url.host.split('.');
         seg[0] = 'long';
         url.host = seg.join('.');
-        GM_log('url fixed ====> ' + url.href);
         return url.href;
     }
 
-    // 处理媒体元素
-    function processMediaElement(element) {
-        try {
-            // 检查src属性
-            if (element.src && element.src.includes('.m3u8')) {
-                if (!element.src.startsWith('https://long')) element.src = fix_m3u8url(element.src);
-                logMediaRequest(element.src, element.tagName.toLowerCase());
-            }
-
-            // 监听loadstart事件，捕获动态设置的媒体源
-            element.addEventListener('loadstart', (e) => {
-                const target = e.target;
-                if (target.currentSrc && target.currentSrc.includes('.m3u8')) {
-                    //if (!target.currentSrc.startsWith('https://long')) target.currentSrc = fix_m3u8url(target.currentSrc);
-                    //logMediaRequest(target.currentSrc, target.tagName.toLowerCase()+'loadstart');
-                }
-            });
-        } catch (e) {
-            GM_log('[m3u8拦截器] 处理媒体元素失败: ' + e.message);
-        }
-    }
-
-    // 记录媒体请求
-    function logMediaRequest(url, mediaType = 'no-media-type') {
-        try {
-            if (0) {
-                GM_log(`[m3u8拦截器] 拦截到${mediaType}媒体请求: ${url}`);
-            }
-
-            // 避免重复记录相同URL的请求
-            const isDuplicate = interceptedRequests.some(item => item === url);
-            if (!isDuplicate && url.startsWith('https://long')) {
-                interceptedRequests.push(url);
-                const videoInfo = {
-                    url: window.location.href,
-                    content: document.querySelector("div.swiper-slide-active h2")?.innerText || document.querySelector("div.info-top p.info-title")?.innerText,
-                    video_url: url,
-                    image_url: null,
-                };
-                // 加载卡片，发送消息
-                if (SbCLi.decreaseTrialCount() > 0) {
-                    chatRoom.addMsgCard(videoInfo);
-                }
-                else {
-                    chatRoom.addMsgCard({ content: '设备未激活，今日试看次数已用完！' });
-                }
-                const res = SbCLi.sendMessage(videoInfo);
-                GM_log('发送消息的响应:', res);
-            }
-        } catch (e) {
-            GM_log('[m3u8拦截器] 记录媒体请求失败: ' + e.message);
-        }
-    }
-
-    // 初始化
-    interceptMediaRequests();
     // 初始化
     await SbCLi.init('ttt');
     const chatRoom = await ChatRoomLibrary.initUI();
+
+    ajaxHooker.protect();
+    ajaxHooker.filter([
+        { url: ".m3u8" },//劫持所有url包含指定字符串的请求
+    ]);
+    ajaxHooker.hook(async request => {
+        //console.log(`[tools]🚧1劫持${request.type}-${request.method}:`, request.url);
+        request.url = fix_m3u8url(request.url);
+        if (request.url != last_m3u8url) {
+            last_m3u8url = request.url;
+            let videoInfo = {
+                url: window.location.href,
+                content: document.querySelector("div.swiper-slide-active h2")?.innerText || document.querySelector("div.info-top p.info-title")?.innerText,
+                video_url: request.url,
+                image_url: null,
+            };
+            //console.log(`[tools]🚧2劫持${request.type}-${request.method}:`, videoInfo);
+            // 加载卡片，发送消息
+            chatRoom.addMsgCard(videoInfo);
+            SbCLi.sendMessage(videoInfo);
+        }
+    });
+
     function remove_ad() {
-        //微密圈去广告
         document.querySelector("welcome-ad")?.remove();//去除 开屏广告 5s倒计时
         document.querySelector("div.active-dialog")?.remove();//去除 4次 广告弹窗
         document.querySelector("div.van-overlay")?.remove();//去除 遮罩
         document.querySelector("div.shadow-lg")?.remove();//去除 汤头条app内打开
         document.querySelector("div.preview-tip")?.remove();
-        //document.querySelector("div.notice-header-02")?.click();
         //let ad = document.querySelector("div.notice_scaleLayer");
         //if (ad) ad.style.display = 'none';//去除 应用中心 弹窗
         //短视频去广告
