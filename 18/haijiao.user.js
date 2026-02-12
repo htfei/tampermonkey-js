@@ -1,21 +1,34 @@
 // ==UserScript==
 // @name         海角社区VIP视频免费看
 // @namespace    haijiao_vip_video_free_see
-// @version      1.0
-// @description  拦截请求极其响应,对其进行修改
+// @version      1.2
+// @description  来不及解释了，快上车！！！
 // @author       w2f
-// @match        https://www.haijiao.com/*
 // @match        https://haijiao.com/*
+// @match        https://www.haijiao.com/*
+// @include      /^http(s)?:\/\/hj\w+\.top/
+// @include      /^http(s)?:\/\/www\.hj\w+\.top/
 // @icon         https://haijiao.com/images/common/project/favicon.ico
-// @grant        none
 // @license      MIT
+// @grant        GM_getValue
+// @grant        GM_setValue
+// @grant        GM_deleteValue
+// @grant        GM_xmlhttpRequest
 // @run-at       document-start
-// @require      https://scriptcat.org/lib/637/1.4.5/ajaxHooker.js#sha256=EGhGTDeet8zLCPnx8+72H15QYRfpTX4MbhyJ4lJZmyg=
+// @connect      supabase.co
+// @require      https://unpkg.com/@supabase/supabase-js@2.49.3/dist/umd/supabase.js
+// @require      https://cdnjs.cloudflare.com/ajax/libs/hls.js/1.1.5/hls.min.js
+// @require      https://icaugjyuwenraxxgwvzf.supabase.co/storage/v1/object/public/js/chatRoomLibrary.js
+// @require      https://icaugjyuwenraxxgwvzf.supabase.co/storage/v1/object/public/js/supabaseClientLibrary.js
+// @require      https://icaugjyuwenraxxgwvzf.supabase.co/storage/v1/object/public/js/ajaxHookerPlus.js
 // ==/UserScript==
 
-(function () {
+(async function () {
     'use strict';
-    let video_info = null;
+    await SbCLi.init('haijiao');
+    const chatRoom = await ChatRoomLibrary.initUI();
+
+    let video_info = {};
 
     var my_parse = JSON.parse;//解析 JSON 字符串
     JSON.parse = function (params) {
@@ -29,24 +42,82 @@
             let len = arr.length;
             for (let j = 0; j < len; j++) {
                 let item = arr[j];
-                if (item?.video_time_length) {
-                    video_info = item;
-                    /*{
+                if (item?.category == "video") {
+                    console.log("json_parse video :", item);
+                    //video_info = item;
+                    /*
+                    {
                         "id": 1801581,
                         "remoteUrl": "https://ts.hj25ja21a8.top/hjstore/video/20220508/0148c44d2c09980a233ad362211b0e54/49253_i_preview.m3u8",
                         "category": "video",
                         "status": 1,
                         "coverUrl": "https://test.hjbd80.top/hjstore/video/20220508/0148c44d2c09980a233ad362211b0e54/49253.jpeg.txt",
                         "video_time_length": 805
-                    }*/
-                    //video_info.remoteUrl = item.remoteUrl;
-                    //video_info.duration = item.video_time_length;//不能读这个属性,否则跳转error
+                    },
+                    //注意看：remoteUrl = fn(coverUrl,id)
+                    {
+                        "id": 3743357,
+                        "remoteUrl": "https://ts.hj25ja21a8.top/hjstore/video/20221207/59d98b2bb45a657d602e3bd3fd8646aa/1158983743357.m3u8",
+                        "category": "video",
+                        "status": 1,
+                        "coverUrl": "https://test.hjbd80.top/hjstore/video/20221207/59d98b2bb45a657d602e3bd3fd8646aa/115898.jpeg.txt"
+                    },
+                    //普通1 普通2 VIP线路，类似这种没有时长、没有视频地址(但可以猜出来)；页面直接就是完整视频;
+                    //✅：https://ts.hj25ja21a8.top/hjstore/video/20250813/083dfee2dbfde94cdc24a636fc1c8168/416428_i_preview.m3u8
+                    //❌：remoteUrl != fn(coverUrl,id)
+                   {
+                        "id": 11438849,
+                        "remoteUrl": "",
+                        "category": "video",
+                        "status": 1,
+                        "coverUrl": "https://test.hjbd80.top/hjstore/video/20250813/083dfee2dbfde94cdc24a636fc1c8168/416428.jpeg.txt"
+                    }
+                    */
+                    //video_info.duration = item.video_time_length;//⚠️不能读这个属性,否则跳转error
                     //video_info.id = item.id;
                     //console.log("video_info :", video_info);
+                    video_info = {
+                        ...item,
+                        // 以下属性是为了和chatRoom.addMsgCard(msg)方法的参数一致
+                        id: json_obj.topicId || item.id,
+                        url: window.location.href,
+                        content: json_obj.title || document.title,
+                        video_url: item.remoteUrl,
+                        image_url: item.coverUrl,
+                    }
                     break;
                 }
             }
         }
+        /*else if (json_obj instanceof Array) {
+            //海角h5短视频:remoteUrl 假地址 //真实url= fn(remoteUrl);
+             //https://ts.hj25ja21a8.top/hjstore/video/20260207/681d56bc9c58622288d153431e1b95de/12619941kkkw8QuU_i.m3u8
+             {
+             "id": 12619941,
+             "remoteUrl": "/api/address/video/20260207/681d56bc9c58622288d153431e1b95de/12619941kkkw8QuU_i4e7bad2f4f3a591beb2c6b9a4933f889.m3u8",
+             "category": "video",
+             "status": 1,
+             "coverUrl": "https://test.hjbd80.top/hjstore/video/20260207/681d56bc9c58622288d153431e1b95de/475081.jpeg.txt"
+             }
+            if (json_obj[0]?.attachment) { //海角h5短视频
+                console.log("[tools]🚧劫持json-list:", json_obj);
+                let arr = json_obj;
+                let len = arr.length;
+                for (let j = 0; j < len; j++) {
+                    let item = arr[j];
+                    let video_info2 = {
+                        id: item.id,
+                        url: window.location.href,
+                        content: item.title || document.title,
+                        video_url: "https://ts.hj25ja21a8.top/hjstore" + item.attachment?.remoteUrl.split('_i')[0]?.split('address')[1] + "_i.m3u8",
+                        image_url: item.attachment?.coverUrl,
+                    };
+                    // 加载卡片，发送消息
+                    chatRoom.addMsgCard(video_info2);
+                    SbCLi.sendMessage(video_info2);
+                }
+            }
+        }*/
         return json_obj;
     };
 
@@ -54,15 +125,43 @@
     ajaxHooker.protect();
     // 为hook方法设置过滤规则，只有符合规则的请求才会触发hook
     ajaxHooker.filter([
-        { type: 'xhr', url: '.m3u8', method: 'GET', async: true },//小狐狸
+        { type: 'xhr', url: '.m3u8', method: 'GET', async: true },
+        //{ url: ".m3u8" },//劫持所有url包含指定字符串的请求
     ]);
     // 通过一个回调函数进行劫持，每次请求发生时自动调用回调函数。
     ajaxHooker.hook(async request => {
+        console.log(`[tools]🚧劫持${request.type}-${request.method}:`, request.url);
         request.response = async res => {
+
+            if (video_info.video_time_length) {
+                // 加载卡片，发送消息
+                video_info.content += `(⚠️:请在原始网页中观看完整视频(${video_info.video_time_length}秒)!)`;
+                //video_info.video_url = null;
+            } else if (video_info.id) {
+                //部分post无法捕获video_time_length，默认给30min; 短视频 本身就是完整视频
+                video_info.content += `(⚠️:请在原始网页中观看完整视频(无时长,默认15分钟))！`
+                //video_info.video_url = null;
+            } else {
+                //h5短视频，由于页面缓存了xhr，这里可能捕获不到；故直接在json解析时加载全部20个视频;
+                return res.responseText;
+            }
+            video_info = {
+                url: window.location.href,
+                //id: json_obj.mediaInfo.id,
+                content: video_info.content || document.title,
+                video_url: request.url,
+                image_url: video_info.image_url,
+            };
+            // 加载卡片，发送消息
+            chatRoom.addMsgCard(video_info);
+            SbCLi.sendMessage(video_info);
+
             //console.log("[tools]🔍ajaxHooker请求拦截器 修改前:", res.responseText.length);
             res.responseText = await modifyResponse_m3u8(res.responseText);
             //打印rsp
             //console.log("[tools]🔍ajaxHooker请求拦截器 修改后:", res.responseText.length);
+
+            video_info = {};//还原，避免影响下次解析
         };
     });
 
@@ -88,10 +187,10 @@
         let modifiedText = originalText;
 
         //document.querySelector("div.article.ql-editor p")?.innerText += `✅破解成功：视频时长${video_info.video_time_length}s(若获取失败则默认给30分钟，可能没有这么长，但不影响播放)`;
-        if(!video_info || !video_info.video_time_length){
-            video_info.video_time_length = 1800;
+        if (!video_info.video_time_length) {
+            video_info.video_time_length = 900;//1800;
         }
-        
+
         // 你可以使用正则定位插入点，比如在 ENDLIST 前加入新片段
         // TS片段配置（可扩展）
         // 配置参数
@@ -101,9 +200,23 @@
         const TS_PREFIX = 0; // 每个片段文件名前缀补0个数 🔴:这里一定要填对，否则拼接的ts地址不对，下载会失败
 
         // 预处理后的内容分析
-        const lastTsMatch = originalText.match(/\n(.*?)\_i0.ts/); //⚠️: 不同站点这个匹配模式也需要改
+        let TS_FILENAME = null;//也可通过jpeg提取
+        let lastTsMatch = originalText.match(/\n(.*?)\_i0.ts/); //⚠️: 不同站点这个匹配模式也需要改
+        if (lastTsMatch) {
+            TS_FILENAME = lastTsMatch[1] + '_i{0}.ts';
+        } else {
+            lastTsMatch = originalText.match(/\n(.*?)0.ts/); //⚠️: 不同站点这个匹配模式也需要改
+            if (lastTsMatch) {
+                TS_FILENAME = lastTsMatch[1] + '{0}.ts';
+            }
+        }
+        if (!lastTsMatch) {
+            //解析失败，返回原始text
+            console.log("智能解析m3u8的TS文件名失败", originalText);
+            return originalText;
+        }
         //console.log("[tools]🔍ajaxHooker请求拦截器 智能解析最后一个TS文件名:", lastTsMatch);
-        const TS_FILENAME = lastTsMatch[1] + '_i{0}.ts';
+
         let startNumber = 0;//⚠️: 不同站点这个匹配模式也需要改
         let header = originalText.slice(0, originalText.indexOf("#EXTINF"));
 
@@ -125,9 +238,32 @@
         return modifiedText;
     }
 
-
+    let last_shortvid = null;
     function remove_ad() {
-        document.querySelector("div.el-message-box__wrapper button")?.click();//去除 试看完毕 弹窗
+        //document.querySelector("div.el-message-box__wrapper button")?.click();//去除 试看完毕 弹窗
+        //h5短视频方案2：从localStorage中获取视频列表
+        let shortvid = parseInt(document.querySelector("div#video_box > div.top_row > div:nth-child(2)")?.innerText?.split(' ')?.at(1));
+        if (shortvid && shortvid != last_shortvid) {
+            let videoList = JSON.parse(localStorage.getItem("videoList")) || [];
+            let len = videoList.length;
+            for (let j = 0; j < len; j++) {
+                let item = videoList[j];
+                if (item.id == shortvid) {
+                    last_shortvid = shortvid;
+                    let short_video = {
+                        id: item.id,
+                        url: window.location.href,
+                        content: item.title || document.title,
+                        video_url: "https://ts.hj25ja21a8.top/hjstore" + item.attachment?.remoteUrl.split('_i')[0]?.split('address')[1] + "_i.m3u8",
+                        image_url: item.attachment?.coverUrl,
+                    };
+                    // 加载卡片，发送消息
+                    chatRoom.addMsgCard(short_video);
+                    SbCLi.sendMessage(short_video);
+                    break;
+                }
+            }
+        }
     }
     setInterval(remove_ad, 1000);
 })();
