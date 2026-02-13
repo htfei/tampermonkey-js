@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         海角社区VIP视频免费看
 // @namespace    haijiao_vip_video_free_see
-// @version      1.2
+// @version      1.3
 // @description  来不及解释了，快上车！！！
 // @author       w2f
 // @match        https://haijiao.com/*
@@ -18,18 +18,14 @@
 // @connect      supabase.co
 // @require      https://unpkg.com/@supabase/supabase-js@2.49.3/dist/umd/supabase.js
 // @require      https://cdnjs.cloudflare.com/ajax/libs/hls.js/1.1.5/hls.min.js
-// @require      https://icaugjyuwenraxxgwvzf.supabase.co/storage/v1/object/public/js/chatRoomLibrary.js
-// @require      https://icaugjyuwenraxxgwvzf.supabase.co/storage/v1/object/public/js/supabaseClientLibrary.js
-// @require      https://icaugjyuwenraxxgwvzf.supabase.co/storage/v1/object/public/js/ajaxHookerPlus.js
+// @require      https://scriptcat.org/lib/5008/1.0.9/chatRoomLibrary.js#sha384=q97t2pA7/+cd/pNF0yV+5YtYPJqqaQ3Z1UALOdmAsmre12tn+QkWKrIvemIPFJKV
+// @require      https://scriptcat.org/lib/5007/1.0.5/supabaseClientLibrary.js#sha384=Lmn3Xw4T1M9EafLVLt1ffUVaBi0b5jVrj+bUN9CJaDQsoH+cZysJBi49WimPRFtT
+// @require      https://scriptcat.org/lib/5398/1.4.9/ajaxHookerPlus.js#sha384=p/dGSuD4jK5vvIk78Rx/+hHVI93+2C4MYXSV06Kqv3/QZHRr+C14WoA17DPNrBWt
 // ==/UserScript==
 
 (async function () {
     'use strict';
-    await SbCLi.init('haijiao');
-    const chatRoom = await ChatRoomLibrary.initUI();
-
     let video_info = {};
-
     var my_parse = JSON.parse;//解析 JSON 字符串
     JSON.parse = function (params) {
         //这里可以添加其他逻辑比如 debugger
@@ -43,7 +39,7 @@
             for (let j = 0; j < len; j++) {
                 let item = arr[j];
                 if (item?.category == "video") {
-                    console.log("json_parse video :", item);
+                    //console.log("json_parse video :", item);
                     //video_info = item;
                     /*
                     {
@@ -73,17 +69,18 @@
                         "coverUrl": "https://test.hjbd80.top/hjstore/video/20250813/083dfee2dbfde94cdc24a636fc1c8168/416428.jpeg.txt"
                     }
                     */
-                    //video_info.duration = item.video_time_length;//⚠️不能读这个属性,否则跳转error
+                    //video_info.video_time_length = item.video_time_length;//⚠️不能读这个属性,否则跳转error
                     //video_info.id = item.id;
                     //console.log("video_info :", video_info);
                     video_info = {
-                        ...item,
+                        //...item,
+                        video_time_length: item.video_time_length,
                         // 以下属性是为了和chatRoom.addMsgCard(msg)方法的参数一致
                         id: json_obj.topicId || item.id,
-                        url: window.location.href,
-                        content: json_obj.title || document.title,
+                        //url: window.location.href,
+                        content: json_obj.title,
                         video_url: item.remoteUrl,
-                        image_url: item.coverUrl,
+                        //image_url: item.coverUrl,
                     }
                     break;
                 }
@@ -125,44 +122,25 @@
     ajaxHooker.protect();
     // 为hook方法设置过滤规则，只有符合规则的请求才会触发hook
     ajaxHooker.filter([
-        { type: 'xhr', url: '.m3u8', method: 'GET', async: true },
-        //{ url: ".m3u8" },//劫持所有url包含指定字符串的请求
+        //{ type: 'xhr', url: '.m3u8', method: 'GET', async: true },
+        { url: ".m3u8" },//劫持所有url包含指定字符串的请求
     ]);
     // 通过一个回调函数进行劫持，每次请求发生时自动调用回调函数。
     ajaxHooker.hook(async request => {
         console.log(`[tools]🚧劫持${request.type}-${request.method}:`, request.url);
         request.response = async res => {
-
             if (video_info.video_time_length) {
+                //console.log("[tools]🔍ajaxHooker请求拦截器 修改前:", res.responseText.length);
+                res.responseText = await modifyResponse_m3u8(res.responseText);
+                //console.log("[tools]🔍ajaxHooker请求拦截器 修改后:", res.responseText.length);
                 // 加载卡片，发送消息
                 video_info.content += `(⚠️:请在原始网页中观看完整视频(${video_info.video_time_length}秒)!)`;
-                //video_info.video_url = null;
             } else if (video_info.id) {
-                //部分post无法捕获video_time_length，默认给30min; 短视频 本身就是完整视频
-                video_info.content += `(⚠️:请在原始网页中观看完整视频(无时长,默认15分钟))！`
-                //video_info.video_url = null;
-            } else {
-                //h5短视频，由于页面缓存了xhr，这里可能捕获不到；故直接在json解析时加载全部20个视频;
-                return res.responseText;
+                //部分post无法捕获video_time_length
+                //video_info.content += `(⚠️:请在原始网页中观看完整视频(无时长,默认15分钟))！`
             }
-            video_info = {
-                ...video_info,
-                url: window.location.href,
-                //id: json_obj.mediaInfo.id,
-                content: video_info.content || document.title,
-                video_url: request.url,
-                image_url: video_info.image_url,
-            };
-            // 加载卡片，发送消息
-            chatRoom.addMsgCard(video_info);
-            SbCLi.sendMessage(video_info);
-
-            //console.log("[tools]🔍ajaxHooker请求拦截器 修改前:", res.responseText.length);
-            res.responseText = await modifyResponse_m3u8(res.responseText);
-            //打印rsp
-            //console.log("[tools]🔍ajaxHooker请求拦截器 修改后:", res.responseText.length);
-
-            video_info = {};//还原，避免影响下次解析
+            //h5短视频，由于页面缓存了xhr，这里可能捕获不到
+            return res.responseText;//直接返回，在circle中加载UI
         };
     });
 
@@ -186,17 +164,13 @@
 
         // 修改 m3u8 内容：插入 160.ts
         let modifiedText = originalText;
-
-        //document.querySelector("div.article.ql-editor p")?.innerText += `✅破解成功：视频时长${video_info.video_time_length}s(若获取失败则默认给30分钟，可能没有这么长，但不影响播放)`;
-        if (!video_info.video_time_length) {
-            video_info.video_time_length = 900;//1800;
-        }
+        let timelen = video_info.video_time_length || 900; //若未获取到时长在，则默认900s
 
         // 你可以使用正则定位插入点，比如在 ENDLIST 前加入新片段
         // TS片段配置（可扩展）
         // 配置参数
         const TS_DURATION = 1.25; // 每个片段时长(秒) ⚠️:部分网站每个ts片段时长不一致, 但目前看不影响播放,具体取决于浏览器行为
-        const MAX_TS_COUNT = parseInt(video_info.video_time_length / TS_DURATION + 0.8);//30*30; // 最大生成数量 ⚠️:目前给了个很大的值,30*30*2s=30min时长, 如果能获取到真实时长这里最好修改
+        const MAX_TS_COUNT = parseInt(timelen / TS_DURATION + 0.8);//30*30; // 最大生成数量 ⚠️:目前给了个很大的值,30*30*2s=30min时长, 如果能获取到真实时长这里最好修改
         //const TS_FILENAME = video_info.id + '_i{0}.ts'; //每个片段文件名 🔴:这里要拼接完整的ts地址,如果后面有参数也要加上,如果参数部分有加密hash则无法破解❌ //bug:不完全是videoid 也不完全是这个格式 [id]uHdsRav8_i{0}.ts
         const TS_PREFIX = 0; // 每个片段文件名前缀补0个数 🔴:这里一定要填对，否则拼接的ts地址不对，下载会失败
 
@@ -241,6 +215,20 @@
 
     let last_shortvid = null;
     function remove_ad() {
+        if(video_info.id){
+            video_info = {
+                ...video_info,
+                url: window.location.href,
+                //id: json_obj.mediaInfo.id,
+                //content: video_info.content || document.title,
+                //video_url: request.url,
+                //image_url: video_info.image_url,
+            };
+            // 加载卡片，发送消息
+            chatRoom?.addMsgCard(video_info);
+            SbCLi?.sendMessage(video_info);
+            video_info = {};//清空，避免影响下次解析
+        }
         //document.querySelector("div.el-message-box__wrapper button")?.click();//去除 试看完毕 弹窗
         //h5短视频方案2：从localStorage中获取视频列表
         let shortvid = parseInt(document.querySelector("div#video_box > div.top_row > div:nth-child(2)")?.innerText?.split(' ')?.at(1));
@@ -259,12 +247,14 @@
                         image_url: item.attachment?.coverUrl,
                     };
                     // 加载卡片，发送消息
-                    chatRoom.addMsgCard(short_video);
-                    SbCLi.sendMessage(short_video);
+                    chatRoom?.addMsgCard(short_video);
+                    SbCLi?.sendMessage(short_video);
                     break;
                 }
             }
         }
     }
-    setInterval(remove_ad, 1000);
+    setInterval(remove_ad, 2000);
+    await SbCLi?.init('haijiao');
+    const chatRoom = await ChatRoomLibrary?.initUI();
 })();
