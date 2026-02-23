@@ -1,7 +1,7 @@
 // ==UserScript==
-// @name         海角社区VIP视频免费看
+// @name         海角社区收费视频免费看
 // @namespace    haijiao_vip_video_free_see
-// @version      1.3
+// @version      1.4
 // @description  来不及解释了，快上车！！！
 // @author       w2f
 // @match        https://haijiao.com/*
@@ -33,7 +33,7 @@
 
         //console.log("json_parse params:",params); //打印劫持到的json字符串
         if (json_obj?.attachments instanceof Array) {
-            //console.log("json_parse :", json_obj);
+            console.log("json_parse :", json_obj);
             let arr = json_obj.attachments;
             let len = arr.length;
             for (let j = 0; j < len; j++) {
@@ -135,9 +135,12 @@
                 //console.log("[tools]🔍ajaxHooker请求拦截器 修改后:", res.responseText.length);
                 // 加载卡片，发送消息
                 video_info.content += `(⚠️:请在原始网页中观看完整视频(${video_info.video_time_length}秒)!)`;
+                video_info.ok = true;
             } else if (video_info.id) {
                 //部分post无法捕获video_time_length
-                //video_info.content += `(⚠️:请在原始网页中观看完整视频(无时长,默认15分钟))！`
+                //video_info.content += `(⚠️:请在原始网页中观看完整视频(无时长信息))！`;
+                video_info.video_url = request.url;
+                video_info.ok = true;
             }
             //h5短视频，由于页面缓存了xhr，这里可能捕获不到
             return res.responseText;//直接返回，在circle中加载UI
@@ -215,7 +218,7 @@
 
     let last_shortvid = null;
     function remove_ad() {
-        if(video_info.id){
+        if (video_info.ok) {
             video_info = {
                 ...video_info,
                 url: window.location.href,
