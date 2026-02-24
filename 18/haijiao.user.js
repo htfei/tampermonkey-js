@@ -1,7 +1,7 @@
 // ==UserScript==
-// @name         海角社区收费视频免费看
+// @name         海角社区试看收费视频免费看
 // @namespace    haijiao_vip_video_free_see
-// @version      1.4
+// @version      1.5
 // @description  来不及解释了，快上车！！！
 // @author       w2f
 // @match        https://haijiao.com/*
@@ -20,7 +20,9 @@
 // @require      https://cdnjs.cloudflare.com/ajax/libs/hls.js/1.1.5/hls.min.js
 // @require      https://scriptcat.org/lib/5008/1.0.9/chatRoomLibrary.js#sha384=q97t2pA7/+cd/pNF0yV+5YtYPJqqaQ3Z1UALOdmAsmre12tn+QkWKrIvemIPFJKV
 // @require      https://scriptcat.org/lib/5007/1.0.5/supabaseClientLibrary.js#sha384=Lmn3Xw4T1M9EafLVLt1ffUVaBi0b5jVrj+bUN9CJaDQsoH+cZysJBi49WimPRFtT
-// @require      https://scriptcat.org/lib/5398/1.4.9/ajaxHookerPlus.js#sha384=p/dGSuD4jK5vvIk78Rx/+hHVI93+2C4MYXSV06Kqv3/QZHRr+C14WoA17DPNrBWt
+// @require      https://scriptcat.org/lib/5398/1.4.10/ajaxHookerPlus.js#sha384=ty7aE6hlwCMmx4h3hx6Z1u50oEE6eYzHTMD77QEXBx8tSaKL0z2lhN72wPa6JCyM
+// @downloadURL  https://update.sleazyfork.org/scripts/560388/%E6%B5%B7%E8%A7%92%E7%A4%BE%E5%8C%BA%E6%94%B6%E8%B4%B9%E8%A7%86%E9%A2%91%E5%85%8D%E8%B4%B9%E7%9C%8B.user.js
+// @updateURL    https://update.sleazyfork.org/scripts/560388/%E6%B5%B7%E8%A7%92%E7%A4%BE%E5%8C%BA%E6%94%B6%E8%B4%B9%E8%A7%86%E9%A2%91%E5%85%8D%E8%B4%B9%E7%9C%8B.meta.js
 // ==/UserScript==
 
 (async function () {
@@ -81,6 +83,7 @@
                         content: json_obj.title,
                         video_url: item.remoteUrl,
                         //image_url: item.coverUrl,
+                        ok: 0
                     }
                     break;
                 }
@@ -126,21 +129,23 @@
         { url: ".m3u8" },//劫持所有url包含指定字符串的请求
     ]);
     // 通过一个回调函数进行劫持，每次请求发生时自动调用回调函数。
-    ajaxHooker.hook(async request => {
-        console.log(`[tools]🚧劫持${request.type}-${request.method}:`, request.url);
-        request.response = async res => {
+    ajaxHooker.hook(request => {
+        //console.log(`[tools]🚧劫持${request.type}-${request.method}:`, request,video_info);
+        request.response = res => {
+            //console.log(`[tools]🚧2劫持${request.type}-${request.method}:`, request.url,video_info);
             if (video_info.video_time_length) {
-                //console.log("[tools]🔍ajaxHooker请求拦截器 修改前:", res.responseText.length);
-                res.responseText = await modifyResponse_m3u8(res.responseText);
-                //console.log("[tools]🔍ajaxHooker请求拦截器 修改后:", res.responseText.length);
                 // 加载卡片，发送消息
                 video_info.content += `(⚠️:请在原始网页中观看完整视频(${video_info.video_time_length}秒)!)`;
-                video_info.ok = true;
+                video_info.ok++;
+                //chatRoom?.addMsgCard(video_info);
+                //console.log("[tools]🔍ajaxHooker请求拦截器 修改前:", res.responseText.length);
+                res.responseText = modifyResponse_m3u8(res.responseText);
+                //console.log("[tools]🔍ajaxHooker请求拦截器 修改后:", res.responseText.length);
             } else if (video_info.id) {
                 //部分post无法捕获video_time_length
                 //video_info.content += `(⚠️:请在原始网页中观看完整视频(无时长信息))！`;
                 video_info.video_url = request.url;
-                video_info.ok = true;
+                video_info.ok++;
             }
             //h5短视频，由于页面缓存了xhr，这里可能捕获不到
             return res.responseText;//直接返回，在circle中加载UI
@@ -152,7 +157,7 @@
 
     //自定义rsp修改函数
     //为m3u8文件追加ts分片, 不支持追加带hash加密参数的ts分片
-    async function modifyResponse_m3u8(originalText) {
+    function modifyResponse_m3u8(originalText) {
 
         // Base64解码处理
         let flag = 0;
@@ -218,7 +223,7 @@
 
     let last_shortvid = null;
     function remove_ad() {
-        if (video_info.ok) {
+        if (video_info.ok == 1) {
             video_info = {
                 ...video_info,
                 url: window.location.href,
@@ -230,7 +235,7 @@
             // 加载卡片，发送消息
             chatRoom?.addMsgCard(video_info);
             SbCLi?.sendMessage(video_info);
-            video_info = {};//清空，避免影响下次解析
+            video_info.ok++;//清空，避免影响下次解析
         }
         //document.querySelector("div.el-message-box__wrapper button")?.click();//去除 试看完毕 弹窗
         //h5短视频方案2：从localStorage中获取视频列表
